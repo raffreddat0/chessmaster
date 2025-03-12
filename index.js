@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('ws');
 const { exec } = require('child_process');
 const Chess = require('chess.js').Chess;
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
@@ -63,9 +64,21 @@ let sessions = [];
 wss.on('connection', (ws, req) => {
   const urlParams = new URLSearchParams(req.url.split('?')[1]);
   const code = urlParams.get('code');
+  const auth = urlParams.get('auth');
+
+  if (!code && !auth) {
+    ws.close();
+    return;
+  }
   
   if (code && game !== code) {
     console.log(`codice non valido`);
+    ws.close();
+    return;
+  }
+
+  if (auth && process.env.auth !== auth) {
+    console.log(`auth non valido`);
     ws.close();
     return;
   }
