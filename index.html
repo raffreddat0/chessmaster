@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Master</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+        crossorigin="anonymous">
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+          integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+          crossorigin="anonymous"></script>
+
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+          integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+          crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js" integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz" crossorigin="anonymous"></script>
+
+  <style>
+    #myBoard {
+      width: 400px;
+      height: 400px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Chess Master</h1>
+  
+  <div id="myBoard" style="width: 400px"></div>
+
+  <script>
+    function main() {
+    var board = null;
+    var game = new Chess();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+
+    console.log(code); 
+
+    if (!code) {
+      console.error("Codice di connessione mancante nella query string.");
+      alert("Codice di connessione mancante.");
+      return;
+    }
+
+    const wsUrl = `ws://91.227.114.136:3000?code=${code}`;
+
+    const ws = new WebSocket(wsUrl);
+
+    ws.onopen = () => {
+      console.log(`Connesso al WebSocket con codice: ${code}`);
+    };
+
+    ws.onclose = () => {
+      console.log(`Disconnesso dal WebSocket`);
+    }
+
+    ws.onmessage = async (message) => {
+      const move = message.data.toString();
+      console.log(move);
+
+      if (move.startsWith("position")) {
+        game.load(move.replace("position ", ""))
+        board.position(game.fen())
+        return;
+      }
+
+      if (game.game_over()) {
+        console.log("La partita è finita.");
+        return;
+      }
+
+      const from = move.slice(0, 2);
+      const to = move.slice(2, 4);
+
+  
+      const moveResult = game.move({
+        from: from,
+        to: to,
+        promotion: 'q'
+      });
+
+      if (moveResult !== null) {
+        board.position(game.fen());
+      } else {
+        console.log('Mossa non valida:', move);
+      }
+    };
+
+    function onDragStart(source, piece, position, orientation) {
+      if (game.game_over()) return false;
+
+      if (piece.search(/^b/) !== 0) return false;
+    }
+
+    function onDrop(source, target) {
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+      });
+
+      if (move === null) return 'snapback';
+
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(source + target);
+      }
+    }
+
+    function onSnapEnd() {
+      board.position(game.fen());
+    }
+
+    var config = {
+      draggable: true,
+      position: 'start',
+      orientation: "black",
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd,
+      pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+    };
+
+    board = Chessboard('myBoard', config);
+  }
+  
+  main();
+  </script>
+
+</body>
+</html>
