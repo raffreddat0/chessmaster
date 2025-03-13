@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const http = require('http');
 const { Server } = require('ws');
 const { exec } = require('child_process');
@@ -8,10 +9,8 @@ require('dotenv').config();
 const app = express();
 const port = 3000;
 
-app.use(express.json());
-
 app.get('/', (req, res) => {
-  res.json({ "txt": "ciao" });
+  res.sendFile(path.join(__dirname, './index.html'));
 });
 
 const server = http.createServer(app);
