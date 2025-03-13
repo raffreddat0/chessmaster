@@ -50,7 +50,8 @@
       return;
     }
 
-    const wsUrl = `ws://91.227.114.136:3000?code=${code}`;
+    //const wsUrl = `ws://91.227.114.136:3000?code=${code}`;
+    const wsUrl = `wss://4.tcp.eu.ngrok.io:11018?code=${code}`
 
     const ws = new WebSocket(wsUrl);
 

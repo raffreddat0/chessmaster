@@ -134,7 +134,7 @@ wss.on('connection', (ws, req) => {
         game = generateCode();
 
       console.log("Partita create con codice", game);
-      ws.send(game);
+      ws.send("code " + game);
       return;
     }
 
