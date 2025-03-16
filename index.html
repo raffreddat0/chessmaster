@@ -124,13 +124,10 @@
       var board = null;
       var game = new Chess();
 
-      document.getElementById('codeInputContainer').style.display = 'none';
       document.getElementById('errorMessage').style.display = 'none';
 
       const wsUrl = `wss://${window.location.host}?code=${code}`;
       const ws = new WebSocket(wsUrl);
-
-      document.getElementById('myBoard').style.display = 'block';
 
       ws.onopen = () => {
         console.log(`Connesso al WebSocket con codice: ${code}`);
@@ -152,6 +149,7 @@
         if (move === "start" || move.startsWith("code")) {
           console.log("Partita iniziata.");
           document.getElementById('codeInputContainer').style.display = 'none';
+          document.getElementById('myBoard').style.display = 'block';
           setupGame(ws, game, board);
           return;
         }
