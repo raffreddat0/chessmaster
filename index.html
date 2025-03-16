@@ -142,7 +142,8 @@
           const codeBanner = document.getElementById('codeBanner');
           codeBanner.textContent = `Codice partita: ${gameCode}`;
           codeBanner.style.display = 'block';
-
+          
+          localStorage.removeItem("code");
           board.orientation('white');
         }
 
