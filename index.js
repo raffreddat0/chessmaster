@@ -61,6 +61,7 @@ const getStockfishMove = (moves, level) => {
 
 let game = "";
 let sessions = [];
+let mode = 0;
 wss.on('connection', (ws, req) => {
   const urlParams = new URLSearchParams(req.url.split('?')[1]);
   const code = urlParams.get('code');
@@ -83,9 +84,16 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
-  if (code)
+  if (mode === 1) {
+    ws.close();
+    return;
+  }
+
+  if (code) {
     sessions[1] = ws;
-  else
+    mode = 2;
+    ws.send("start");
+  } else
     sessions[0] = ws;
 
   console.log('Client connesso');
@@ -130,6 +138,7 @@ wss.on('connection', (ws, req) => {
     if (message === "start") {
       chess = new Chess();
       wait = false;
+      mode = 0;
       if (!code)
         game = generateCode();
 
@@ -146,6 +155,7 @@ wss.on('connection', (ws, req) => {
     if (message === "end") {
       console.log("Partita terminata");
       game = "";
+      mode = 0;
       wait = false;
       sessions[1].close();
       sessions = [sessions[0]];
@@ -182,6 +192,7 @@ wss.on('connection', (ws, req) => {
     }
 
     moves = ` ${message}`;
+    mode = 1;
     try {
       const stockfishMove = await getStockfishMove(moves, level);
       console.log(`Mossa di Stockfish: ${stockfishMove}`);
