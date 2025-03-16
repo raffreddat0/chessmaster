@@ -123,7 +123,6 @@
       var board = null;
       var game = new Chess();
 
-      document.getElementById('codeInputContainer').style.display = 'none';
       document.getElementById('errorMessage').style.display = 'none';
 
       const wsUrl = `wss://${window.location.host}?code=${code}`;
@@ -135,36 +134,16 @@
         console.log(`Connesso al WebSocket con codice: ${code}`);
       };
 
-      ws.onclose = () => {
-        const errorMessage = document.getElementById('errorMessage');
-        localStorage.removeItem("code");
-
-        document.getElementById('myBoard').style.display = 'none';
-        document.getElementById('codeInputContainer').style.display = 'flex';
-
-        if (game.history().length > 0) {
-          errorMessage.textContent = 'Partita terminata.';
-          errorMessage.className = 'success';
-        } else {
-          errorMessage.textContent = 'Partita non trovata.';
-          errorMessage.className = 'error';
-        }
-        errorMessage.style.display = 'block';
-
-        const config = {
-          draggable: false,
-          position: game.fen(),
-          orientation: "black",
-          pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
-        };
-
-        board.destroy();
-        board = Chessboard('myBoard', config);
-      };
-
       ws.onmessage = async (message) => {
         const move = message.data.toString();
         console.log(move);
+
+        if (move === "start") {
+          console.log("Partita iniziata.");
+          document.getElementById('codeInputContainer').style.display = 'none';
+          setupGame(ws, game, board);
+          return;
+        }
 
         if (move.startsWith("position")) {
           game.load(move.replace("position ", ""));
@@ -194,25 +173,54 @@
         }
       };
 
-      var config = {
-        draggable: true,
-        position: 'start',
-        orientation: "black",
-        onDrop: (source, target) => {
-          var move = game.move({
-            from: source,
-            to: target,
-            promotion: 'q'
-          });
-          if (move === null) return 'snapback';
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(source + target);
-          }
-        },
-        pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+      ws.onclose = () => {
+        const errorMessage = document.getElementById('errorMessage');
+        localStorage.removeItem("code");
+
+        document.getElementById('myBoard').style.display = 'none';
+        document.getElementById('codeInputContainer').style.display = 'flex';
+
+        if (game.history().length > 0) {
+          errorMessage.textContent = 'Partita terminata.';
+          errorMessage.className = 'success';
+        } else {
+          errorMessage.textContent = 'Partita non trovata.';
+          errorMessage.className = 'error';
+        }
+        errorMessage.style.display = 'block';
+
+        const config = {
+          draggable: false,
+          position: game.fen(),
+          orientation: "black",
+          pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+        };
+
+        board.destroy();
+        board = Chessboard('myBoard', config);
       };
 
-      board = Chessboard('myBoard', config);
+      function setupGame(ws, game, board) {
+        var config = {
+          draggable: true,
+          position: 'start',
+          orientation: "black",
+          onDrop: (source, target) => {
+            var move = game.move({
+              from: source,
+              to: target,
+              promotion: 'q'
+            });
+            if (move === null) return 'snapback';
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(source + target);
+            }
+          },
+          pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+        };
+
+        board = Chessboard('myBoard', config);
+      }
     }
 
     function connectWithCode() {
