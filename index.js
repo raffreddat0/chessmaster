@@ -278,9 +278,10 @@ wss.on('connection', (ws, req) => {
 
   ws.on('close', () => {
     console.log('Client disconnesso');
-    if (!code)
+    if (!code) {
       game = "";
-    else
+      mode = 0;
+    } else
       sessions = [sessions[0]];
     clearInterval(heartbeatInterval);
     clearTimeout(pongTimeout);
