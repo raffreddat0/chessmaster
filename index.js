@@ -222,7 +222,7 @@ wss.on('connection', (ws, req) => {
     moves = ` ${message}`;
     mode = 1;
     try {
-      const stockfishMove = await withTimeout(getStockfishMove(moves, level), 10000);
+      const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 10000);
       console.log(`Mossa di Stockfish: ${stockfishMove}`);
       chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
       moves = ` ${stockfishMove}`;
