@@ -27,6 +27,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      overflow: hidden;
     }
 
     body {
@@ -35,13 +36,15 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
       background-color: #f0d9b5;
-      overflow-x: hidden;
+      overflow: hidden;
+      margin: 0;
+      height: 100%;
     }
 
     h1 {
       text-align: center;
+      margin-top: 150px;
       margin-bottom: 20px;
     }
 
@@ -50,8 +53,6 @@
       max-width: 500px;
       height: 90vw;
       max-height: 500px;
-      border: 5px solid #b58863;
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
       display: none;
     }
 
@@ -97,9 +98,9 @@
 
     @media (max-width: 600px) {
       #myBoard {
-        width: 100vw;
+        width: 90vw;
         max-width: 100%;
-        height: 100vw;
+        height: 90vw;
         max-height: 100%;
       }
     }
@@ -122,7 +123,10 @@
       var board = null;
       var game = new Chess();
 
-      const wsUrl = `ws://${window.location.host}?code=${code}`;
+      document.getElementById('codeInputContainer').style.display = 'none';
+      document.getElementById('errorMessage').style.display = 'none';
+
+      const wsUrl = `wss://${window.location.host}?code=${code}`;
       const ws = new WebSocket(wsUrl);
 
       document.getElementById('myBoard').style.display = 'block';
@@ -133,6 +137,11 @@
 
       ws.onclose = () => {
         const errorMessage = document.getElementById('errorMessage');
+        localStorage.removeItem("code");
+
+        document.getElementById('myBoard').style.display = 'none';
+        document.getElementById('codeInputContainer').style.display = 'flex';
+
         if (game.history().length > 0) {
           errorMessage.textContent = 'Partita terminata.';
           errorMessage.className = 'success';
@@ -208,9 +217,9 @@
 
     function connectWithCode() {
       const code = document.getElementById('codeInput').value;
-      if (code) {
-        window.location.search = `?code=${encodeURIComponent(code)}`;
-      }
+      localStorage.setItem("code", code);
+
+      main(code);
     }
 
     function setRandomFavicon() {
@@ -226,7 +235,13 @@
 
     setRandomFavicon();
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
+    const param = urlParams.get('code');
+    const code = localStorage.getItem("code");
+
+    if (param) {
+      localStorage.setItem("code", code);
+      window.location.search = "";
+    }
 
     if (code) {
       main(code);
