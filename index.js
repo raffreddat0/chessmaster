@@ -64,15 +64,15 @@ let sessions = [];
 let mode = 0;
 wss.on('connection', (ws, req) => {
   const urlParams = new URLSearchParams(req.url.split('?')[1]);
-  const code = urlParams.get('code');
-  const auth = urlParams.get('auth');
+  let code = urlParams.get('code');
+  let auth = urlParams.get('auth');
 
   if (!code && !auth) {
     ws.close();
     return;
   }
   
-  if (code && game !== code) {
+  if (code && game !== code && code !== "chess") {
     console.log(`codice non valido`);
     ws.close();
     return;
@@ -87,6 +87,11 @@ wss.on('connection', (ws, req) => {
   if (mode === 1) {
     ws.close();
     return;
+  }
+
+  if (code === "chess") {
+    code = null;
+    auth = "chess";
   }
 
   if (code) {
@@ -120,6 +125,17 @@ wss.on('connection', (ws, req) => {
   let level = 20, moves = "";
   let chess = new Chess();
   let wait = code ? true : false;
+
+  if (auth === "chess") {
+    chess = new Chess();
+    wait = false;
+    mode = 0;
+    if (!code)
+      game = generateCode();
+
+    console.log("Partita create con codice", game);
+    ws.send("code " + game);
+  }
 
   if (!code)
   ws.on('message', async (data) => {

@@ -117,12 +117,14 @@
 
   <div id="myBoard"></div>
   <p id="errorMessage"></p>
+  <div id="codeBanner" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: #4caf50; color: white; text-align: center; padding: 10px;"></div>
 
   <script>
     function main(code) {
       var board = null;
       var game = new Chess();
 
+      document.getElementById('codeInputContainer').style.display = 'none';
       document.getElementById('errorMessage').style.display = 'none';
 
       const wsUrl = `wss://${window.location.host}?code=${code}`;
@@ -138,7 +140,16 @@
         const move = message.data.toString();
         console.log(move);
 
-        if (move === "start") {
+        if (move.startsWith("code")) {
+          const gameCode = move.split(" ")[1];
+          const codeBanner = document.getElementById('codeBanner');
+          codeBanner.textContent = `Codice partita: ${gameCode}`;
+          codeBanner.style.display = 'block';
+
+          board.orientation('white');
+        }
+
+        if (move === "start" || move.startsWith("code")) {
           console.log("Partita iniziata.");
           document.getElementById('codeInputContainer').style.display = 'none';
           setupGame(ws, game, board);
@@ -200,27 +211,25 @@
         board = Chessboard('myBoard', config);
       };
 
-      function setupGame(ws, game, board) {
-        var config = {
-          draggable: true,
-          position: 'start',
-          orientation: "black",
-          onDrop: (source, target) => {
-            var move = game.move({
-              from: source,
-              to: target,
-              promotion: 'q'
-            });
-            if (move === null) return 'snapback';
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.send(source + target);
-            }
-          },
-          pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
-        };
+      var config = {
+        draggable: true,
+        position: 'start',
+        orientation: "black",
+        onDrop: (source, target) => {
+          var move = game.move({
+            from: source,
+            to: target,
+            promotion: 'q'
+          });
+          if (move === null) return 'snapback';
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(source + target);
+          }
+        },
+        pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
+      };
 
-        board = Chessboard('myBoard', config);
-      }
+      board = Chessboard('myBoard', config);
     }
 
     function connectWithCode() {
