@@ -160,6 +160,8 @@
           board.position(game.fen());
           return;
         }
+        
+        document.getElementById('codeBanner').style.display = 'none';
 
         if (game.game_over()) {
           console.log("La partita è finita.");
