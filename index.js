@@ -59,6 +59,18 @@ const getStockfishMove = (moves, level) => {
   });
 };
 
+function withTimeout(fun, timeout) {
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error("Timeout!")), timeout)
+  );
+
+  return Promise.race([fun(), timeoutPromise])
+    .catch((err) => {
+      console.error(err.message);
+      return withTimeout(fun, timeout);
+      });
+}
+
 let game = "";
 let sessions = [];
 let mode = 0;
@@ -122,7 +134,7 @@ wss.on('connection', (ws, req) => {
     clearTimeout(pongTimeout); 
   });
 
-  let level = 20, moves = "";
+  let level = 7, moves = "";
   let chess = new Chess();
   let wait = code ? true : false;
 
@@ -210,7 +222,7 @@ wss.on('connection', (ws, req) => {
     moves = ` ${message}`;
     mode = 1;
     try {
-      const stockfishMove = await getStockfishMove(moves, level);
+      const stockfishMove = await withTimeout(getStockfishMove(moves, level), 10000);
       console.log(`Mossa di Stockfish: ${stockfishMove}`);
       chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
       moves = ` ${stockfishMove}`;
