@@ -213,6 +213,18 @@
       }
     }
 
+    function setRandomFavicon() {
+      const pieces = ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP'];
+      const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+      const faviconUrl = `https://chessboardjs.com/img/chesspieces/wikipedia/${randomPiece}.png`;
+
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = faviconUrl;
+      document.head.appendChild(link);
+    }
+
+    setRandomFavicon();
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
 
