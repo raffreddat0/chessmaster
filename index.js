@@ -219,13 +219,13 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    moves = ` ${message}`;
+    moves += ` ${message}`;
     mode = 1;
     try {
-      const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 10000);
+      const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 5000);
       console.log(`Mossa di Stockfish: ${stockfishMove}`);
       chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
-      moves = ` ${stockfishMove}`;
+      moves += ` ${stockfishMove}`;
       ws.send(stockfishMove);
     } catch (error) {
       console.error('Errore nel calcolare la mossa di Stockfish:', error);
