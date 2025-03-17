@@ -183,6 +183,12 @@
         } else {
           console.log('Mossa non valida:', move);
         }
+        
+        if (game.game_over()) {
+          console.log("La partita è finita.");
+          ws.close();
+          return;
+        }
       };
 
       ws.onclose = () => {
