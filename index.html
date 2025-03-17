@@ -200,22 +200,19 @@
           errorMessage.className = 'error';
         }
         errorMessage.style.display = 'block';
-
-        const config = {
-          draggable: false,
-          position: game.fen(),
-          orientation: "black",
-          pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"
-        };
-
-        board.destroy();
-        board = Chessboard('myBoard', config);
       };
 
       var config = {
         draggable: true,
         position: 'start',
         orientation: "black",
+        onDragStart (source, piece, position, orientation) => {
+         if (game.game_over()) return false
+         if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
+         (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
+           return false
+          }
+        },
         onDrop: (source, target) => {
           var move = game.move({
             from: source,
