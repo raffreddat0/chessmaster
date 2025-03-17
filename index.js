@@ -15,7 +15,6 @@ app.get('/', (req, res) => {
 });
 
 app.use((req, res) => {
-  console.warn(`404 - Pagina non trovata: ${req.originalUrl}`);
   res.redirect('/');
 });
 
