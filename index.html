@@ -123,6 +123,7 @@
     function main(code) {
       var board = null;
       var game = new Chess();
+      var state = 0;
 
       document.getElementById('errorMessage').style.display = 'none';
 
@@ -151,7 +152,6 @@
           console.log("Partita iniziata.");
           document.getElementById('codeInputContainer').style.display = 'none';
           document.getElementById('myBoard').style.display = 'block';
-          setupGame(ws, game, board);
           return;
         }
 
@@ -160,14 +160,21 @@
           board.position(game.fen());
           return;
         }
-        
-        document.getElementById('codeBanner').style.display = 'none';
 
-        if (game.game_over()) {
+        if (move === "win" || move === "lose" || move === "draw") {
           console.log("La partita è finita.");
+          if (move === "win")
+            state = 1;
+          if (move === "lose")
+            state = 2;
+          if (move === "draw")
+            state = 3
+
           ws.close();
           return;
         }
+        
+        document.getElementById('codeBanner').style.display = 'none';
 
         const from = move.slice(0, 2);
         const to = move.slice(2, 4);
@@ -184,23 +191,34 @@
           console.log('Mossa non valida:', move);
         }
         
-        if (game.game_over()) {
-          console.log("La partita è finita.");
-          ws.close();
-          return;
-        }
       };
 
       ws.onclose = () => {
         const errorMessage = document.getElementById('errorMessage');
         localStorage.removeItem("code");
 
-        document.getElementById('myBoard').style.display = 'none';
-        document.getElementById('codeInputContainer').style.display = 'flex';
+        if (!game.game_over()) {
+          document.getElementById('myBoard').style.display = 'none';
+          document.getElementById('codeInputContainer').style.display = 'flex';
+        }
 
         if (game.history().length > 0) {
-          errorMessage.textContent = 'Partita terminata.';
-          errorMessage.className = 'success';
+          if (state === 0) {
+            errorMessage.textContent = 'Partita terminata.';
+            errorMessage.className = 'success';
+          }
+          if (state === 1) {
+            errorMessage.textContent = 'Hai vinto!';
+            errorMessage.className = 'success';
+          }
+          if (state === 2) {
+            errorMessage.textContent = 'Hai perso!';
+            errorMessage.className = 'error';
+          }
+          if (state === 3) {
+            errorMessage.textContent = 'Patta!';
+            errorMessage.className = 'error';
+          }
         } else {
           errorMessage.textContent = 'Partita non trovata.';
           errorMessage.className = 'error';
@@ -228,6 +246,10 @@
           if (move === null) return 'snapback';
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);
+          }
+
+          if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8"))) {
+            setTimeout(() => board.position(game.fen()), 200);
           }
         },
         pieceTheme: "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png"

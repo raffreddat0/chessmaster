@@ -41,9 +41,10 @@ const getStockfishMove = (moves, level) => {
 
     stockfishProcess.stdout.on('data', (data) => {
       const output = data.toString();
-      //console.log(output, output.startsWith('bestmove'));
-      if (output.startsWith('bestmove')) {
-        resolve(output.split(' ')[1]);
+      if (output.includes('bestmove')) {
+        const args = output.split(' ');
+        const index = args.indexOf(args.find(arg => arg.includes('bestmove'))) + 1;
+        resolve(args[index]);
       }
     });
 
@@ -79,24 +80,19 @@ wss.on('connection', (ws, req) => {
   let code = urlParams.get('code');
   let auth = urlParams.get('auth');
 
-  if (!code && !auth) {
+  if ((!code && !auth) || mode === 1 || sessions.length === 2) {
     ws.close();
     return;
   }
   
   if (code && game !== code && code !== "chess") {
-    console.log(`codice non valido`);
+    console.log("codice non valido");
     ws.close();
     return;
   }
 
   if (auth && process.env.auth !== auth) {
-    console.log(`auth non valido`);
-    ws.close();
-    return;
-  }
-
-  if (mode === 1) {
+    console.log("auth non valido");
     ws.close();
     return;
   }
@@ -134,7 +130,7 @@ wss.on('connection', (ws, req) => {
     clearTimeout(pongTimeout); 
   });
 
-  let level = 7, moves = "";
+  let level = 20, moves = "";
   let chess = new Chess();
   let wait = code ? true : false;
 
@@ -201,6 +197,8 @@ wss.on('connection', (ws, req) => {
 
       wait = false;
       ws.send(message);
+      if (chess.isGameOver())
+        ws.send(chess.isDraw() ? "draw" : "lose");
       return;
     }
 
@@ -213,6 +211,9 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
+    if (chess.isGameOver())
+      ws.send(chess.isDraw() ? "draw" : "win");
+
     if (sessions.length === 2) {
       sessions[1].emit('message', message);
       wait = true;
@@ -221,16 +222,23 @@ wss.on('connection', (ws, req) => {
 
     moves += ` ${message}`;
     mode = 1;
-    try {
-      const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 5000);
-      console.log(`Mossa di Stockfish: ${stockfishMove}`);
-      chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
-      moves += ` ${stockfishMove}`;
-      ws.send(stockfishMove);
-    } catch (error) {
-      console.error('Errore nel calcolare la mossa di Stockfish:', error);
-      ws.send('error');
+
+    async function stockfish() {
+      try {
+        //const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 2000);
+        const stockfishMove = await getStockfishMove(moves, level);
+        console.log(`Mossa di Stockfish: ${stockfishMove}`);
+        chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
+        moves += ` ${stockfishMove}`;
+        ws.send(stockfishMove);
+      } catch {
+        return await stockfish();
+      }
     }
+
+    await stockfish();
+    if (chess.isGameOver())
+      ws.send(chess.isDraw() ? "draw" : "lose");
   });
   else {
   ws.on('message', async (data) => {
@@ -254,6 +262,9 @@ wss.on('connection', (ws, req) => {
 
       wait = false;
       ws.send(message);
+
+      if (chess.isGameOver())
+        ws.send(chess.isDraw() ? "draw" : "lose");
       return;
     }
 
@@ -264,6 +275,10 @@ wss.on('connection', (ws, req) => {
       console.log(error.description);
       ws.send('error');
       return;
+    }
+
+    if (chess.isGameOver()) {
+      ws.send(chess.isDraw() ? "draw" : "win");
     }
 
     if (sessions.length === 2) {
@@ -281,6 +296,8 @@ wss.on('connection', (ws, req) => {
     if (!code) {
       game = "";
       mode = 0;
+      sessions[1].close();
+      sessions = [];
     } else
       sessions = [sessions[0]];
     clearInterval(heartbeatInterval);
