@@ -206,7 +206,7 @@
         draggable: true,
         position: 'start',
         orientation: "black",
-        onDragStart (source, piece, position, orientation) => {
+        onDragStart: (source, piece, position, orientation) => {
          if (game.game_over()) return false
          if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
          (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
