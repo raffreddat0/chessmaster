@@ -14,6 +14,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './index.html'));
 });
 
+app.use((req, res) => {
+  console.warn(`404 - Pagina non trovata: ${req.originalUrl}`);
+  res.redirect('/');
+});
+
 const server = http.createServer(app);
 const wss = new Server({ server });
 
@@ -27,7 +32,7 @@ function generateCode() {
   return code;
 }
 
-const getStockfishMove = (moves, level) => {
+const getStockfishMove = (fen, level) => {
   return new Promise((resolve, reject) => {
     const stockfishProcess = exec('stockfish');
     const depth = level > 5 ? level : 5;
@@ -36,11 +41,12 @@ const getStockfishMove = (moves, level) => {
     stockfishProcess.stdin.write('setoption name Threads value 4\n');
     stockfishProcess.stdin.write('setoption name Hash value 1024\n');
     stockfishProcess.stdin.write(`setoption name Skill Level value ${level}\n`);
-    stockfishProcess.stdin.write('position startpos moves ' + moves + '\n');
+    stockfishProcess.stdin.write(`position fen ${fen}\n`);
     stockfishProcess.stdin.write(`go depth ${depth}\n`);
 
     stockfishProcess.stdout.on('data', (data) => {
       const output = data.toString();
+      console.log(output);
       if (output.includes('bestmove')) {
         const args = output.split(' ');
         const index = args.indexOf(args.find(arg => arg.includes('bestmove'))) + 1;
@@ -130,7 +136,7 @@ wss.on('connection', (ws, req) => {
     clearTimeout(pongTimeout); 
   });
 
-  let level = 20, moves = "";
+  let level = 5;
   let chess = new Chess();
   let wait = code ? true : false;
 
@@ -220,7 +226,6 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    moves += ` ${message}`;
     if (mode === 0) {
       ws.send("stockfish");
       mode = 1;
@@ -229,13 +234,11 @@ wss.on('connection', (ws, req) => {
     async function stockfish() {
       try {
         //const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 2000);
-        const stockfishMove = await getStockfishMove(moves, level);
+        const stockfishMove = await getStockfishMove(chess.fen(), level);
         console.log(`Mossa di Stockfish: ${stockfishMove}`);
         chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
-        moves += ` ${stockfishMove}`;
         ws.send(stockfishMove);
       } catch {
-        moves += ` ${message}`
         return await stockfish();
       }
     }
@@ -300,7 +303,8 @@ wss.on('connection', (ws, req) => {
     if (!code) {
       game = "";
       mode = 0;
-      sessions[1].close();
+      if (sessions[1])
+        sessions[1].close();
       sessions = [];
     } else
       sessions = [sessions[0]];
