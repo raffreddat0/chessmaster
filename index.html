@@ -124,6 +124,7 @@
       var board = null;
       var game = new Chess();
       var state = 0;
+      var level = 0;
 
       document.getElementById('errorMessage').style.display = 'none';
 
@@ -148,6 +149,11 @@
           board.orientation('white');
         }
 
+        if (move === "stockfish") {
+          level = Number(localStorage.getItem("level") || "1");
+          ws.send("level " + level);
+        }
+
         if (move === "start" || move.startsWith("code")) {
           console.log("Partita iniziata.");
           document.getElementById('codeInputContainer').style.display = 'none';
@@ -163,8 +169,11 @@
 
         if (move === "win" || move === "lose" || move === "draw") {
           console.log("La partita è finita.");
-          if (move === "win")
+          if (move === "win") {
+            if (level > 0)
+              localStorage.setItem("level", level + 1);
             state = 1;
+          }
           if (move === "lose")
             state = 2;
           if (move === "draw")

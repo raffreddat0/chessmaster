@@ -221,7 +221,10 @@ wss.on('connection', (ws, req) => {
     }
 
     moves += ` ${message}`;
-    mode = 1;
+    if (mode === 0) {
+      ws.send("stockfish");
+      mode = 1;
+    }
 
     async function stockfish() {
       try {
@@ -232,6 +235,7 @@ wss.on('connection', (ws, req) => {
         moves += ` ${stockfishMove}`;
         ws.send(stockfishMove);
       } catch {
+        moves += ` ${message}`
         return await stockfish();
       }
     }
