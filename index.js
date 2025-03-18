@@ -4,6 +4,7 @@ const https = require('https');
 const http = require('http');
 const { Server } = require('ws');
 const { exec } = require('child_process');
+const { writeFileSync } = require('fs');
 const Chess = require('chess.js').Chess;
 require('dotenv').config();
 
@@ -12,6 +13,16 @@ const port = 1707;
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './index.html'));
+});
+
+app.get('/history', (req, res) => {
+  const history = require('./history.json');
+  res.json(history);
+});
+
+app.get('/history/:code', (req, res) => {
+  const history = require('./history.json');
+  res.json(history.find(game => game.code === req.params.code) || {});
 });
 
 app.use((req, res) => {
@@ -65,16 +76,14 @@ const getStockfishMove = (fen, level) => {
   });
 };
 
-function withTimeout(fun, timeout) {
-  const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error("Timeout!")), timeout)
-  );
+function updateHistory(code, fen) {
+  const history = require('./history.json');
+  history.push({
+    code: code,
+    fen: fen
+  });
 
-  return Promise.race([fun(), timeoutPromise])
-    .catch((err) => {
-      console.error(err.message);
-      return withTimeout(fun, timeout);
-      });
+  writeFileSync('./history.json', JSON.stringify(history, null, 2));
 }
 
 let game = "";
@@ -188,6 +197,8 @@ wss.on('connection', (ws, req) => {
       wait = false;
       sessions[1].close();
       sessions = [sessions[0]];
+
+      updateHistory(game, chess.fen());
       return;
     }
 
@@ -202,8 +213,10 @@ wss.on('connection', (ws, req) => {
 
       wait = false;
       ws.send(message);
-      if (chess.isGameOver())
+      if (chess.isGameOver()) {
+        updateHistory(game, chess.fen());
         ws.send(chess.isDraw() ? "draw" : "lose");
+      }
       return;
     }
 
@@ -216,8 +229,10 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    if (chess.isGameOver())
+    if (chess.isGameOver()) {
+      updateHistory(game, chess.fen());
       ws.send(chess.isDraw() ? "draw" : "win");
+    }
 
     if (sessions.length === 2) {
       sessions[1].emit('message', message);
@@ -232,7 +247,6 @@ wss.on('connection', (ws, req) => {
 
     async function stockfish() {
       try {
-        //const stockfishMove = await withTimeout(getStockfishMove.bind(null, moves, level), 2000);
         const stockfishMove = await getStockfishMove(chess.fen(), level);
         console.log(`Mossa di Stockfish: ${stockfishMove}`);
         chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: 'q' });
@@ -243,8 +257,10 @@ wss.on('connection', (ws, req) => {
     }
 
     await stockfish();
-    if (chess.isGameOver())
+    if (chess.isGameOver()) {
+      updateHistory(game, chess.fen());
       ws.send(chess.isDraw() ? "draw" : "lose");
+    }
   });
   else {
   ws.on('message', async (data) => {
