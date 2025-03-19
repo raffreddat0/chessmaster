@@ -49,6 +49,10 @@
     }
 
     #myBoard {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       width: 90vw;
       max-width: 500px;
       height: 90vw;
@@ -96,6 +100,32 @@
       background-color: #45a049;
     }
 
+    #promotionMenu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 1px solid #000;
+      padding: 10px;
+      z-index: 1000;
+      display: none;
+      border-radius: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
+
+    #promotionMenu button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+    }
+
+    #promotionMenu img {
+      width: 50px;
+      height: 50px;
+    }
+
     @media (max-width: 600px) {
       #myBoard {
         width: 90vw;
@@ -116,6 +146,7 @@
   </div>
 
   <div id="myBoard"></div>
+  <div id="promotionMenu"></div>
   <p id="errorMessage"></p>
   <div id="codeBanner" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: #4caf50; color: white; text-align: center; padding: 10px;"></div>
 
@@ -152,6 +183,7 @@
         if (move === "stockfish") {
           level = Number(localStorage.getItem("level") || "1");
           ws.send("level " + level);
+          return;
         }
 
         if (move === "start" || move.startsWith("code")) {
@@ -187,11 +219,12 @@
 
         const from = move.slice(0, 2);
         const to = move.slice(2, 4);
+        const promotion = move.slice(4, 5);
 
         const moveResult = game.move({
           from: from,
           to: to,
-          promotion: 'q'
+          promotion: promotion
         });
 
         if (moveResult !== null) {
@@ -235,6 +268,39 @@
         errorMessage.style.display = 'block';
       };
 
+      function showPromotionMenu(source, target) {
+        const promotionMenu = document.getElementById('promotionMenu');
+        promotionMenu.style.display = 'grid'; // Show the menu
+
+        const pieces = ['q', 'r', 'b', 'n'];
+        const color = game.get(target).color;
+
+        promotionMenu.innerHTML = ''; // Clear previous buttons
+
+        pieces.forEach(piece => {
+          const button = document.createElement('button');
+          const img = document.createElement('img');
+          img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${color}${piece.toUpperCase()}.png`;
+          img.alt = piece.toUpperCase();
+
+          button.appendChild(img);
+          button.onclick = () => {
+            promotionMenu.style.display = 'none';
+            game.undo();
+            const move = game.move({
+              from: source,
+              to: target,
+              promotion: piece
+            });
+            if (move !== null) {
+              board.position(game.fen());
+              ws.send(source + target + piece);
+            }
+          };
+          promotionMenu.appendChild(button);
+        });
+      }
+
       var config = {
         draggable: true,
         position: 'start',
@@ -246,17 +312,25 @@
            return false
           }
         },
-        onDrop: (source, target) => {
-          var move = game.move({
+        onDrop: (source, target) => {    
+          const piece = game.get(source).type;
+          const move = game.move({
             from: source,
             to: target,
             promotion: 'q'
           });
+      
           if (move === null) return 'snapback';
+          
+          if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
+            showPromotionMenu(source, target);
+            return;
+          }
+      
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);
           }
-
+      
           if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8"))) {
             setTimeout(() => board.position(game.fen()), 200);
           }
@@ -268,7 +342,7 @@
     }
 
     function connectWithCode() {
-      const code = document.getElementById('codeInput').value;
+      const code = document.getElementById('codeInput').value || "online";
       localStorage.setItem("code", code);
 
       main(code);
