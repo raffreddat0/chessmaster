@@ -215,7 +215,10 @@
           return;
         }
         
-        document.getElementById('codeBanner').style.display = 'none';
+        if (level > 0)
+          document.getElementById('codeBanner').textContent = `Stockfish level: ${level}`;
+        else
+          document.getElementById('codeBanner').style.display = 'none';
 
         const from = move.slice(0, 2);
         const to = move.slice(2, 4);
