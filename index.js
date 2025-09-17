@@ -30,37 +30,27 @@ function generateCode() {
   return code;
 }
 
-const getStockfishMove = (fen, level) => {
-  return new Promise((resolve, reject) => {
-    const stockfishProcess = exec('stockfish');
-    const depth = level > 5 ? level : 5;
-
-    stockfishProcess.stdin.write('uci\n');
-    stockfishProcess.stdin.write('setoption name Threads value 4\n');
-    stockfishProcess.stdin.write('setoption name Hash value 1024\n');
-    stockfishProcess.stdin.write(`setoption name Skill Level value ${level}\n`);
-    stockfishProcess.stdin.write(`position fen ${fen}\n`);
-    stockfishProcess.stdin.write(`go depth ${depth}\n`);
-
-    stockfishProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      if (output.includes('bestmove')) {
-        const args = output.split(' ');
-        const index = args.indexOf(args.find(arg => arg.includes('bestmove'))) + 1;
-        resolve(args[index]);
-      }
-    });
-
-    stockfishProcess.on('error', (error) => {
-      reject(error);
-    });
-
-    stockfishProcess.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Stockfish process ended with code ${code}`));
-      }
-    });
+const getStockfishMove = async (fen, level) => {
+  const url = 'https://stockfish.online/api/s/v2.php';
+  const params = new URLSearchParams({
+    fen: fen,
+    depth: level > 3 ? level : 3
   });
+
+  try {
+    const response = await fetch(`${url}?${params}`);
+    const data = await response.json();
+
+    if (data.success) {
+      const continuation = data.continuation.split(" ");
+      return continuation[0];
+    } else {
+      throw new Error('Errore nell\'analisi della posizione');
+    }
+  } catch (error) {
+    console.error('Errore:', error);
+    return null;
+  }
 };
 
 let games = [];
@@ -74,7 +64,7 @@ wss.on('connection', (ws, req) => {
     ws.close();
     return;
   }
-  
+
   if (code && !games.includes(code) && code !== "online" && sessions[code].length === 1) {
     console.log("codice non valido");
     ws.close();
@@ -115,10 +105,10 @@ wss.on('connection', (ws, req) => {
   const heartbeatInterval = setInterval(heartbeat, 30000);
 
   ws.on('pong', (data) => {
-    clearTimeout(pongTimeout); 
+    clearTimeout(pongTimeout);
   });
 
-  let level = 5;
+  let level = 3;
   let chess = new Chess();
   let wait = code ? true : false;
   let game = code;
@@ -138,7 +128,9 @@ wss.on('connection', (ws, req) => {
   ws.on('message', async (data) => {
     const message = data.toString();
     if (message.startsWith("level")) {
-      level = parseInt(message.split(" ")[1]);
+      level = parseInt(message.split(" ")[1]) || 3;
+      if (level > 15)
+        level = 15;
       console.log(`Livello impostato a ${level}`);
       return;
     }
