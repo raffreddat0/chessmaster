@@ -154,7 +154,7 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    if (message === "end") {
+    if (message === "exit") {
       console.log("Partita terminata");
       wait = false;
       sessions[game][1].close();

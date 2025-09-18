@@ -54,9 +54,9 @@
       left: 50%;
       transform: translate(-50%, -50%);
       width: 90vw;
-      max-width: 500px;
+      max-width: 700px;
       height: 90vw;
-      max-height: 500px;
+      max-height: 700px;
       display: none;
     }
 
@@ -78,6 +78,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      margin-top: 50px;
       gap: 10px;
     }
 
@@ -139,7 +140,7 @@
 <body>
 
   <h1>Chess Master</h1>
-  
+
   <div id="codeInputContainer">
     <input type="text" id="codeInput" placeholder="Inserisci il codice">
     <button onclick="connectWithCode()">Entra</button>
@@ -175,7 +176,7 @@
           const codeBanner = document.getElementById('codeBanner');
           codeBanner.textContent = `Codice partita: ${gameCode}`;
           codeBanner.style.display = 'block';
-          
+
           localStorage.removeItem("code");
           board.orientation('white');
         }
@@ -214,7 +215,7 @@
           ws.close();
           return;
         }
-        
+
         if (level > 0)
           document.getElementById('codeBanner').textContent = `Stockfish level: ${level}`;
         else
@@ -235,11 +236,12 @@
         } else {
           console.log('Mossa non valida:', move);
         }
-        
+
       };
 
       ws.onclose = () => {
         const errorMessage = document.getElementById('errorMessage');
+        const codeBanner = document.getElementById('codeBanner');
         localStorage.removeItem("code");
 
         if (!game.game_over()) {
@@ -248,37 +250,45 @@
         }
 
         if (game.history().length > 0) {
-          if (state === 0) {
-            errorMessage.textContent = 'Partita terminata.';
-            errorMessage.className = 'success';
-          }
-          if (state === 1) {
-            errorMessage.textContent = 'Hai vinto!';
-            errorMessage.className = 'success';
-          }
-          if (state === 2) {
-            errorMessage.textContent = 'Hai perso!';
-            errorMessage.className = 'error';
-          }
-          if (state === 3) {
-            errorMessage.textContent = 'Patta!';
-            errorMessage.className = 'error';
-          }
+            if (state === 0) {
+                errorMessage.textContent = 'Partita terminata.';
+                errorMessage.className = 'success';
+                errorMessage.style.display = 'block';
+                codeBanner.style.display = 'none';
+            }
+            if (state === 1) {
+                codeBanner.textContent = 'Hai vinto!';
+                codeBanner.style.backgroundColor = '#4caf50';
+                codeBanner.style.display = 'block';
+                if (level > 0)
+                    localStorage.setItem("level", level + 1);
+            }
+            if (state === 2) {
+                codeBanner.textContent = 'Hai perso!';
+                codeBanner.style.backgroundColor = '#f44336';
+                codeBanner.style.display = 'block';
+            }
+            if (state === 3) {
+                codeBanner.textContent = 'Patta!';
+                codeBanner.style.backgroundColor = '#ff9800';
+                codeBanner.style.display = 'block';
+            }
         } else {
-          errorMessage.textContent = 'Partita non trovata.';
-          errorMessage.className = 'error';
+            errorMessage.textContent = 'Partita non trovata.';
+            errorMessage.className = 'error';
+            errorMessage.style.display = 'block';
+            codeBanner.style.display = 'none';
         }
-        errorMessage.style.display = 'block';
       };
 
       function showPromotionMenu(source, target) {
         const promotionMenu = document.getElementById('promotionMenu');
-        promotionMenu.style.display = 'grid'; // Show the menu
+        promotionMenu.style.display = 'grid';
 
         const pieces = ['q', 'r', 'b', 'n'];
         const color = game.get(target).color;
 
-        promotionMenu.innerHTML = ''; // Clear previous buttons
+        promotionMenu.innerHTML = '';
 
         pieces.forEach(piece => {
           const button = document.createElement('button');
@@ -315,25 +325,25 @@
            return false
           }
         },
-        onDrop: (source, target) => {    
+        onDrop: (source, target) => {
           const piece = game.get(source).type;
           const move = game.move({
             from: source,
             to: target,
             promotion: 'q'
           });
-      
+
           if (move === null) return 'snapback';
-          
+
           if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
             showPromotionMenu(source, target);
             return;
           }
-      
+
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);
           }
-      
+
           if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8"))) {
             setTimeout(() => board.position(game.fen()), 200);
           }
