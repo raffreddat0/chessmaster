@@ -34,7 +34,7 @@ const getStockfishMove = async (fen, level) => {
   const url = 'https://stockfish.online/api/s/v2.php';
   const params = new URLSearchParams({
     fen: fen,
-    depth: level > 3 ? level : 3
+    depth: level
   });
 
   try {
@@ -108,7 +108,7 @@ wss.on('connection', (ws, req) => {
     clearTimeout(pongTimeout);
   });
 
-  let level = 3;
+  let level = 1;
   let chess = new Chess();
   let wait = code ? true : false;
   let game = code;
