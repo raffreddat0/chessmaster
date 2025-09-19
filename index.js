@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const { Server } = require('ws');
-const { exec } = require('child_process');
 const Chess = require('chess.js').Chess;
 require('dotenv').config();
 
