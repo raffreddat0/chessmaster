@@ -20,7 +20,7 @@ const server = http.createServer(app);
 const wss = new Server({ server });
 
 function generateCode() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
   for (let i = 0; i < 6; i++) {
     const randomIndex = Math.floor(Math.random() * characters.length);
@@ -64,7 +64,7 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
-  if (code && !games.includes(code) && code !== "online" && sessions[code].length === 1) {
+  if (code && !games.includes(code) && code !== "ONLINE" && sessions[code].length === 1) {
     console.log("codice non valido");
     ws.close();
     return;
@@ -76,7 +76,7 @@ wss.on('connection', (ws, req) => {
     return;
   }
 
-  if (code === "online") {
+  if (code === "ONLINE") {
     code = null;
     auth = "online";
   }
@@ -134,7 +134,7 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    if (sessions[game].length === 2 && message === "position"){
+    if (sessions[game]?.length === 2 && message === "position"){
       sessions[game][1].emit("message", "position " + chess.fen());
       return;
     }
@@ -156,7 +156,8 @@ wss.on('connection', (ws, req) => {
     if (message === "exit") {
       console.log("Partita terminata");
       wait = false;
-      sessions[game][1].close();
+      if (sessions[game]?.length === 2)
+        sessions[game][1].close();
       sessions[game] = [ws];
       games = games.filter(code => code !== game);
       game = "";
@@ -274,7 +275,7 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     console.log('Client disconnesso');
     if (!code) {
-      if (sessions[game].length === 2)
+      if (sessions[game]?.length === 2)
         sessions[game][1].close();
       sessions[game] = [];
       games = games.filter(code => code!== game);

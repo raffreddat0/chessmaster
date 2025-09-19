@@ -356,7 +356,8 @@
     }
 
     function connectWithCode() {
-      const code = document.getElementById('codeInput').value || "online";
+      let code = document.getElementById('codeInput').value || "online";
+      code = code.toUpperCase();
       localStorage.setItem("code", code);
 
       main(code);
