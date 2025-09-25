@@ -83,6 +83,7 @@ wss.on('connection', (ws, req) => {
 
   if (code) {
     sessions[code].push(ws);
+    sessions[code][0].send("joined");
     ws.send("start");
   }
 
@@ -158,9 +159,9 @@ wss.on('connection', (ws, req) => {
       wait = false;
       if (sessions[game]?.length === 2)
         sessions[game][1].close();
-      sessions[game] = [ws];
+      sessions[game] = [];
       games = games.filter(code => code !== game);
-      game = "";
+      game = null;
       return;
     }
 
@@ -279,6 +280,7 @@ wss.on('connection', (ws, req) => {
         sessions[game][1].close();
       sessions[game] = [];
       games = games.filter(code => code!== game);
+      game = null;
     } else
       sessions[game] = [sessions[game][0]];
     clearInterval(heartbeatInterval);
