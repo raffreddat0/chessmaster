@@ -36,7 +36,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #f0d9b5;
+      background-color: #302e2b;
+      color: #fff;
       overflow: hidden;
       margin: 0;
       height: 100%;
@@ -44,28 +45,33 @@
 
     h1 {
       text-align: center;
-      margin-top: 100px;
+      margin-top: 70px;
       margin-bottom: 20px;
       font-size: xxx-large;
     }
 
-    #myBoard {
+    #board {
       position: absolute;
+      border-radius: 10px;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 30vw;
+      width: 40vw;
       max-width: 100%;
-      height: 30vw;
+      height: 40vw;
       max-height: 100%;
       display: none;
     }
 
-    [class^="white-"], [class*=" white-"] {
+    [class*="board-"] {
+      border: none !important;
+    }
+
+    [class*="white-"] {
       background-color: #eeeed2 !important;
     }
 
-    [class^="black-"], [class*=" black-"] {
+    [class*="black-"] {
       background-color: #769656 !important;
     }
 
@@ -96,6 +102,7 @@
       font-size: 16px;
       width: 80%;
       max-width: 300px;
+      border-radius: 5px;
     }
 
     button {
@@ -148,12 +155,38 @@
       pointer-events: none;
     }
 
-    [class^="highlight1-"], [class*=" highlight1-"], [class^="highlight2-"], [class*=" highlight2-"] {
-      box-shadow: inset 0 0 4px 4px rgba(100, 100, 100, 0.5);
+    [class*="white-"][class*="highlight1-"] {
+      box-shadow: none !important;
+      background-color: #f5f682 !important;
+      border: 5px solid #fcfcd3;
+    }
+
+    [class*="black-"][class*="highlight1-"] {
+      box-shadow: none !important;
+      background-color: #b9ca43 !important;
+      border: 5px solid #d0dbc4;
+    }
+
+    [class*="white-"][class*="highlight2-"] {
+      box-shadow: none !important;
+      border: 5px solid #fcfcd3;
+    }
+
+    [class*="black-"][class*="highlight2-"] {
+      box-shadow: none !important;
+      border: 5px solid #d0dbc4;
+    }
+
+    [class*="white-"].highlight {
+      background-color: #f5f682 !important;
+    }
+
+    [class*="black-"].highlight {
+      background-color: #b9ca43 !important;
     }
 
     @media (max-width: 600px) {
-      #myBoard {
+      #board {
         width: 90vw;
         max-width: 100%;
         height: 90vw;
@@ -171,7 +204,7 @@
     <button onclick="connectWithCode()">Entra</button>
   </div>
 
-  <div id="myBoard"></div>
+  <div id="board"></div>
   <div id="promotionMenu"></div>
   <p id="errorMessage"></p>
   <div id="codeBanner" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: #4caf50; color: white; text-align: center; padding: 10px;"></div>
@@ -215,7 +248,7 @@
         if (move === "start" || move.startsWith("code")) {
           console.log("Partita iniziata.");
           document.getElementById('codeInputContainer').style.display = 'none';
-          document.getElementById('myBoard').style.display = 'block';
+          document.getElementById('board').style.display = 'block';
           return;
         }
 
@@ -258,6 +291,9 @@
 
         if (moveResult !== null) {
           board.position(game.fen());
+          removeHighlights();
+          $board.find('.square-' + from).addClass('highlight');
+          $board.find('.square-' + to).addClass('highlight');
           await new Promise(r => setTimeout(r, 150));
           draggable = true;
         } else {
@@ -272,7 +308,7 @@
         localStorage.removeItem("code");
 
         if (!game.game_over()) {
-          document.getElementById('myBoard').style.display = 'none';
+          document.getElementById('board').style.display = 'none';
           document.getElementById('codeInputContainer').style.display = 'flex';
         }
 
@@ -341,24 +377,10 @@
         });
       }
 
+      let selected = null;
       let draggable = true;
-      var config = {
-        draggable,
-        position: 'start',
-        orientation: "black",
-        onDragStart: (source, piece, position, orientation) => {
-          board.draggable = draggable;
-         if (game.game_over() || !draggable) return false
-         if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
-         (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
-           return false
-          }
-
-          highlightPossibleMoves(source);
-        },
-        onDrop: (source, target) => {
-          removeHighlights();
-
+      var $board = $('#board')
+      function onDrop(source, target) {
           const piece = game.get(source).type;
           const move = game.move({
             from: source,
@@ -366,7 +388,23 @@
             promotion: 'q'
           });
 
+          if (target !== source && selected !== source)
+            removeMoves();
+
+          if (source == target)
+            if (selected !== source) {
+              $board.find('.square-' + selected).removeClass('highlight');
+              $board.find('.square-' + source).addClass('highlight');
+              selected = source;
+            } else {
+              $board.find('.square-' + source).removeClass('highlight');
+              removeMoves();
+              selected = null;
+            }
+
           if (move === null) return 'snapback';
+          selected = null;
+          removeMoves();
 
           if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
             showPromotionMenu(source, target);
@@ -381,25 +419,41 @@
             setTimeout(() => board.position(game.fen()), 200);
           }
 
+          removeHighlights();
+          $board.find('.square-' + source).addClass('highlight');
+          $board.find('.square-' + target).addClass('highlight');
           draggable = false;
+      }
+
+      var config = {
+        draggable,
+        position: 'start',
+        orientation: "black",
+        onDragStart: (source, piece, position, orientation) => {
+          board.draggable = draggable;
+         if (game.game_over() || !draggable) return false
+         if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
+         (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
+           return false
+          }
+
+          highlightPossibleMoves(source);
         },
+        onDrop,
         pieceTheme: (piece) => {
           const formatted = piece.toLowerCase()
           return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${formatted}.png`
         }
       };
 
-      function highlightSelectedSquare(square) {
-        const squareElement = document.querySelector(`.square-${square}`);
-        if (squareElement) {
-          const highlight = document.createElement('div');
-          highlight.className = 'selected-square';
-          squareElement.appendChild(highlight);
-        }
+      function removeHighlights() {
+        $board.find('.square-55d63')
+        .removeClass('highlight')
       }
 
+
       function highlightPossibleMoves(square) {
-        removeHighlights();
+        removeMoves();
 
         const moves = game.moves({
           square: square,
@@ -407,11 +461,11 @@
         });
 
         moves.forEach(move => {
-          addHighlight(move.to);
+          addMoves(move.to);
         });
       }
 
-      function addHighlight(square) {
+      function addMoves(square) {
         const squareElement = document.querySelector(`.square-${square}`);
         if (squareElement) {
           const highlight = document.createElement('div');
@@ -420,15 +474,25 @@
         }
       }
 
-      function removeHighlights() {
+      function removeMoves() {
         const highlights = document.querySelectorAll('.highlight-square');
         highlights.forEach(highlight => {
           highlight.parentNode.removeChild(highlight);
         });
       }
 
-      board = Chessboard('myBoard', config);
+      board = Chessboard('board', config);
       $(window).resize(board.resize);
+
+      setTimeout(() => {
+        document.querySelectorAll('#board .square-55d63').forEach(square => {
+          square.addEventListener('click', (e) => {
+            const target = e.currentTarget.getAttribute('data-square')
+            onDrop(selected, target);
+            board.position(game.fen());
+          })
+        })
+      }, 200);
     }
 
     function connectWithCode() {
