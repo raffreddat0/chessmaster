@@ -185,6 +185,15 @@
       background-color: #b9ca43 !important;
     }
 
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
     @media (max-width: 600px) {
       #board {
         width: 90vw;
@@ -428,6 +437,7 @@
 
       var config = {
         draggable,
+        showNotation: false,
         position: 'start',
         orientation: "black",
         onDragStart: (source, piece, position, orientation) => {
