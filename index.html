@@ -197,7 +197,7 @@
 </head>
 <body>
 
-  <h1>Chess Master</h1>
+  <h1>CHESS MASTER</h1>
 
   <div id="codeInputContainer">
     <input type="text" id="codeInput" placeholder="Inserisci il codice">
@@ -232,7 +232,7 @@
         if (move.startsWith("code")) {
           const gameCode = move.split(" ")[1];
           const codeBanner = document.getElementById('codeBanner');
-          codeBanner.textContent = `Codice partita: ${gameCode}`;
+          codeBanner.textContent = `${gameCode}`;
           codeBanner.style.display = 'block';
 
           localStorage.removeItem("code");
@@ -259,7 +259,6 @@
         }
 
         if (move === "win" || move === "lose" || move === "draw") {
-          console.log("La partita è finita.");
           if (move === "win") {
             if (level > 0)
               localStorage.setItem("level", level + 1);
@@ -275,7 +274,7 @@
         }
 
         if (level > 0)
-          document.getElementById('codeBanner').textContent = `Stockfish level: ${level}`;
+          document.getElementById('codeBanner').textContent = `Level: ${level}`;
         else
           document.getElementById('codeBanner').style.display = 'none';
 
@@ -381,6 +380,7 @@
       let draggable = true;
       var $board = $('#board')
       function onDrop(source, target) {
+        if (!source) return;
           const piece = game.get(source).type;
           const move = game.move({
             from: source,
@@ -436,6 +436,14 @@
          (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
            return false
           }
+
+          document.querySelectorAll('#board .square-55d63').forEach(square => {
+            square.addEventListener('click', (e) => {
+              const target = e.currentTarget.getAttribute('data-square')
+              onDrop(selected, target);
+              board.position(game.fen());
+            });
+          });
 
           highlightPossibleMoves(source);
         },
