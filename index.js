@@ -30,24 +30,38 @@ function generateCode() {
 }
 
 const getStockfishMove = async (fen, level) => {
-  const url = 'https://stockfish.online/api/s/v2.php';
-  const params = new URLSearchParams({
-    fen: fen,
-    depth: level
-  });
+  const url = "https://chess-api.com/v1";
+
+  const variants = 6 - level < 1 ? 1 : 6 - level;
+  const depth = level;
+  const maxThinkingTime = level * 10 > 100 ? 100 : level * 10;
 
   try {
-    const response = await fetch(`${url}?${params}`);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fen,
+        variants,
+        depth,
+        maxThinkingTime
+      })
+    });
+
     const data = await response.json();
 
-    if (data.success) {
-      const continuation = data.continuation.split(" ");
-      return continuation[0];
+    if (!data.variants && !data.move) {
+      throw new Error("Nessuna mossa trovata");
+    }
+
+    if (data?.variants?.length > 0) {
+      const index = Math.floor(Math.random() * data.variants.length);
+      return data.variants[index].move;
     } else {
-      throw new Error('Errore nell\'analisi della posizione');
+      return data.move;
     }
   } catch (error) {
-    console.error('Errore:', error);
+    console.error("Errore:", error);
     return null;
   }
 };

@@ -289,6 +289,7 @@
         });
 
         if (moveResult !== null) {
+          await new Promise(r => setTimeout(r, 300));
           board.position(game.fen());
           removeHighlights();
           $board.find('.square-' + from).addClass('highlight');
