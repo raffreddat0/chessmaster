@@ -1,6 +1,9 @@
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
+#include "servo.h"
+
+const int cell = 8;
 int status = 0;
 void animation(int type);
 
@@ -11,13 +14,17 @@ struct Config {
   int streak;
   int wins;
   int losses;
+  int draws;
   int games;
 };
 
+//                RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 int joyPin1 = A0;
 int joyPin2 = A1;
-int switchPin = 2;
+int switchPin = 13;
+
+int reset = 53;
 int value1 = 0; 
 int value2 = 0;
 int click = 0;
@@ -40,7 +47,11 @@ int playing = -1;
 char wifis[10][20];
 int redirect = 0;
 int scanning = 0;
+bool connected = false;
 int size = -1;
+char code[7] = "";
+bool ws = false;
+char tssid[20] = "";
 
 byte frecciaGiu[8] = {
   0b00000,
@@ -52,6 +63,30 @@ byte frecciaGiu[8] = {
   0b00100,
   0b00000
 };
+
+String checkEdges(int M[cell][cell]) {
+  for (int r = 0; r < 2; r++) {
+    for (int c = 0; c < cell; c++) {
+      if (M[r][c] != 1) {
+        char col = 'a' + c;
+        int row = r + 1;
+        return String(col) + row;
+      }
+    }
+  }
+
+  for (int r = cell - 2; r < cell; r++) {
+    for (int c = 0; c < cell; c++) {
+      if (M[r][c] != 1) {
+        char col = 'a' + c;
+        int row = r + 1;
+        return String(col) + row;
+      }
+    }
+  }
+
+  return "";
+}
 
 void splitString(String input, char output[][20], char sep = ',') {
   int start = 0;
@@ -174,7 +209,7 @@ void wifi() {
     lcd.print("Connected!");
     page = redirect;
     input = "";
-    strcpy(config.ssid, wifis[scanning - 2]);
+    strcpy(config.ssid, tssid);
     EEPROM.put(0, config);
     Serial.println(config.ssid);
     delay(2000);
@@ -183,7 +218,7 @@ void wifi() {
     return;
   }
   
-  if (input.startsWith("error")) {
+  if (input.startsWith("connection error")) {
     lcd.setCursor(7, 1);
     lcd.print("Error!");
     scanning = 1;
@@ -193,11 +228,11 @@ void wifi() {
     delay(100);
   }
 
-  if (scanning > 1) {
+  if (scanning == 2) {
     lcd.setCursor(3, 0);
     lcd.print("Connecting to");
-    lcd.setCursor((20 - strlen(wifis[scanning - 2])) / 2, 1);
-    lcd.print(wifis[scanning - 2]);
+    lcd.setCursor((20 - strlen(tssid)) / 2, 1);
+    lcd.print(tssid);
     return;
   }
 
@@ -208,6 +243,18 @@ void wifi() {
 
   int numItems = size;
   strcpy(wifis[numItems - 1], "Exit");
+
+  /*
+  if (numItems == 0) {
+    digitalWrite(reset, LOW);
+    delay(100);
+    digitalWrite(reset, HIGH);
+
+    if (config.ssid && strlen(config.ssid) > 0)
+      Serial1.println(String("wifi ") + config.ssid + ":chessmaster");
+
+    Serial1.println("wifi");
+  }*/
 
   if (y != y0 || x != x0) {
     lcd.clear();
@@ -241,9 +288,9 @@ void wifi() {
       input = "";
       lcd.clear();
     } else {
-      Serial.println(y);
-      scanning = y + 2;
-      Serial1.println(String("wifi ") + wifis[y] + ":chessmaster");
+      scanning = 2;
+      strcpy(tssid, wifis[y]);
+      Serial1.println(String("wifi ") + tssid + ":chessmaster");
       lcd.clear();
       delay(100);
     }
@@ -290,8 +337,8 @@ void settings() {
     if (strcmp(settings[i].label, "Level: ") == 0) {
       if (i == y && x != x0) {
         config.level += (x - x0);
-        if (config.level < 1) config.level = 20;
-        if (config.level > 20) config.level = 1;
+        if (config.level < 1) config.level = 15;
+        if (config.level > 15) config.level = 1;
         x = x0 = 0;
         EEPROM.put(0, config);
       }
@@ -327,6 +374,7 @@ void settings() {
       y = x = 0;
       y0 = x0 = 0;
       lcd.clear();
+      delay(100);
     }
   }
 }
@@ -336,6 +384,7 @@ void stats() {
     "Streak: ",
     "Wins: ",
     "Losses: ",
+    "Draws: ",
     "Games: ",
     "Exit"
   };
@@ -364,6 +413,7 @@ void stats() {
     if (strcmp(stats[i], "Streak: ") == 0) lcd.print(config.streak);
     else if (strcmp(stats[i], "Wins: ") == 0) lcd.print(config.wins);
     else if (strcmp(stats[i], "Losses: ") == 0) lcd.print(config.losses);
+    else if (strcmp(stats[i], "Draws: ") == 0) lcd.print(config.draws);
     else if (strcmp(stats[i], "Games: ") == 0) lcd.print(config.games);
   }
 
@@ -376,7 +426,26 @@ void stats() {
   }
 }
 
-void play() {
+void play(int M[cell][cell]) {
+  if (!connected) {
+    page = -3;
+    lcd.clear();
+    delay(200);
+    return;
+  }
+
+  String pos = checkEdges(M);
+  if (playing == 0 && pos.length() > 0) {
+    lcd.setCursor(2, 0);
+    lcd.print("Place the pieces");
+    lcd.setCursor(4, 1);
+    lcd.print("in position!");
+    lcd.setCursor(8, 3);
+    lcd.print(pos);
+    return;
+  } else
+    
+
   if (ddlay(1000)) {
     time[1]++;
     if (time[1] > 59) {
@@ -392,7 +461,8 @@ void play() {
       x = 0;
   }
 
-  playing = 1;
+  if (playing == 0)
+    playing = 1;
 
   lcd.setCursor(7, 0);
   if (time[0] < 10) lcd.print("0");
@@ -401,8 +471,22 @@ void play() {
   if (time[1] < 10) lcd.print("0");
   lcd.print(time[1]);
 
-  lcd.setCursor(6, 1);
-  lcd.print(confirm == 0 ? (turn == 0 ? " WHITE  " : " BLACK  ") : "Confirm?");
+  if (playing == 1) {
+    lcd.setCursor(6, 1);
+    lcd.print(confirm == 0 ? (turn == 0 ? " WHITE  " : " BLACK  ") : "Confirm?");
+  }
+
+  if (playing > 1) {
+    confirm = x = 1;
+    lcd.setCursor(8, 1);
+
+    if (playing == 2)
+      lcd.print("WIN!");
+    if (playing == 3)
+      lcd.print("LOSE");
+    if (playing == 4)
+      lcd.print("DRAW");
+  }
 
   if (confirm == 0) {
     if (ddlay(500)) {
@@ -443,6 +527,10 @@ void play() {
         time[1] = 0;
         playing = 0;
         input = "";
+        if (playing == 1)
+          Serial1.println("exit");
+        config.games += 1;
+        EEPROM.put(0, config);
       } else {
         confirm = 0;
       }
@@ -450,17 +538,38 @@ void play() {
   }
 }
 
-void online() {
-  if (playing == -1) {
-    Serial1.println("start");
-    playing = 0;
+void online(int M[cell][cell]) {
+  if (!connected) {
+    page = -3;
+    lcd.clear();
+    delay(200);
+    return;
   }
 
-  if (playing = 0 && !input.equals("")) {
-    lcd.setCursor(1, 1);
+  if (playing == -1) {
+    Serial1.println("start");
+    playing = -2;
+  }
+
+  if (input.startsWith("code")) {
+    String parsed = input.substring(5);
+    parsed.toCharArray(code, sizeof(code));
+    input = "";
+  }
+
+  if (playing == -2 && input.startsWith("joined")) {
+    playing = 0;
+    strcpy(code, "");
+    input = "";
+    lcd.clear();
+    delay(100);
+  }
+
+  if (playing == -2) {
+    lcd.setCursor(1, 0);
     lcd.print("Waiting for Player");
-    lcd.setCursor(7, 2);
-    lcd.print(input);
+    lcd.setCursor(7, 1);
+    lcd.print(code);
 
     if (ddlay(1000))
       time[2]++;
@@ -480,19 +589,21 @@ void online() {
     }
 
     if (click && time[2] > 1) {
-      lcd.clear();
-      delay(100);
+      playing = -1;
+      strcpy(code, "");
       click = 0;
       x = x0 = 0;
       y = y0 = 0;
-      time[3] = 0;
+      time[2] = 0;
       page = 0;
       input = "";
+      lcd.clear();
+      delay(200);
     }
   }
 
-  if (playing == 1)
-    play();
+  if (playing == 0)
+    play(M);
 }
 
 void home() {
@@ -539,19 +650,66 @@ void home() {
     }
 }
 
-void lcdloop() {
+int lcdloop(int M[cell][cell]) {
   if (Serial1.available()) {
     input = Serial1.readStringUntil('\n');
     Serial.println(input);
 
-    if (input.startsWith("wifi")) {
+    if (input.startsWith("wifi ")) {
       splitString(input.substring(5), wifis);
       input = "";
+    }
+
+    if (input.startsWith("connected"))
+      connected = true;
+
+    if (input.startsWith("disconnected"))
+      connected = false;
+
+    if (input.startsWith("win")) {
+      config.wins += 1;
+      config.streak += 1;
+      if (config.level < 15)
+        config.level += 1;
+      EEPROM.put(0, config);
+    }
+
+    if (input.startsWith("draw")) {
+      config.draws += 1;
+      EEPROM.put(0, config);
+    }
+
+    if (input.startsWith("lose")) {
+      config.losses += 1;
+      config.streak = 0;
+      EEPROM.put(0, config);
+    }
+
+    if ((page == 1 || page == 2) && !input.startsWith("error") && !input.startsWith("code") && !input.startsWith("joined")) {
+        char lettera = input.charAt(2);
+        int colonna = input.substring(3).toInt();
+
+        int rigaIndex = 7 - (colonna - 1);
+        int colIndex = lettera - 'a';
+
+        if (M[rigaIndex][colIndex] == 1) {
+          move(input.substring(2), 1);
+          //moveV(45);
+          //moveH(90);
+          eat();
+        }
+        move(input, 1);
+        //moveV(45);
+        //moveH(90);
+        move(input.substring(2), 0);
+        moveV(0);
+        moveH(90);
+  
     }
   }
 
   if (page == -2 ) {
-    if (config.ssid && strlen(config.ssid) > 0 && (!input.startsWith("connected") && !input.startsWith("error")))
+    if (config.ssid && strlen(config.ssid) > 0 && (!input.startsWith("connected") && !input.startsWith("connection error")))
       return;
     else {
       input = "";
@@ -567,11 +725,11 @@ void lcdloop() {
     value2 = treatValue(analogRead(joyPin2));
     x0 = x;
     y0 = y;
-
+    
     if (value2 >= 6)
       x--;
 
-    if (value2 <= 2)
+    if (value2 <= 3)
       x++;
 
     if (value1 >= 6)
@@ -615,10 +773,10 @@ void lcdloop() {
         home();
         break;
       case 1:
-        play();
+        play(M);
         break;
       case 2:
-        online();
+        online(M);
         break;
       case 3:
         stats();
@@ -632,6 +790,8 @@ void lcdloop() {
     }
 
   delay(5);
+
+  return playing;
 }
 
 void lcdbegin() {
@@ -640,24 +800,31 @@ void lcdbegin() {
   lcd.createChar(0, frecciaGiu);
 
   pinMode(switchPin, INPUT_PULLUP);
+  pinMode(reset, OUTPUT);
+  digitalWrite(reset, HIGH);
+
+  digitalWrite(reset, LOW);
+  delay(200);
+  digitalWrite(reset, HIGH);
+  delay(500);
+
   //lcd.blink();
   lcd.setCursor(4, 1);
   lcd.print("CHESS MASTER");
 
   lcd.setCursor(7, 3);
-  lcd.print("v0.1.0");
+  lcd.print("v1.0.0");
 
   delay(2000);
 
-  //config = {1, 0, "", 0, 0, 0, 0};
   EEPROM.get(0, config);
   Serial.println(config.ssid);
+
+  Serial1.println("wifi");
 
   if (config.ssid && strlen(config.ssid) > 0) {
     Serial1.println(String("wifi ") + config.ssid + ":chessmaster");
   }
-
-  Serial1.println("wifi");
 }
 
 void animation(int type) {
