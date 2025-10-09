@@ -1,27 +1,27 @@
-const express = require('express');
-const path = require('path');
-const http = require('http');
-const { Server } = require('ws');
-const Chess = require('chess.js').Chess;
-require('dotenv').config();
+const express = require("express");
+const path = require("path");
+const http = require("http");
+const { Server } = require("ws");
+const Chess = require("chess.js").Chess;
+require("dotenv").config();
 
 const app = express();
 const port = 1707;
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, './index.html'));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./index.html"));
 });
 
 app.use((req, res) => {
-  res.redirect('/');
+  res.redirect("/");
 });
 
 const server = http.createServer(app);
 const wss = new Server({ server });
 
 function generateCode() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
   for (let i = 0; i < 6; i++) {
     const randomIndex = Math.floor(Math.random() * characters.length);
     code += characters[randomIndex];
@@ -30,7 +30,7 @@ function generateCode() {
 }
 
 const getStockfishMove = async (fen, level) => {
-  const url = 'https://stockfish.online/api/s/v2.php';
+  const url = "https://stockfish.online/api/s/v2.php";
   const params = new URLSearchParams({
     fen: fen,
     depth: level
@@ -44,20 +44,20 @@ const getStockfishMove = async (fen, level) => {
       const continuation = data.continuation.split(" ");
       return continuation[0];
     } else {
-      throw new Error('Errore nell\'analisi della posizione');
+      throw new Error("Errore nell\"analisi della posizione");
     }
   } catch (error) {
-    console.error('Errore:', error);
+    console.error("Errore:", error);
     return null;
   }
 };
 
 let games = [];
 let sessions = {};
-wss.on('connection', (ws, req) => {
-  const urlParams = new URLSearchParams(req.url.split('?')[1]);
-  let code = urlParams.get('code');
-  let auth = urlParams.get('auth');
+wss.on("connection", (ws, req) => {
+  const urlParams = new URLSearchParams(req.url.split("?")[1]);
+  let code = urlParams.get("code");
+  let auth = urlParams.get("auth");
 
   if (!code && !auth) {
     ws.close();
@@ -87,7 +87,7 @@ wss.on('connection', (ws, req) => {
     ws.send("start");
   }
 
-  console.log('Client connesso');
+  console.log("Client connesso");
 
   let pongTimeout;
   const heartbeat = () => {
@@ -104,7 +104,7 @@ wss.on('connection', (ws, req) => {
 
   const heartbeatInterval = setInterval(heartbeat, 30000);
 
-  ws.on('pong', (data) => {
+  ws.on("pong", (data) => {
     clearTimeout(pongTimeout);
   });
 
@@ -125,7 +125,7 @@ wss.on('connection', (ws, req) => {
   }
 
   if (!code)
-  ws.on('message', async (data) => {
+  ws.on("message", async (data) => {
     const message = data.toString();
     if (message.startsWith("level")) {
       level = parseInt(message.split(" ")[1]) || 3;
@@ -167,10 +167,10 @@ wss.on('connection', (ws, req) => {
 
     if (wait) {
       try {
-        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
+        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
       } catch(error) {
         console.log(error.description);
-        sessions[game][1].emit('message', 'invalid');
+        sessions[game][1].emit("message", "invalid");
         return;
       }
 
@@ -181,20 +181,21 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    console.log(`Mossa dell'utente: ${message}`);
+    console.log(`Mossa dell"utente: ${message}`);
     try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
+      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
     } catch(error) {
       console.log(error.description);
-      ws.send('invalid');
+      ws.send("invalid");
       return;
     }
 
+    ws.send("valid")
     if (chess.isGameOver())
       ws.send(chess.isDraw() ? "draw" : "win");
 
     if (sessions[game].length === 2) {
-      sessions[game][1].emit('message', message);
+      sessions[game][1].emit("message", message);
       wait = true;
       return;
     }
@@ -211,7 +212,7 @@ wss.on('connection', (ws, req) => {
       try {
         const stockfishMove = await getStockfishMove(chess.fen(), level);
         console.log(`Mossa di Stockfish: ${stockfishMove}`);
-        chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
+        chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: message.substring(4, 5) || "q" });
         ws.send(stockfishMove);
       } catch {
         return await stockfish();
@@ -223,7 +224,7 @@ wss.on('connection', (ws, req) => {
       ws.send(chess.isDraw() ? "draw" : "lose");
   });
   else {
-  ws.on('message', async (data) => {
+  ws.on("message", async (data) => {
     const message = data.toString();
 
     if (message.startsWith("position")) {
@@ -235,10 +236,10 @@ wss.on('connection', (ws, req) => {
 
     if (wait) {
       try {
-        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
+        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
       } catch(error) {
         console.log(error.description);
-        sessions[game][0].emit('message', 'invalid');
+        sessions[game][0].emit("message", "invalid");
         return;
       }
 
@@ -250,31 +251,32 @@ wss.on('connection', (ws, req) => {
       return;
     }
 
-    console.log(`Mossa dell'avversario: ${message}`);
+    console.log(`Mossa dell"avversario: ${message}`);
     try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
+      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
     } catch(error) {
       console.log(error.description);
-      ws.send('invalid');
+      ws.send("invalid");
       return;
     }
 
+    ws.send("valid");
     if (chess.isGameOver()) {
       ws.send(chess.isDraw() ? "draw" : "win");
     }
 
     if (sessions[game].length === 2) {
-      sessions[game][0].emit('message', message);
+      sessions[game][0].emit("message", message);
       wait = true;
       return;
     }
 
   });
-  sessions[game][0].emit('message', 'position');
+  sessions[game][0].emit("message", "position");
   }
 
-  ws.on('close', () => {
-    console.log('Client disconnesso');
+  ws.on("close", () => {
+    console.log("Client disconnesso");
     if (!code) {
       if (sessions[game]?.length === 2)
         sessions[game][1].close();
@@ -288,14 +290,14 @@ wss.on('connection', (ws, req) => {
   });
 });
 
-server.listen(port, '0.0.0.0', () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Server in ascolto sulla porta ${port}`);
 });
 
-process.on('uncaughtException', (error) => {
+process.on("uncaughtException", (error) => {
   console.error(error);
 });
 
-process.on('unhandledRejection', (reason) => {
+process.on("unhandledRejection", (reason) => {
   console.error(reason);
 });
