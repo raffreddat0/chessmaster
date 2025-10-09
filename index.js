@@ -170,7 +170,7 @@ wss.on('connection', (ws, req) => {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
       } catch(error) {
         console.log(error.description);
-        sessions[1].emit('message', 'error');
+        sessions[game][1].emit('message', 'invalid');
         return;
       }
 
@@ -186,7 +186,7 @@ wss.on('connection', (ws, req) => {
       chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
     } catch(error) {
       console.log(error.description);
-      ws.send('error');
+      ws.send('invalid');
       return;
     }
 
@@ -238,7 +238,7 @@ wss.on('connection', (ws, req) => {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
       } catch(error) {
         console.log(error.description);
-        sessions[game][0].emit('message', 'error');
+        sessions[game][0].emit('message', 'invalid');
         return;
       }
 
@@ -255,7 +255,7 @@ wss.on('connection', (ws, req) => {
       chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || 'q' });
     } catch(error) {
       console.log(error.description);
-      ws.send('error');
+      ws.send('invalid');
       return;
     }
 
