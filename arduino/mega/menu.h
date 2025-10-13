@@ -1,11 +1,11 @@
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
+#include "utils.h"
 #include "servo.h"
 
-const int cell = 8;
-int status = 0;
 void animation(int type);
+void lcdbegin();
 
 struct Config {
   int level;
@@ -18,6 +18,9 @@ struct Config {
   int games;
 };
 
+Config config;
+int addr = sizeof(Config);
+
 //                RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
 int joyPin1 = A0;
@@ -28,125 +31,330 @@ int reset = 53;
 int value1 = 0; 
 int value2 = 0;
 int click = 0;
-int row = 0;
-int col = 0;
-int d = 1;
+int prevent = 0;
+
 int x0 = 0;
 int y0 = 0;
 int x = 0;
 int y = 0;
+int z = 0;
+int z0 = 0;
+
+int d = 0;
+int r = 0;
+int e = 0;
+int s = 0;
+
+String input = "";
 int page = -2;
-Config config;
-int menu = 0;
-long int time[3] = {0, 0, 0}; 
-int turn = 0;
+int status = 0;
 int confirm = 0;
 int yes = 0;
-String input = "";
-int playing = -1;
+int size = -1;
+
 char wifis[10][20];
+char tssid[20] = "";
 int redirect = 0;
 int scanning = 0;
 bool connected = false;
-int size = -1;
+
+long int time[3] = {0, 0, 0};
 char code[7] = "";
-bool ws = false;
-char tssid[20] = "";
+int playing = -1;
+int invalid[2] = {-1, -1};
+int turn = 0;
 
-byte frecciaGiu[8] = {
-  0b00000,
-  0b00000,
-  0b00000,
-  0b00000,
-  0b10001,
-  0b01010,
-  0b00100,
-  0b00000
-};
+void calibration() {
+  lcd.setCursor(4, 0);
+  lcd.print("Calibration");
 
-String checkEdges(int M[cell][cell]) {
-  for (int r = 0; r < 2; r++) {
-    for (int c = 0; c < cell; c++) {
-      if (M[r][c] != 1) {
-        char col = 'a' + c;
-        int row = r + 1;
-        return String(col) + row;
-      }
-    }
+  int ms[4] = {100, 200, 500, 1000};
+  if (x != x0 && e) {
+    if (x > 4)
+      x = 0;
+    if (x < 0)
+      x = 4;
   }
 
-  for (int r = cell - 2; r < cell; r++) {
-    for (int c = 0; c < cell; c++) {
-      if (M[r][c] != 1) {
-        char col = 'a' + c;
-        int row = r + 1;
-        return String(col) + row;
-      }
-    }
+  if (x < 4) {
+    lcd.setCursor(6, 2);
+    lcd.print(e ? "<" : " ");
+    lcd.print(ms[x]);
+    if (e) lcd.print(">");
+    lcd.print(" ms   ");
+  } else {
+    lcd.setCursor(7, 2);
+    lcd.print("<Exit>  ");
   }
 
-  return "";
+  if (y != y0 && x < 4) {
+    y = constrain(y, -1, 1);
+
+    if (y == 1) {
+      down(ms[x]);
+    }
+    if (y == -1) {
+      up(ms[x]);
+    }
+
+    y = y0 = 0;
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (x < 4) {
+      if (e)
+        e = 0;
+      else
+        e = 1;
+    } else {
+      page = redirect;
+      y = x = 0;
+      y0 = x0 = 0;
+      lcd.clear();
+      delay(100);
+    }
+  }
 }
 
-void splitString(String input, char output[][20], char sep = ',') {
-  int start = 0;
-  size = 0;
+void squares() {
+  struct MenuItem {
+    const char* label;
+    int page;
+  };
 
-  while (size < 10) {
-    int idx = input.indexOf(sep, start);
-    if (idx == -1) idx = input.length();
+  const MenuItem settings[] = {
+    {"Square: ", 0},
+    {"Turn: ", 0},
+    {"Move: ", 0},
+    {"Down: ", 0},
+    {"Exit", 0}
+  };
 
-    String temp = input.substring(start, idx);
-    temp.trim();
-    
-    bool isDuplicate = false;
-    for (int i = 0; i < size; i++) {
-      if (temp.equals(output[i])) {
-        isDuplicate = true;
+  const int numItems = sizeof(settings) / sizeof(settings[0]);
+
+  if (y != y0 || x != x0) {
+    lcd.clear();
+    delay(100);
+    y = constrain(y, 0, numItems - 1);
+  }
+
+  char square[3] = "";
+  int range[4] = {1, 5, 10, 20};
+
+  lcd.setCursor(6, 0);
+  lcd.print("Squares");
+  lcd.setCursor(17, 0);
+  if (range[r] < 10) {
+    lcd.print(" ");
+    lcd.print(range[r]);
+  } else
+    lcd.print(range[r]);
+
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (S[7 - z][z0].turn < 0)
+    S[7 - z][z0].turn = 90;
+  if (S[7 - z][z0].move < 0)
+    S[7 - z][z0].move = 0;
+  if (S[7 - z][z0].down < 0)
+    S[7 - z][z0].down = 0; 
+  
+  for (int i = start; i < end; i++) {
+    int row = i - start + 1;
+    lcd.setCursor(0, row);
+
+    if (i == y) lcd.print("> ");
+    else lcd.print("  ");
+
+    lcd.print(settings[i].label);
+    if (strcmp(settings[i].label, "Square: ") == 0) {
+      if (i == y && x != x0) {
+        if (s == 1)
+          z0 += (x - x0);
+        else
+          z += (x - x0);
+        
+        if (z < 0) {
+          z = 7;
+          if (s == 0) z0--;
+        }
+        if (z > 7) {
+          z = 0;
+          if (s == 0) z0++;
+        }
+        if (z0 < 0) z0 = 7;
+        if (z0 > 7) z0 = 0;
+        x = x0 = 0;
+      }
+
+      square[0] = char('a' + z0);
+      square[1] = char('1' + 7 - (7 - z));
+      square[2] = '\0';
+      
+      switch (s) {
+      case 0:
+        lcd.print("<");
+        lcd.print(square);
+        lcd.print(">");
+        break;
+      case 1:
+        lcd.print("<");
+        lcd.print(square[0]);
+        lcd.print(">");
+        lcd.print(square[1]);
+        break;
+      case 2:
+        lcd.print(square[0]);
+        lcd.print("<");
+        lcd.print(square[1]);
+        lcd.print(">");
         break;
       }
     }
 
-    if (!isDuplicate) {
-      temp.toCharArray(output[size], 20);
-      size++;
-    }
-
-    if (idx == input.length()) break;
-    start = idx + 1;
-  }
-}
-
-int treatValue(int data) {
-  return (data * 9 / 1024);
-}
-
-const int MAX_KEYS = 20;
-unsigned long intervals[MAX_KEYS];
-unsigned long lastTimes[MAX_KEYS];
-
-bool ddlay(unsigned long interval) {
-  unsigned long now = millis();
-
-  for (int i = 0; i < MAX_KEYS; i++) {
-    if (intervals[i] == interval) {
-      if (now - lastTimes[i] >= interval) {
-        lastTimes[i] = now;
-        return true;
-      } else {
-        return false;
+    if (strcmp(settings[i].label, "Turn: ") == 0) {
+      if (i == y && x != x0) {
+        S[7 - z][z0].turn += range[r] * (x - x0);
+        if (S[7 - z][z0].turn < 0) S[7 - z][z0].turn = 180;
+        if (S[7 - z][z0].turn > 180) S[7 - z][z0].turn = 0;
+        x = x0 = 0;
+        EEPROM.put(addr, S);
       }
+
+      if (i == y)
+        moveH(S[7 - z][z0].turn);
+
+      lcd.print("<");
+      lcd.print(S[7 - z][z0].turn);
+      lcd.print(">");
+    }
+
+    if (strcmp(settings[i].label, "Move: ") == 0) {
+      if (i == y && x != x0) {
+        S[7 - z][z0].move += range[r] * (x - x0);
+        if (S[7 - z][z0].move < 0) S[7 - z][z0].move = 180;
+        if (S[7 - z][z0].move > 180) S[7 - z][z0].move = 0;
+        x = x0 = 0;
+        EEPROM.put(addr, S);
+      }
+
+      if (i == y)
+        moveV(S[7 - z][z0].move);
+
+      lcd.print("<");
+      lcd.print(S[7 - z][z0].move);
+      lcd.print(">");
+    }
+
+    if (strcmp(settings[i].label, "Down: ") == 0) {
+      if (i == y && x != x0) {
+        S[7 - z][z0].down += range[r] * (x - x0);
+        S[7 - z][z0].down = constrain(S[7 - z][z0].down, 0, 150);
+        x = x0 = 0;
+        EEPROM.put(addr, S);
+      }
+
+      if (i == y) {
+        if (S[7 - z][z0].down > d)
+          down((S[7 - z][z0].down - d) * 100);
+        else
+          up((d - S[7 - z][z0].down) * 100);
+        d = S[7 - z][z0].down;
+      }
+
+      lcd.print("<");
+      lcd.print(S[7 - z][z0].down * 100);
+      lcd.print(">");
     }
   }
 
-  for (int i = 0; i < MAX_KEYS; i++) {
-    if (intervals[i] == 0) {
-      intervals[i] = interval;
-      lastTimes[i] = now;
-      return true;
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (settings[y].page) {
+      redirect = -4;
+      page = settings[y].page;
+      y = x = 0;
+      y0 = x0 = 0;
+      lcd.clear();
+      delay(100);
+    } else if (y == numItems - 1) {
+      page = redirect;
+      y = x = 0;
+      y0 = x0 = 0;
+      moveH(90);
+      moveV(0);
+      up(d * 100);
+      d = 0;
+      lcd.clear();
+      delay(100);
+    } else if (y == 0) {
+      s++;
+      if (s > 2) s = 0;
+    } else {
+      r++;
+      if (r > 3) r = 0;
     }
   }
-  return false;
+}
+
+void debug() {
+  struct MenuItem {
+    const char* label;
+    int page;
+  };
+
+  const MenuItem settings[] = {
+    {"Squares", -6},
+    {"Calibration", -5},
+    {"Exit", 0}
+  };
+
+  const int numItems = sizeof(settings) / sizeof(settings[0]);
+
+  if (y != y0 || x != x0) {
+    lcd.clear();
+    delay(100);
+    y = constrain(y, 0, numItems - 1);
+  }
+
+  lcd.setCursor(8, 0);
+  lcd.print("Debug");
+
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  for (int i = start; i < end; i++) {
+    int row = i - start + 1;
+    lcd.setCursor(0, row);
+
+    if (i == y) lcd.print("> ");
+    else lcd.print("  ");
+
+    lcd.print(settings[i].label);
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (settings[y].page) {
+      redirect = -4;
+      page = settings[y].page;
+      y = x = 0;
+      y0 = x0 = 0;
+      lcd.clear();
+      delay(100);
+    } else if (y == numItems - 1) {
+      page = redirect = 4;
+      y = x = 0;
+      y0 = x0 = 0;
+      lcd.clear();
+      delay(100);
+    }
+  }
 }
 
 void credits() {
@@ -194,6 +402,7 @@ void credits() {
 
   if (click) {
     click = 0;
+    prevent = 1;
     page = 4;
     y = x = 0;
     y0 = x0 = 0;
@@ -202,7 +411,7 @@ void credits() {
 }
 
 void wifi() {
-  if (input.startsWith("connected")) {
+  if (input == "connected") {
     lcd.clear();
     delay(100);
     lcd.setCursor(5, 1);
@@ -218,7 +427,7 @@ void wifi() {
     return;
   }
   
-  if (input.startsWith("connection error")) {
+  if (input == "connection error") {
     lcd.setCursor(7, 1);
     lcd.print("Error!");
     scanning = 1;
@@ -244,18 +453,6 @@ void wifi() {
   int numItems = size;
   strcpy(wifis[numItems - 1], "Exit");
 
-  /*
-  if (numItems == 0) {
-    digitalWrite(reset, LOW);
-    delay(100);
-    digitalWrite(reset, HIGH);
-
-    if (config.ssid && strlen(config.ssid) > 0)
-      Serial1.println(String("wifi ") + config.ssid + ":chessmaster");
-
-    Serial1.println("wifi");
-  }*/
-
   if (y != y0 || x != x0) {
     lcd.clear();
     delay(100);
@@ -280,6 +477,7 @@ void wifi() {
 
   if (click) {
     click = 0;
+    prevent = 1;
     if (y == numItems - 1) {
       page = redirect;
       scanning = 0;
@@ -307,6 +505,7 @@ void settings() {
     {"Level: ", 0},
     {"Language: ", 0},
     {"Wifi", -3},
+    {"Debug", -4},
     {"Credits", 5},
     {"Exit", 0}
   };
@@ -346,7 +545,8 @@ void settings() {
       lcd.print(config.level);
       lcd.print(">");
     }
-    else if (strcmp(settings[i].label, "Language: ") == 0) {
+    
+    if (strcmp(settings[i].label, "Language: ") == 0) {
       if (i == y && x != x0) {
         config.lang += (x - x0);
         if (config.lang < 0) config.lang = 0;
@@ -362,6 +562,7 @@ void settings() {
 
   if (click) {
     click = 0;
+    prevent = 1;
     if (settings[y].page) {
       redirect = 4;
       page = settings[y].page;
@@ -419,6 +620,7 @@ void stats() {
 
   if (click && y == numItems - 1) {
     click = 0;
+    prevent = 1;
     page = 0;
     y = x = 0;
     y0 = x0 = 0;
@@ -426,7 +628,7 @@ void stats() {
   }
 }
 
-void play(int M[cell][cell]) {
+void play(int M[cell][cell], char position[4]) {
   if (!connected) {
     page = -3;
     lcd.clear();
@@ -434,6 +636,7 @@ void play(int M[cell][cell]) {
     return;
   }
 
+  /*
   String pos = checkEdges(M);
   if (playing == 0 && pos.length() > 0) {
     lcd.setCursor(2, 0);
@@ -443,8 +646,7 @@ void play(int M[cell][cell]) {
     lcd.setCursor(8, 3);
     lcd.print(pos);
     return;
-  } else
-    
+  }*/
 
   if (ddlay(1000)) {
     time[1]++;
@@ -473,7 +675,7 @@ void play(int M[cell][cell]) {
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
-    lcd.print(confirm == 0 ? (turn == 0 ? " WHITE  " : " BLACK  ") : "Confirm?");
+    lcd.print(confirm == 0 ? (turn == 0 ? " WHITE  " : " BLACK  ") : "  Exit? ");
   }
 
   if (playing > 1) {
@@ -489,13 +691,19 @@ void play(int M[cell][cell]) {
   }
 
   if (confirm == 0) {
-    if (ddlay(500)) {
+    if (invalid[0] != -1 && invalid[1] != -1 && M[invalid[0]][invalid[1]] == 1) {
+      invalid[0] = -1;
+      invalid[1] = -1;
+    }
+
+    lcd.setCursor(6, 3);
+    lcd.print("        ");
+    if ((invalid[0] == -1 && invalid[1] == -1)) {
+      lcd.setCursor(8, 3);
+      lcd.print(position);
+    } else {  
       lcd.setCursor(6, 3);
-      if (status % 2 == 0)
-        lcd.print("<Exit>");
-      else
-        lcd.print("           ");
-      status = (status + 1) % 2;
+      lcd.print("Invalid!");
     }
   } else {
     lcd.setCursor(4, 3);
@@ -514,6 +722,7 @@ void play(int M[cell][cell]) {
 
   if (click && (time[0] > 0 || time[1] > 1)) {
     click = 0;
+    prevent = 1;
     lcd.clear();
     delay(100);
     if (confirm == 0) {
@@ -525,7 +734,7 @@ void play(int M[cell][cell]) {
         page = 0;
         time[0] = 0;
         time[1] = 0;
-        playing = 0;
+        playing = -1;
         input = "";
         if (playing == 1)
           Serial1.println("exit");
@@ -557,7 +766,7 @@ void online(int M[cell][cell]) {
     input = "";
   }
 
-  if (playing == -2 && input.startsWith("joined")) {
+  if (playing == -2 && input == "joined") {
     playing = 0;
     strcpy(code, "");
     input = "";
@@ -592,6 +801,7 @@ void online(int M[cell][cell]) {
       playing = -1;
       strcpy(code, "");
       click = 0;
+      prevent = 1;
       x = x0 = 0;
       y = y0 = 0;
       time[2] = 0;
@@ -603,7 +813,7 @@ void online(int M[cell][cell]) {
   }
 
   if (playing == 0)
-    play(M);
+    page = 1;
 }
 
 void home() {
@@ -650,42 +860,75 @@ void home() {
     }
 }
 
-int lcdloop(int M[cell][cell]) {
+int lcdloop(int M[cell][cell], char position[4]) {
   if (Serial1.available()) {
     input = Serial1.readStringUntil('\n');
+    input.trim();
     Serial.println(input);
 
     if (input.startsWith("wifi ")) {
-      splitString(input.substring(5), wifis);
+      size = splitString(input.substring(5), wifis);
       input = "";
     }
 
-    if (input.startsWith("connected"))
+    if (input == "connected")
       connected = true;
 
-    if (input.startsWith("disconnected"))
+    if (input == "disconnected")
       connected = false;
 
-    if (input.startsWith("win")) {
-      config.wins += 1;
-      config.streak += 1;
-      if (config.level < 15)
-        config.level += 1;
-      EEPROM.put(0, config);
-    }
+    if (page == 1) {
+      int skip = 0;
 
-    if (input.startsWith("draw")) {
-      config.draws += 1;
-      EEPROM.put(0, config);
-    }
+      if (input == "win") {
+        config.wins += 1;
+        config.streak += 1;
 
-    if (input.startsWith("lose")) {
-      config.losses += 1;
-      config.streak = 0;
-      EEPROM.put(0, config);
-    }
+        if (config.level < 15)
+          config.level += 1;
 
-    if ((page == 1 || page == 2) && !input.startsWith("error") && !input.startsWith("code") && !input.startsWith("joined")) {
+        EEPROM.put(0, config);
+        skip = 1;
+      }
+
+      if (input == "draw") {
+        config.draws += 1;
+
+        EEPROM.put(0, config);
+        skip = 1;
+      }
+
+      if (input == "lose") {
+        config.losses += 1;
+        config.streak = 0;
+
+        EEPROM.put(0, config);
+        skip = 1;
+      }
+
+      if (input == "valid") {
+        turn = 1;
+        skip = 1;
+      }
+
+      if (input == "invalid") {
+        char lettera = position[0];
+        int colonna = position[1] - '0';
+
+        int rigaIndex = 7 - (colonna - 1);
+        int colIndex = lettera - 'a';
+
+        invalid[0] = rigaIndex;
+        invalid[1] = colIndex;
+        strcpy(position, "");
+
+        turn = 0;
+        skip = 1;
+      }
+
+      if (skip == 0 && !input.startsWith("code") && input != "joined") {
+        strcpy(position, input.c_str());
+
         char lettera = input.charAt(2);
         int colonna = input.substring(3).toInt();
 
@@ -694,42 +937,55 @@ int lcdloop(int M[cell][cell]) {
 
         if (M[rigaIndex][colIndex] == 1) {
           move(input.substring(2), 1);
-          //moveV(45);
-          //moveH(90);
           eat();
         }
         move(input, 1);
-        //moveV(45);
-        //moveH(90);
         move(input.substring(2), 0);
         moveV(0);
         moveH(90);
-  
+        turn = 0;
+        invalid[0] = -1;
+        invalid[1] = -1;
+      }
     }
   }
 
-  if (page == -2 ) {
-    if (config.ssid && strlen(config.ssid) > 0 && (!input.startsWith("connected") && !input.startsWith("connection error")))
-      return;
+
+  if (page == -2) {
+    if (config.ssid && strlen(config.ssid) > 0 && (input != "connected" && input != "connection error")) return;
     else {
       input = "";
       page = -1;
     }
   }
 
-  if (ddlay(150))
+  if (ddlay(150)) {
     click = !digitalRead(switchPin);
+    if (click == 0 && prevent == 1)
+      prevent = 0;
+    if (click == 1 && prevent == 1)
+      click = 0;
+  }
 
   if (ddlay(250)) { 
     value1 = treatValue(analogRead(joyPin1));         
     value2 = treatValue(analogRead(joyPin2));
     x0 = x;
     y0 = y;
+
+    /*
+    Serial.print("y: ");
+    Serial.println(value1);
+    Serial.print("x: ");
+    Serial.println(value2);
+    Serial.print("sw: ");
+    Serial.println(click);
+    */
     
     if (value2 >= 6)
       x--;
 
-    if (value2 <= 3)
+    if (value2 <= 2)
       x++;
 
     if (value1 >= 6)
@@ -745,6 +1001,7 @@ int lcdloop(int M[cell][cell]) {
       x = 0;
       y = 0;
       click = 0;
+      prevent = 1;
       status = 0;
       input = "";
       lcd.clear();
@@ -766,6 +1023,15 @@ int lcdloop(int M[cell][cell]) {
   }
 
     switch(page){
+      case -6:
+        squares();
+        break;
+      case -5:
+        calibration();
+        break;
+      case -4:
+        debug();
+        break;
       case -3:
         wifi();
         break;
@@ -773,7 +1039,7 @@ int lcdloop(int M[cell][cell]) {
         home();
         break;
       case 1:
-        play(M);
+        play(M, position);
         break;
       case 2:
         online(M);
@@ -797,7 +1063,7 @@ int lcdloop(int M[cell][cell]) {
 void lcdbegin() {
   lcd.begin(20, 4);
   randomSeed(analogRead(0));
-  lcd.createChar(0, frecciaGiu);
+  lcd.createChar(0, arrowDown);
 
   pinMode(switchPin, INPUT_PULLUP);
   pinMode(reset, OUTPUT);
@@ -808,20 +1074,18 @@ void lcdbegin() {
   digitalWrite(reset, HIGH);
   delay(500);
 
-  //lcd.blink();
   lcd.setCursor(4, 1);
   lcd.print("CHESS MASTER");
-
   lcd.setCursor(7, 3);
   lcd.print("v1.0.0");
 
   delay(2000);
 
   EEPROM.get(0, config);
+  EEPROM.get(addr, S);
   Serial.println(config.ssid);
 
   Serial1.println("wifi");
-
   if (config.ssid && strlen(config.ssid) > 0) {
     Serial1.println(String("wifi ") + config.ssid + ":chessmaster");
   }
@@ -830,8 +1094,6 @@ void lcdbegin() {
 void animation(int type) {
     int row = 3;
     int col = 6;
-
-    //Serial.println(type);
 
   switch(type) {
     case 0:

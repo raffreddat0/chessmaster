@@ -3,7 +3,7 @@
 int rows[] = {51, 47, 43, 39, 35, 31, 27, 23};
 int cols[] = {53, 49, 45, 41, 37, 33, 29, 25};
 int M[cell][cell], M0[cell][cell];
-char position[4] = "";
+char position[5] = "";
 int moved[2] = {0, 0};
 
 void setup() {
@@ -29,7 +29,7 @@ void setup() {
 }
 
 void loop() {
-  int playing = lcdloop(M);
+  int playing = lcdloop(M, position);
   serloop();
   
   if (ddlay(500)) {
@@ -44,13 +44,17 @@ void loop() {
         if (M[row][col] != M0[row][col] && M0[row][col] == 1) {
           position[0] = char('a' + col);
           position[1] = char('1' + 7 - row);
+          position[2] = '\0';
+          position[3] = '\0';
+          position[4] = '\0';
           moved[0] = 1;
-          //moved[1] = 0;
+          moved[1] = 0;
         }
 
-        if (M[row][col] != M0[row][col] && M0[row][col] == 0) {
+        if (M[row][col] != M0[row][col] && M0[row][col] == 0 && moved[0] == 1) {
           position[2] = char('a' + col);
           position[3] = char('1' + 7 - row);
+          position[4] = '\0';
           moved[1] = 1;
         }
 
