@@ -5,8 +5,9 @@ Servo servo2;
 Servo servo3;
 Servo servo4;
 
-int h0 = 140, v0 = 60, d0 = 10000;
+int pinBreak = 48, pinBreakOutput = 46, pinMagnet = 6;
 int prev = 0, prev1 = 90, prev2 = 0;
+float dwn = 0;
 
 struct Square {
   int turn;
@@ -14,12 +15,16 @@ struct Square {
   int down;
 };
 
+extern Square S0 = {};
 extern Square S[8][8] = {};
 
 void serbegin() {
   Serial.begin(9600);
 
-  pinMode(6, LOW);
+  pinMode(pinMagnet, LOW);
+  pinMode(pinBreakOutput, OUTPUT);
+  digitalWrite(pinBreakOutput, HIGH); 
+  pinMode(pinBreak, INPUT_PULLUP);
 
   servo1.detach();
   servo2.detach();
@@ -44,13 +49,13 @@ void moveV(int degree) {
     for (int angolo = prev; angolo <= degree; angolo++) {
       servo3.write(angolo);
       servo4.write(180 - angolo);
-      delay(10);
+      delay(20);
     }
   } else {
     for (int angolo = prev; angolo >= degree; angolo--) {
       servo3.write(angolo);
       servo4.write(180 - angolo);
-      delay(10);
+      delay(20);
     }
   }
   prev = degree;
@@ -72,17 +77,39 @@ void moveH(int degree) {
 }
 
 void up(int ms) {
-  servo2.attach(4);
-  servo2.writeMicroseconds(1417);
-  delay(ms);
-  servo2.detach();
+  for (int i = 1; i < ms / 100 + 1; i++) {
+    if (digitalRead(pinBreak)) {
+      dwn = 0;
+      break;
+    }
+
+    servo2.attach(4);
+    servo2.writeMicroseconds(1396);
+    delay(100);
+    servo2.detach();
+    delay(10);
+  }
+
+  dwn = (dwn - ms < 0 ? 0 : dwn - ms) / 100;
 }
 
 void down(int ms) {
-  servo2.attach(4);
-  servo2.writeMicroseconds(1528);
-  delay(ms);
-  servo2.detach();
+  for (int i = 1; i < ms / 100 + 1; i++) {
+    servo2.attach(4);
+    servo2.writeMicroseconds(1548);
+    delay(100);
+    servo2.detach();
+    delay(10);
+  }
+
+  dwn += ms / 100;
+}
+
+void reset() {
+  if (dwn > 0)
+    up(dwn * 100);
+  moveH(90);
+  moveV(0);
 }
 
 void move(String position, int magnet = 0) {
@@ -97,24 +124,26 @@ void move(String position, int magnet = 0) {
     int v = S[rigaIndex][colIndex].move;
     int d = S[rigaIndex][colIndex].down;
 
-    Serial.print("Giro: "); Serial.println(h);
-    Serial.print("Muovo: "); Serial.println(v);
-    Serial.print("Discesa: "); Serial.println(d);
-
+    reset();
     moveH(h < 0 ? 0 : h);
     moveV(v < 0 ? 0 : v);
-    down(d < 0 ? 0 : d*100);
-    pinMode(6, magnet);
-    up(d < 0 ? 0 : d*100);
+    down(d < 0 ? 0 : d * 100);
+    delay(100);
+    pinMode(pinMagnet, magnet);
+    delay(100);
+    reset();
   }
 }
 
 void eat() {
-  moveH(h0);
-  moveV(v0);
-  down(d0);
-  pinMode(6, 0);
-  up(d0);
+  reset();
+  moveH(S0.turn < 0 ? 0 : S0.turn);
+  moveV(S0.move < 0 ? 0 : S0.move);
+  down(S0.down < 0 ? 0 : S0.down * 100);
+  delay(100);
+  pinMode(pinMagnet, 0);
+  delay(100);
+  reset();
 }
 
 void serloop() {
@@ -123,8 +152,9 @@ void serloop() {
     input.trim();
     Serial.println(input);
 
-    if (input == "on") pinMode(6, HIGH);
-    else if (input == "off") pinMode(6, LOW);
+    if (input == "on") pinMode(pinMagnet, HIGH);
+    else if (input == "off") pinMode(pinMagnet, LOW);
+    else if (input == "reset") reset();
     else if (input.startsWith("eat")) {
       eat();
     } else if (input.startsWith("up")) {
@@ -139,17 +169,10 @@ void serloop() {
     } else if (input.startsWith("move")) {
       int degree = input.substring(5).toInt();
       moveV(degree);
-    } else if (input.startsWith("test")) {
-      int degree = input.substring(5).toInt();
-      servo2.attach(4);
-      servo2.write(degree);
     } else {
       move(input, 1);
-      if (input.length() > 2) {
+      if (input.length() > 2)
         move(input.substring(2), 0);
-        moveV(0);
-        moveH(90);
-      }
     }
   }
 }

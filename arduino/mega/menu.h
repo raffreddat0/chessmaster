@@ -19,7 +19,10 @@ struct Config {
 };
 
 Config config;
-int addr = sizeof(Config);
+Square T[8][8] = {};
+Square T0 = {};
+int addr = sizeof(config);
+int addr0 = addr + sizeof(S);
 
 //                RS, E, D4, D5, D6, D7
 LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
@@ -27,7 +30,7 @@ int joyPin1 = A0;
 int joyPin2 = A1;
 int switchPin = 13;
 
-int reset = 53;
+int resetlcd = 53;
 int value1 = 0; 
 int value2 = 0;
 int click = 0;
@@ -35,12 +38,11 @@ int prevent = 0;
 
 int x0 = 0;
 int y0 = 0;
+int z0 = 0;
 int x = 0;
 int y = 0;
 int z = 0;
-int z0 = 0;
 
-int d = 0;
 int r = 0;
 int e = 0;
 int s = 0;
@@ -51,6 +53,7 @@ int status = 0;
 int confirm = 0;
 int yes = 0;
 int size = -1;
+int editing = 0;
 
 char wifis[10][20];
 char tssid[20] = "";
@@ -63,6 +66,131 @@ char code[7] = "";
 int playing = -1;
 int invalid[2] = {-1, -1};
 int turn = 0;
+
+void ditch() {
+  const char* settings[] = {
+    "Turn: ",
+    "Move: ",
+    "Down: ",
+    "Try",
+    "Save",
+    "Exit"
+  };
+
+  const int numItems = sizeof(settings) / sizeof(settings[0]);
+
+  if (!editing) {
+    T0 = S0;
+    editing = 1;
+  }
+
+  if (y != y0 || x != x0) {
+    lcd.clear();
+    delay(100);
+    y = constrain(y, 0, numItems - 1);
+  }
+
+  char square[3] = "";
+  int range[4] = {1, 5, 10, 20};
+
+  lcd.setCursor(7, 0);
+  lcd.print("Ditch");
+  lcd.setCursor(17, 0);
+  if (range[r] < 10) {
+    lcd.print(" ");
+    lcd.print(range[r]);
+  } else
+    lcd.print(range[r]);
+
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (T0.turn < 0)
+    T0.turn = 90;
+  if (T0.move < 0)
+    T0.move = 0;
+  if (T0.down < 0)
+    T0.down = 0;
+  
+  for (int i = start; i < end; i++) {
+    int row = i - start + 1;
+    lcd.setCursor(0, row);
+
+    if (i == y) lcd.print("> ");
+    else lcd.print("  ");
+
+    lcd.print(settings[i]);
+    if (strcmp(settings[i], "Turn: ") == 0) {
+      if (i == y && x != x0) {
+        T0.turn += range[r] * (x - x0);
+        if (T0.turn < 0) T0.turn = 180;
+        if (T0.turn > 180) T0.turn = 0;
+        x = x0 = 0;
+      }
+
+      lcd.print("<");
+      lcd.print(T0.turn);
+      lcd.print(">");
+    }
+
+    if (strcmp(settings[i], "Move: ") == 0) {
+      if (i == y && x != x0) {
+        T0.move += range[r] * (x - x0);
+        if (T0.move < 0) T0.move = 180;
+        if (T0.move > 180) T0.move = 0;
+        x = x0 = 0;
+      }
+
+      lcd.print("<");
+      lcd.print(T0.move);
+      lcd.print(">");
+    }
+
+    if (strcmp(settings[i], "Down: ") == 0) {
+      if (i == y && x != x0) {
+        T0.down += range[r] * (x - x0);
+        T0.down = constrain(T0.down, 0, 150);
+        x = x0 = 0;
+      }
+
+      lcd.print("<");
+      lcd.print(T0.down * 100);
+      lcd.print(">");
+    }
+
+    if (strcmp(settings[i], "Save") == 0) {
+      if (memcmp(S, T, sizeof(S)) == 0)
+        lcd.print("d");
+      else
+        lcd.print(" ");
+    }
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (y == numItems - 3) {
+      reset();
+      moveH(T0.turn);
+      moveV(T0.move);
+      down(T0.down * 100);
+    } else if (y == numItems - 2) {
+      S0 = T0;
+      EEPROM.put(addr0, S0);
+    } else if (y == numItems - 1) {
+      page = redirect;
+      y = x = 0;
+      y0 = x0 = 0;
+      reset();
+      editing = 0;
+      lcd.clear();
+      delay(100);
+    } else {
+      r++;
+      if (r > 3) r = 0;
+    }
+  }
+}
 
 void calibration() {
   lcd.setCursor(4, 0);
@@ -83,8 +211,8 @@ void calibration() {
     if (e) lcd.print(">");
     lcd.print(" ms   ");
   } else {
-    lcd.setCursor(7, 2);
-    lcd.print("<Exit>  ");
+    lcd.setCursor(6, 2);
+    lcd.print(" <Exit>  ");
   }
 
   if (y != y0 && x < 4) {
@@ -119,20 +247,22 @@ void calibration() {
 }
 
 void squares() {
-  struct MenuItem {
-    const char* label;
-    int page;
-  };
-
-  const MenuItem settings[] = {
-    {"Square: ", 0},
-    {"Turn: ", 0},
-    {"Move: ", 0},
-    {"Down: ", 0},
-    {"Exit", 0}
+  const char* settings[] = {
+    "Square: ",
+    "Turn: ",
+    "Move: ",
+    "Down: ",
+    "Try",
+    "Save",
+    "Exit"
   };
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
+
+  if (!editing) {
+    memcpy(T, S, sizeof(S));
+    editing = 1;
+  }
 
   if (y != y0 || x != x0) {
     lcd.clear();
@@ -155,12 +285,12 @@ void squares() {
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
 
-  if (S[7 - z][z0].turn < 0)
-    S[7 - z][z0].turn = 90;
-  if (S[7 - z][z0].move < 0)
-    S[7 - z][z0].move = 0;
-  if (S[7 - z][z0].down < 0)
-    S[7 - z][z0].down = 0; 
+  if (T[7 - z][z0].turn < 0)
+    T[7 - z][z0].turn = 90;
+  if (T[7 - z][z0].move < 0)
+    T[7 - z][z0].move = 0;
+  if (T[7 - z][z0].down < 0)
+    T[7 - z][z0].down = 0;
   
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
@@ -169,8 +299,8 @@ void squares() {
     if (i == y) lcd.print("> ");
     else lcd.print("  ");
 
-    lcd.print(settings[i].label);
-    if (strcmp(settings[i].label, "Square: ") == 0) {
+    lcd.print(settings[i]);
+    if (strcmp(settings[i], "Square: ") == 0) {
       if (i == y && x != x0) {
         if (s == 1)
           z0 += (x - x0);
@@ -187,6 +317,7 @@ void squares() {
         }
         if (z0 < 0) z0 = 7;
         if (z0 > 7) z0 = 0;
+
         x = x0 = 0;
       }
 
@@ -215,80 +346,69 @@ void squares() {
       }
     }
 
-    if (strcmp(settings[i].label, "Turn: ") == 0) {
+    if (strcmp(settings[i], "Turn: ") == 0) {
       if (i == y && x != x0) {
-        S[7 - z][z0].turn += range[r] * (x - x0);
-        if (S[7 - z][z0].turn < 0) S[7 - z][z0].turn = 180;
-        if (S[7 - z][z0].turn > 180) S[7 - z][z0].turn = 0;
+        T[7 - z][z0].turn += range[r] * (x - x0);
+        if (T[7 - z][z0].turn < 0) T[7 - z][z0].turn = 180;
+        if (T[7 - z][z0].turn > 180) T[7 - z][z0].turn = 0;
         x = x0 = 0;
-        EEPROM.put(addr, S);
       }
 
-      if (i == y)
-        moveH(S[7 - z][z0].turn);
-
       lcd.print("<");
-      lcd.print(S[7 - z][z0].turn);
+      lcd.print(T[7 - z][z0].turn);
       lcd.print(">");
     }
 
-    if (strcmp(settings[i].label, "Move: ") == 0) {
+    if (strcmp(settings[i], "Move: ") == 0) {
       if (i == y && x != x0) {
-        S[7 - z][z0].move += range[r] * (x - x0);
-        if (S[7 - z][z0].move < 0) S[7 - z][z0].move = 180;
-        if (S[7 - z][z0].move > 180) S[7 - z][z0].move = 0;
+        T[7 - z][z0].move += range[r] * (x - x0);
+        if (T[7 - z][z0].move < 0) T[7 - z][z0].move = 180;
+        if (T[7 - z][z0].move > 180) T[7 - z][z0].move = 0;
         x = x0 = 0;
-        EEPROM.put(addr, S);
       }
 
-      if (i == y)
-        moveV(S[7 - z][z0].move);
-
       lcd.print("<");
-      lcd.print(S[7 - z][z0].move);
+      lcd.print(T[7 - z][z0].move);
       lcd.print(">");
     }
 
-    if (strcmp(settings[i].label, "Down: ") == 0) {
+    if (strcmp(settings[i], "Down: ") == 0) {
       if (i == y && x != x0) {
-        S[7 - z][z0].down += range[r] * (x - x0);
-        S[7 - z][z0].down = constrain(S[7 - z][z0].down, 0, 150);
+        T[7 - z][z0].down += range[r] * (x - x0);
+        T[7 - z][z0].down = constrain(T[7 - z][z0].down, 0, 150);
         x = x0 = 0;
-        EEPROM.put(addr, S);
-      }
-
-      if (i == y) {
-        if (S[7 - z][z0].down > d)
-          down((S[7 - z][z0].down - d) * 100);
-        else
-          up((d - S[7 - z][z0].down) * 100);
-        d = S[7 - z][z0].down;
       }
 
       lcd.print("<");
-      lcd.print(S[7 - z][z0].down * 100);
+      lcd.print(T[7 - z][z0].down * 100);
       lcd.print(">");
+    }
+
+    if (strcmp(settings[i], "Save") == 0) {
+      if (memcmp(S, T, sizeof(S)) == 0)
+        lcd.print("d");
+      else
+        lcd.print(" ");
     }
   }
 
   if (click) {
     click = 0;
     prevent = 1;
-    if (settings[y].page) {
-      redirect = -4;
-      page = settings[y].page;
-      y = x = 0;
-      y0 = x0 = 0;
-      lcd.clear();
-      delay(100);
+    if (y == numItems - 3) {
+      reset();
+      moveH(T[7 - z][z0].turn);
+      moveV(T[7 - z][z0].move);
+      down(T[7 - z][z0].down * 100);
+    } else if (y == numItems - 2) {
+      memcpy(S, T, sizeof(T));
+      EEPROM.put(addr, S);
     } else if (y == numItems - 1) {
       page = redirect;
       y = x = 0;
       y0 = x0 = 0;
-      moveH(90);
-      moveV(0);
-      up(d * 100);
-      d = 0;
+      reset();
+      editing = 0;
       lcd.clear();
       delay(100);
     } else if (y == 0) {
@@ -310,6 +430,7 @@ void debug() {
   const MenuItem settings[] = {
     {"Squares", -6},
     {"Calibration", -5},
+    {"Ditch", -7},
     {"Exit", 0}
   };
 
@@ -939,10 +1060,8 @@ int lcdloop(int M[cell][cell], char position[4]) {
           move(input.substring(2), 1);
           eat();
         }
-        move(input, 1);
+        move(input, 1);;
         move(input.substring(2), 0);
-        moveV(0);
-        moveH(90);
         turn = 0;
         invalid[0] = -1;
         invalid[1] = -1;
@@ -1023,6 +1142,9 @@ int lcdloop(int M[cell][cell], char position[4]) {
   }
 
     switch(page){
+      case -7:
+        ditch();
+        break;
       case -6:
         squares();
         break;
@@ -1066,12 +1188,12 @@ void lcdbegin() {
   lcd.createChar(0, arrowDown);
 
   pinMode(switchPin, INPUT_PULLUP);
-  pinMode(reset, OUTPUT);
-  digitalWrite(reset, HIGH);
+  pinMode(resetlcd, OUTPUT);
+  digitalWrite(resetlcd, HIGH);
 
-  digitalWrite(reset, LOW);
+  digitalWrite(resetlcd, LOW);
   delay(200);
-  digitalWrite(reset, HIGH);
+  digitalWrite(resetlcd, HIGH);
   delay(500);
 
   lcd.setCursor(4, 1);
@@ -1083,6 +1205,7 @@ void lcdbegin() {
 
   EEPROM.get(0, config);
   EEPROM.get(addr, S);
+  EEPROM.get(addr0, S0);
   Serial.println(config.ssid);
 
   Serial1.println("wifi");
