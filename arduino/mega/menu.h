@@ -1052,7 +1052,7 @@ int lcdloop(int M[cell][cell], char position[4]) {
         skip = 1;
       }
 
-      if (skip == 0 && !input.startsWith("code") && input != "joined") {
+      if (skip == 0 && !input.startsWith("code") && !input.startsWith("stockfish") && input != "joined") {
         strcpy(position, input.c_str());
 
         char lettera = input.charAt(2);
@@ -1065,7 +1065,7 @@ int lcdloop(int M[cell][cell], char position[4]) {
           move(input.substring(2), 1);
           eat();
         }
-        move(input, 1);;
+        move(input, 1);
         move(input.substring(2), 0);
         turn = 0;
         invalid[0] = -1;
