@@ -759,7 +759,7 @@ void play(int M[cell][cell], char position[4]) {
 
   /*
   String pos = checkEdges(M);
-  if (playing == 0 && pos.length() > 0) {
+  if (playing == -1 && pos.length() > 0) {
     lcd.setCursor(2, 0);
     lcd.print("Place the pieces");
     lcd.setCursor(4, 1);
@@ -768,6 +768,11 @@ void play(int M[cell][cell], char position[4]) {
     lcd.print(pos);
     return;
   }*/
+
+  if (playing == -1) {
+    Serial1.println("start");
+    playing = 0;
+  }
 
   if (ddlay(1000)) {
     time[1]++;
