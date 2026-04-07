@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Master</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
+        crossorigin="anonymous">
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+          integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+          crossorigin="anonymous"></script>
+
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+          integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+          crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"
+          integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz"
+          crossorigin="anonymous"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #302e2b;
+      color: #fff;
+      overflow: hidden;
+      margin: 0;
+      height: 100vh;
+      min-height: 100vh;
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      font-size: xxx-large;
+    }
+
+    #board {
+      position: absolute;
+      border-radius: 10px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40vw;
+      max-width: 100%;
+      height: 40vw;
+      max-height: 100%;
+      display: none;
+    }
+
+    [class*="board-"] {
+      border: none !important;
+    }
+
+    [class*="white-"] {
+      background-color: #eeeed2 !important;
+    }
+
+    [class*="black-"] {
+      background-color: #769656 !important;
+    }
+
+    #errorMessage {
+      margin-top: 20px;
+      display: none;
+    }
+
+    #errorMessage.error {
+      color: red;
+    }
+
+    #errorMessage.success {
+      color: green;
+    }
+
+    #codeInputContainer {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      padding: 30px;
+      gap: 15px;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      font-size: 16px;
+      width: 80%;
+      max-width: 300px;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #promotionMenu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      border: 1px solid #000;
+      padding: 10px;
+      z-index: 1000;
+      display: none;
+      border-radius: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
+
+    #promotionMenu button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+    }
+
+    #promotionMenu img {
+      width: 50px;
+      height: 50px;
+    }
+
+    .highlight-square {
+      background-color: rgba(100, 100, 100, 0.5);
+      border-radius: 50%;
+      position: absolute;
+      width: 30%;
+      height: 30%;
+      top: 35%;
+      left: 35%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    [class*="white-"][class*="highlight1-"] {
+      box-shadow: none !important;
+      background-color: #f5f682 !important;
+      border: 5px solid #fcfcd3;
+    }
+
+    [class*="black-"][class*="highlight1-"] {
+      box-shadow: none !important;
+      background-color: #b9ca43 !important;
+      border: 5px solid #d0dbc4;
+    }
+
+    [class*="white-"][class*="highlight2-"] {
+      box-shadow: none !important;
+      border: 5px solid #fcfcd3;
+    }
+
+    [class*="black-"][class*="highlight2-"] {
+      box-shadow: none !important;
+      border: 5px solid #d0dbc4;
+    }
+
+    [class*="white-"].highlight {
+      background-color: #f5f682 !important;
+    }
+
+    [class*="black-"].highlight {
+      background-color: #b9ca43 !important;
+    }
+
+    img {
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    @media (max-width: 600px) {
+      #board {
+        width: 90vw;
+        max-width: 100%;
+        height: 90vw;
+        max-height: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: xx-large;
+    }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>CHESS MASTER</h1>
+
+  <div id="codeInputContainer">
+    <input type="text" id="codeInput" placeholder="Inserisci il codice">
+    <button onclick="connectWithCode()">Entra</button>
+  </div>
+
+  <div id="board"></div>
+  <div id="promotionMenu"></div>
+  <p id="errorMessage"></p>
+  <div id="codeBanner" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: #4caf50; color: white; text-align: center; padding: 10px;"></div>
+
+  <script>
+    function main(code) {
+      var board = null;
+      var game = new Chess();
+      var state = 0;
+      var level = 0;
+
+      const wsUrl = `ws${window.location.protocol === "https:" ? "s" : ""}://${window.location.host}?code=${code}`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log(`Connesso al WebSocket con codice: ${code}`);
+      };
+
+      ws.onmessage = async (message) => {
+        const move = message.data.toString();
+        console.log(move);
+
+        if (["valid", "invalid"].includes(move))
+          return;
+
+        if (move.startsWith("code")) {
+          const gameCode = move.split(" ")[1];
+          const codeBanner = document.getElementById('codeBanner');
+          codeBanner.textContent = `${gameCode}`;
+          codeBanner.style.display = 'block';
+
+          localStorage.removeItem("code");
+          board.orientation('white');
+        }
+
+        if (move === "stockfish") {
+          level = Number(localStorage.getItem("level") || "1");
+          ws.send("level " + level);
+          return;
+        }
+
+        if (move === "start" || move.startsWith("code")) {
+          console.log("Partita iniziata.");
+          document.getElementById('codeInputContainer').style.display = 'none';
+          document.getElementById('board').style.display = 'block';
+          return;
+        }
+
+        if (move.startsWith("position")) {
+          game.load(move.replace("position ", ""));
+          board.position(game.fen());
+          return;
+        }
+
+        if (move === "win" || move === "lose" || move === "draw") {
+          if (move === "win") {
+            if (level > 0)
+              localStorage.setItem("level", level + 1);
+            state = 1;
+          }
+          if (move === "lose")
+            state = 2;
+          if (move === "draw")
+            state = 3
+
+          ws.close();
+          return;
+        }
+
+        if (level > 0)
+          document.getElementById('codeBanner').textContent = `Level: ${level}`;
+        else
+          document.getElementById('codeBanner').style.display = 'none';
+
+        const from = move.slice(0, 2);
+        const to = move.slice(2, 4);
+        const promotion = move.slice(4, 5);
+
+        const moveResult = game.move({
+          from: from,
+          to: to,
+          promotion: promotion
+        });
+
+        if (moveResult !== null) {
+          await new Promise(r => setTimeout(r, 100));
+          board.position(game.fen());
+          removeHighlights();
+          $board.find('.square-' + from).addClass('highlight');
+          $board.find('.square-' + to).addClass('highlight');
+          await new Promise(r => setTimeout(r, 150));
+          draggable = true;
+        } else {
+          console.log('Mossa non valida:', move);
+        }
+
+      };
+
+      ws.onclose = () => {
+        const errorMessage = document.getElementById('errorMessage');
+        const codeBanner = document.getElementById('codeBanner');
+        localStorage.removeItem("code");
+
+        if (!game.game_over()) {
+          document.getElementById('board').style.display = 'none';
+          document.body.style.justifyContent = 'center';
+          document.body.style.marginTop = '0px';
+          document.getElementById('codeInputContainer').style.display = 'flex';
+        }
+
+        if (game.history().length > 0) {
+            if (state === 0) {
+                errorMessage.textContent = 'Partita terminata.';
+                errorMessage.className = 'success';
+                errorMessage.style.display = 'block';
+                codeBanner.style.display = 'none';
+            }
+            if (state === 1) {
+                codeBanner.textContent = 'Hai vinto!';
+                codeBanner.style.backgroundColor = '#4caf50';
+                codeBanner.style.display = 'block';
+                if (level > 0)
+                    localStorage.setItem("level", level + 1);
+            }
+            if (state === 2) {
+                codeBanner.textContent = 'Hai perso!';
+                codeBanner.style.backgroundColor = '#f44336';
+                codeBanner.style.display = 'block';
+            }
+            if (state === 3) {
+                codeBanner.textContent = 'Patta!';
+                codeBanner.style.backgroundColor = '#ff9800';
+                codeBanner.style.display = 'block';
+            }
+        } else {
+            errorMessage.textContent = 'Partita non trovata.';
+            errorMessage.className = 'error';
+            errorMessage.style.display = 'block';
+            codeBanner.style.display = 'none';
+        }
+      };
+
+      function showPromotionMenu(source, target) {
+        const promotionMenu = document.getElementById('promotionMenu');
+        promotionMenu.style.display = 'grid';
+
+        const pieces = ['q', 'r', 'b', 'n'];
+        const color = game.get(target).color;
+
+        promotionMenu.innerHTML = '';
+
+        pieces.forEach(piece => {
+          const button = document.createElement('button');
+          const img = document.createElement('img');
+          img.src = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${color}${piece.toLocaleLowerCase()}.png`;
+          img.alt = piece.toLowerCase();
+
+          button.appendChild(img);
+          button.onclick = () => {
+            promotionMenu.style.display = 'none';
+            game.undo();
+            const move = game.move({
+              from: source,
+              to: target,
+              promotion: piece
+            });
+            if (move !== null) {
+              board.position(game.fen());
+              ws.send(source + target + piece);
+            }
+          };
+          promotionMenu.appendChild(button);
+        });
+      }
+
+      let selected = null;
+      let draggable = true;
+      var $board = $('#board')
+      function onDrop(source, target) {
+        if (!source) return;
+          const piece = game.get(source).type;
+          const move = game.move({
+            from: source,
+            to: target,
+            promotion: 'q'
+          });
+
+          if (target !== source && selected !== source)
+            removeMoves();
+
+          if (source == target)
+            if (selected !== source) {
+              $board.find('.square-' + selected).removeClass('highlight');
+              $board.find('.square-' + source).addClass('highlight');
+              selected = source;
+            } else {
+              $board.find('.square-' + source).removeClass('highlight');
+              removeMoves();
+              selected = null;
+            }
+
+          if (move === null) return 'snapback';
+          selected = null;
+          removeMoves();
+
+          if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
+            showPromotionMenu(source, target);
+            return;
+          }
+
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(source + target);
+          }
+
+          if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8"))) {
+            setTimeout(() => board.position(game.fen()), 200);
+          }
+
+          removeHighlights();
+          $board.find('.square-' + source).addClass('highlight');
+          $board.find('.square-' + target).addClass('highlight');
+          draggable = false;
+      }
+
+      var config = {
+        draggable,
+        showNotation: false,
+        position: 'start',
+        orientation: "black",
+        onDragStart: (source, piece, position, orientation) => {
+          board.draggable = draggable;
+         if (game.game_over() || !draggable) return false
+         if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
+         (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
+           return false
+          }
+
+          document.querySelectorAll('#board .square-55d63').forEach(square => {
+            square.addEventListener('click', (e) => {
+              const target = e.currentTarget.getAttribute('data-square')
+              onDrop(selected, target);
+              board.position(game.fen());
+            });
+          });
+
+          highlightPossibleMoves(source);
+        },
+        onDrop,
+        pieceTheme: (piece) => {
+          const formatted = piece.toLowerCase()
+          return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${formatted}.png`
+        }
+      };
+
+      function removeHighlights() {
+        $board.find('.square-55d63')
+        .removeClass('highlight')
+      }
+
+
+      function highlightPossibleMoves(square) {
+        removeMoves();
+
+        const moves = game.moves({
+          square: square,
+          verbose: true
+        });
+
+        moves.forEach(move => {
+          addMoves(move.to);
+        });
+      }
+
+      function addMoves(square) {
+        const squareElement = document.querySelector(`.square-${square}`);
+        if (squareElement) {
+          const highlight = document.createElement('div');
+          highlight.className = 'highlight-square';
+          squareElement.appendChild(highlight);
+        }
+      }
+
+      function removeMoves() {
+        const highlights = document.querySelectorAll('.highlight-square');
+        highlights.forEach(highlight => {
+          highlight.parentNode.removeChild(highlight);
+        });
+      }
+
+      board = Chessboard('board', config);
+      $(window).resize(board.resize);
+
+      setTimeout(() => {
+        document.body.style.marginTop = '50px';
+        document.body.style.justifyContent = 'flex-start';
+      }, 200);
+    }
+
+    function connectWithCode() {
+      let code = document.getElementById('codeInput').value || "online";
+      code = code.toUpperCase();
+      localStorage.setItem("code", code);
+
+      main(code);
+    }
+
+    function setRandomFavicon() {
+      const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
+      const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+      const faviconUrl = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${randomPiece}.png`;
+
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = faviconUrl;
+      document.head.appendChild(link);
+    }
+
+    setRandomFavicon();
+    const urlParams = new URLSearchParams(window.location.search);
+    const param = urlParams.get('code');
+    const code = localStorage.getItem("code");
+
+    if (param) {
+      localStorage.setItem("code", code);
+      window.location.search = "";
+    }
+
+    if (code) {
+      main(code);
+    } else {
+      document.getElementById('codeInputContainer').style.display = 'flex';
+    }
+  </script>
+
+</body>
+</html>
