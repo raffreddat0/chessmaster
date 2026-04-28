@@ -484,7 +484,7 @@ void credits() {
   const char *credits[] = {
       "Giovanni Montagna", "Matteo Geusa",   "Samuele Putignani",
       "Camilla Torresin",  "Lorenzo Afrune", "Alessandro Meraglia",
-      "Paola Candido",     "Niccolò Amato", ""};
+      "Paola Candido",     "Niccolò Amato", "Andrea Mangia", ""};
 
   const int numItems = sizeof(credits) / sizeof(credits[0]);
 
@@ -1056,7 +1056,7 @@ int lcdloop(int M[cell][cell], char position[4]) {
 
       if (skip == 0 && !input.startsWith("code") && !input.startsWith("stockfish") && input != "joined") {
         char piece = input[0];
-        input.remove(0, 1); 
+        input.remove(0, 1);
         strcpy(position, input.c_str());
 
         char lettera = input.charAt(2);

@@ -428,10 +428,12 @@
           selected = null;
           removeMoves();
 
+          /*
           if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
             showPromotionMenu(source, target);
             return;
           }
+          */
 
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);
