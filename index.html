@@ -1,9 +1,13 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chess Master</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet"
         href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
@@ -23,209 +27,358 @@
           crossorigin="anonymous"></script>
 
   <style>
+    :root {
+      --bg-color: #0c0c0c;
+      --card-bg: #161616;
+      --primary: oklch(48% .23 264);
+      --primary-hover: oklch(42% .23 264);
+      --highlight: oklch(80.9% .105 251.813);
+      --text-main: #ffffff;
+      --text-muted: #a1a1aa;
+      --error: #ef4444;
+      --success: #22c55e;
+      --border: #27272a;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      overflow: hidden;
     }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'IBM Plex Mono', monospace;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background-color: #302e2b;
-      color: #fff;
       overflow: hidden;
-      margin: 0;
-      height: 100vh;
-      min-height: 100vh;
-      touch-action: manipulation;
-      -ms-touch-action: manipulation;
+      line-height: 1.5;
+      position: relative;
     }
 
-    h1 {
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.2;
+      pointer-events: none;
+      background-image:
+        linear-gradient(var(--border) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, var(--border) 1.5px, transparent 1.5px);
+      background-size: 25vw 25vh;
+    }
+
+    .bg-pattern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(39, 39, 42, 0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39, 39, 42, 0.5) 1px, transparent 1px);
+      background-size: 5vw 5vh; /* Smaller sub-grid */
+    }
+
+    #gameHeader {
+      position: fixed;
+      top: 3rem;
+      left: 0;
+      width: 100%;
       text-align: center;
-      margin: 20px 0;
-      font-size: xxx-large;
-    }
-
-    #board {
-      position: absolute;
-      border-radius: 10px;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 40vw;
-      max-width: 100%;
-      height: 40vw;
-      max-height: 100%;
+      z-index: 100;
       display: none;
-    }
-
-    [class*="board-"] {
-      border: none !important;
-    }
-
-    [class*="white-"] {
-      background-color: #eeeed2 !important;
-    }
-
-    [class*="black-"] {
-      background-color: #769656 !important;
-    }
-
-    #errorMessage {
-      margin-top: 20px;
-      display: none;
-    }
-
-    #errorMessage.error {
-      color: red;
-    }
-
-    #errorMessage.success {
-      color: green;
-    }
-
-    #codeInputContainer {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-top: 10px;
-      padding: 30px;
-      gap: 15px;
-    }
-
-    input[type="text"] {
-      padding: 8px;
-      font-size: 16px;
-      width: 80%;
-      max-width: 300px;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    #promotionMenu {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #fff;
-      border: 1px solid #000;
-      padding: 10px;
-      z-index: 1000;
-      display: none;
-      border-radius: 8px;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-    }
-
-    #promotionMenu button {
-      border: none;
-      background-color: transparent;
-      cursor: pointer;
-    }
-
-    #promotionMenu img {
-      width: 50px;
-      height: 50px;
-    }
-
-    .highlight-square {
-      background-color: rgba(100, 100, 100, 0.5);
-      border-radius: 50%;
-      position: absolute;
-      width: 30%;
-      height: 30%;
-      top: 35%;
-      left: 35%;
-      z-index: 1;
       pointer-events: none;
     }
 
-    [class*="white-"][class*="highlight1-"] {
-      box-shadow: none !important;
-      background-color: #f5f682 !important;
-      border: 5px solid #fcfcd3;
+    #gameHeader h2 {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.2rem;
+      color: var(--text-main);
+      opacity: 1;
+      text-transform: uppercase;
+      margin: 0;
     }
 
-    [class*="black-"][class*="highlight1-"] {
-      box-shadow: none !important;
-      background-color: #b9ca43 !important;
-      border: 5px solid #d0dbc4;
+    h1 {
+      font-family: 'IBM Plex Serif', serif;
+      font-size: 4.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      background: linear-gradient(to bottom, #fff 40%, #888 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      z-index: 10;
     }
 
-    [class*="white-"][class*="highlight2-"] {
-      box-shadow: none !important;
-      border: 5px solid #fcfcd3;
+    .hero-container {
+      text-align: center;
+      max-width: 800px;
+      padding: 2rem;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
 
-    [class*="black-"][class*="highlight2-"] {
-      box-shadow: none !important;
-      border: 5px solid #d0dbc4;
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      margin-bottom: 2.5rem;
     }
 
-    [class*="white-"].highlight {
-      background-color: #f5f682 !important;
+    #codeInputContainer {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      border-radius: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow:
+        0 0 0 1px var(--border),
+        0 25px 50px -12px rgba(0, 0, 0, 0.7),
+        0 15px 30px -5px rgba(0, 0, 0, 0.4);
     }
 
-    [class*="black-"].highlight {
-      background-color: #b9ca43 !important;
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
     }
 
-    img {
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
+    label {
+      font-size: 0.96rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    input[type="text"] {
+      background: #000;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      transition: all 0.1s ease;
+      box-shadow: hsl(219, 93%, 20%) 0 -2px 0 0 inset, rgba(0, 0, 0, 0.4) 0 1px 3px 0;
       user-select: none;
-      touch-action: manipulation;
     }
 
-    @media (max-width: 600px) {
-      #board {
-        width: 90vw;
-        max-width: 100%;
-        height: 90vw;
-        max-height: 100%;
-      }
+    button:hover {
+      background-color: var(--primary-hover);
+      box-shadow: none;
+    }
 
+    button:active {
+      transform: translateY(1px) scale(0.99);
+      box-shadow: none;
+    }
+
+    button kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+      padding: 0 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-left: 4px;
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+    }
+
+    #board {
+      width: 40vw;
+      max-width: 100%;
+      display: none;
+      box-shadow:
+        0 0 0 1px var(--border),
+        0 20px 50px -12px rgba(0, 0, 0, 0.8),
+        0 10px 20px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .white-1e1d7 {
+      background-color: #ffffff !important;
+      color: var(--primary) !important;
+    }
+
+    .black-3c85d {
+      background-color: var(--primary) !important;
+      color: #ffffff !important;
+    }
+
+    .highlight {
+      box-shadow: inset 0 0 0 5px var(--highlight) !important;
+    }
+
+    #errorMessage {
+      margin-top: 1.5rem;
+      font-weight: 500;
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+    }
+
+    #errorMessage.error {
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    #errorMessage.success {
+      color: var(--success);
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    #codeBanner {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: none;
+      z-index: 100;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    #promotionMenu {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 1rem;
+      z-index: 1000;
+      display: none;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    #promotionMenu button {
+      background: #27272a;
+      padding: 0.5rem;
+    }
+
+    #promotionMenu img {
+      width: 60px;
+      height: 60px;
+    }
+
+    .highlight-square {
+      background-color: var(--highlight);
+      opacity: 0.8;
+      border-radius: 50%;
+      position: absolute;
+      width: 20%;
+      height: 20%;
+      top: 40%;
+      left: 40%;
+      z-index: 1;
+      pointer-events: none;
+      box-shadow: 0 0 10px var(--highlight);
+    }
+
+    @media (max-width: 640px) {
       h1 {
-        text-align: center;
-        margin-bottom: 20px;
-        font-size: xx-large;
-    }
+        font-size: 2.8rem;
+        margin-bottom: 0.5rem;
+      }
+      .subtitle {
+        font-size: 1rem;
+      }
+      #board {
+        width: 95vw;
+        margin: 1rem auto;
+      }
+      #codeBanner {
+        bottom: 1.5rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        width: auto;
+        max-width: 90vw;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>CHESS MASTER</h1>
+  <div class="bg-pattern"></div>
 
-  <div id="codeInputContainer">
-    <input type="text" id="codeInput" placeholder="Inserisci il codice">
-    <button onclick="connectWithCode()">Entra</button>
+  <div id="gameHeader">
+    <h2>Chess Master</h2>
+  </div>
+
+  <div class="hero-container" id="hero">
+    <h1>CHESS MASTER</h1>
+    <p class="subtitle">“Challenge the Future, One Move at a Time”</p>
+    <div id="codeInputContainer">
+      <div class="input-group">
+        <label for="codeInput">Game Code</label>
+        <input type="text" id="codeInput" placeholder="Enter code or just enter...">
+      </div>
+      <button onclick="connectWithCode()">
+          <svg style="transform: rotate(-90deg);" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+          Enter Game
+        </button>
+    </div>
   </div>
 
   <div id="board"></div>
   <div id="promotionMenu"></div>
   <p id="errorMessage"></p>
-  <div id="codeBanner" style="display: none; position: fixed; bottom: 0; width: 100%; background-color: #4caf50; color: white; text-align: center; padding: 10px;"></div>
+  <div id="codeBanner"></div>
 
   <script>
     function main(code) {
@@ -238,7 +391,7 @@
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log(`Connesso al WebSocket con codice: ${code}`);
+        console.log(`Connected to WebSocket with code: ${code}`);
       };
 
       ws.onmessage = async (message) => {
@@ -251,7 +404,7 @@
         if (move.startsWith("code")) {
           const gameCode = move.split(" ")[1];
           const codeBanner = document.getElementById('codeBanner');
-          codeBanner.textContent = `${gameCode}`;
+          codeBanner.textContent = `Code: ${gameCode}`;
           codeBanner.style.display = 'block';
 
           localStorage.removeItem("code");
@@ -265,8 +418,9 @@
         }
 
         if (move === "start" || move.startsWith("code")) {
-          console.log("Partita iniziata.");
-          document.getElementById('codeInputContainer').style.display = 'none';
+          console.log("Game started.");
+          document.getElementById('hero').style.display = 'none';
+          document.getElementById('gameHeader').style.display = 'block';
           document.getElementById('board').style.display = 'block';
           return;
         }
@@ -292,10 +446,11 @@
           return;
         }
 
-        if (level > 0)
-          document.getElementById('codeBanner').textContent = `Level: ${level}`;
-        else
-          document.getElementById('codeBanner').style.display = 'none';
+        if (level > 0) {
+          const codeBanner = document.getElementById('codeBanner');
+          codeBanner.textContent = `Level: ${level}`;
+          codeBanner.style.display = 'block';
+        }
 
         const from = move.slice(0, 2);
         const to = move.slice(2, 4);
@@ -316,7 +471,7 @@
           await new Promise(r => setTimeout(r, 150));
           draggable = true;
         } else {
-          console.log('Mossa non valida:', move);
+          console.log('Invalid move:', move);
         }
 
       };
@@ -328,37 +483,35 @@
 
         if (!game.game_over()) {
           document.getElementById('board').style.display = 'none';
-          document.body.style.justifyContent = 'center';
-          document.body.style.marginTop = '0px';
+          document.getElementById('gameHeader').style.display = 'none';
+          document.getElementById('hero').style.display = 'block';
           document.getElementById('codeInputContainer').style.display = 'flex';
         }
 
         if (game.history().length > 0) {
+            errorMessage.style.display = 'block';
             if (state === 0) {
-                errorMessage.textContent = 'Partita terminata.';
+                errorMessage.textContent = 'Game ended.';
                 errorMessage.className = 'success';
-                errorMessage.style.display = 'block';
                 codeBanner.style.display = 'none';
             }
             if (state === 1) {
-                codeBanner.textContent = 'Hai vinto!';
-                codeBanner.style.backgroundColor = '#4caf50';
+                codeBanner.textContent = 'You won!';
+                codeBanner.style.background = 'var(--success)';
                 codeBanner.style.display = 'block';
-                if (level > 0)
-                    localStorage.setItem("level", level + 1);
             }
             if (state === 2) {
-                codeBanner.textContent = 'Hai perso!';
-                codeBanner.style.backgroundColor = '#f44336';
+                codeBanner.textContent = 'You lost!';
+                codeBanner.style.background = 'var(--error)';
                 codeBanner.style.display = 'block';
             }
             if (state === 3) {
-                codeBanner.textContent = 'Patta!';
-                codeBanner.style.backgroundColor = '#ff9800';
+                codeBanner.textContent = 'Draw!';
+                codeBanner.style.background = '#f59e0b';
                 codeBanner.style.display = 'block';
             }
         } else {
-            errorMessage.textContent = 'Partita non trovata.';
+            errorMessage.textContent = 'Game not found.';
             errorMessage.className = 'error';
             errorMessage.style.display = 'block';
             codeBanner.style.display = 'none';
@@ -516,11 +669,6 @@
 
       board = Chessboard('board', config);
       $(window).resize(board.resize);
-
-      setTimeout(() => {
-        document.body.style.marginTop = '50px';
-        document.body.style.justifyContent = 'flex-start';
-      }, 200);
     }
 
     function connectWithCode() {

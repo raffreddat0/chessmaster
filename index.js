@@ -293,7 +293,7 @@ wss.on("connection", (ws, req) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Server in ascolto sulla porta ${port}`);
+  console.log(`Server in ascolto sulla porta http://localhost:${port}`);
 });
 
 process.on("uncaughtException", (error) => {
