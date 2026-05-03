@@ -572,7 +572,7 @@
       var game = new Chess();
       var state = 0;
       var level = 0;
-      var startTime = null;
+      var timer = null;
       var timerInterval = null;
       var viewingIndex = -1;
       var autoPlayInterval = null;
@@ -717,9 +717,9 @@
 
       function startTimer() {
         if (timerInterval) clearInterval(timerInterval);
-        startTime = Date.now();
+        timer = Date.now();
         timerInterval = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const elapsed = Math.floor((Date.now() - timer) / 1000);
           const hours = Math.floor(elapsed / 3600);
           const mins = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
           const secs = (elapsed % 60).toString().padStart(2, '0');
@@ -795,8 +795,8 @@
           return;
         }
 
-         if (content.startsWith("time")) {
-          startTime = Number(content.replace("time ", ""));
+         if (content.startsWith("timer")) {
+          timer = Number(content.replace("timer ", ""));
           return;
         }
 
@@ -815,7 +815,7 @@
           return;
         }
 
-        if (!startTime)
+        if (!timer)
           startTimer();
 
         if (level > 0) {
