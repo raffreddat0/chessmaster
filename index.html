@@ -796,6 +796,7 @@
         }
 
          if (content.startsWith("timer")) {
+          startTimer();
           timer = Number(content.replace("timer ", ""));
           return;
         }
