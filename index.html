@@ -244,6 +244,163 @@
         0 10px 20px -5px rgba(0, 0, 0, 0.5);
     }
 
+    #historyPanel {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 320px;
+      height: 70vh;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .history-header {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    #gameTimerDisplay {
+      font-size: 2.5rem;
+      font-weight: 700;
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--primary);
+      text-align: center;
+      padding: 1rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+    }
+
+    #moveListContent {
+      flex-grow: 1;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.2);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      font-size: 0.9rem;
+      display: grid;
+      grid-template-columns: 30px 1fr 1fr;
+      gap: 0.5rem;
+      align-content: flex-start;
+    }
+
+    #moveListContent::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #moveListContent::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .move-item {
+      color: var(--text-main);
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      text-align: center;
+    }
+
+    .move-item:hover {
+      background: var(--primary);
+    }
+
+    .move-item.active {
+      background: var(--primary) !important;
+      color: white !important;
+    }
+
+    #historyControls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: rgba(0,0,0,0.3);
+      border-radius: 0.5rem;
+      margin-top: 0.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .nav-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.4rem;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+    }
+
+    .nav-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+      transform: scale(1.1);
+    }
+
+    .nav-btn:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.15;
+      cursor: not-allowed;
+    }
+
+    .nav-btn.active {
+      color: var(--primary);
+    }
+
+    .move-num {
+      color: var(--text-muted);
+      text-align: right;
+      padding-right: 0.5rem;
+    }
+
+    #btnBackToPresent {
+      display: none;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    #btnBackToPresent.visible {
+      display: block;
+    }
+
+    @media (max-width: 1200px) {
+      #historyPanel {
+        display: none !important;
+      }
+    }
+
     .white-1e1d7 {
       background-color: #ffffff !important;
       color: var(--primary) !important;
@@ -403,6 +560,35 @@
     </div>
 
   <div id="board"></div>
+
+  <div id="historyPanel">
+    <div>
+      <div class="history-header">Game Time</div>
+      <div id="gameTimerDisplay">00:00</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="history-header">Move History</div>
+      <div id="moveListContent"></div>
+
+      <div id="historyControls">
+        <button class="nav-btn" id="btnFirstMove" onclick="showPastMove(0)" title="First Move">
+          <svg viewBox="0 0 24 24"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>
+        </button>
+        <button class="nav-btn" id="btnPrevMove" onclick="prevMove()" title="Previous Move">
+          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.82 12l4.59-4.59L14 6l-6 6 6 6z"/></svg>
+        </button>
+        <button class="nav-btn" id="btnAutoPlay" onclick="toggleAutoPlay()" title="Auto Play">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="nav-btn" id="btnNextMove" onclick="nextMove()" title="Next Move">
+          <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+        </button>
+        <button class="nav-btn" id="btnLastMove" onclick="backToPresent()" title="Current Position">
+          <svg viewBox="0 0 24 24"><path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
   <div id="promotionMenu"></div>
   <div id="island"></div>
 
@@ -412,6 +598,165 @@
       var game = new Chess();
       var state = 0;
       var level = 0;
+      var startTime = Date.now();
+      var timerInterval = null;
+      var viewingIndex = -1;
+      var autoPlayInterval = null;
+
+      function updateHistory() {
+        const history = game.history({ verbose: true });
+        const moveList = document.getElementById('moveListContent');
+        moveList.innerHTML = '';
+
+        for (let i = 0; i < history.length; i += 2) {
+          const moveNum = Math.floor(i / 2) + 1;
+
+          const numSpan = document.createElement('span');
+          numSpan.className = 'move-num';
+          numSpan.textContent = `${moveNum}.`;
+          moveList.appendChild(numSpan);
+
+          const whiteMove = document.createElement('span');
+          whiteMove.className = 'move-item';
+          whiteMove.textContent = history[i].from + history[i].to;
+          whiteMove.onclick = () => showPastMove(i + 1);
+          if (viewingIndex === i + 1 || (viewingIndex === -1 && i + 1 === history.length)) {
+            whiteMove.classList.add('active');
+          }
+          moveList.appendChild(whiteMove);
+
+          if (history[i + 1]) {
+            const blackMove = document.createElement('span');
+            blackMove.className = 'move-item';
+            blackMove.textContent = history[i + 1].from + history[i + 1].to;
+            blackMove.onclick = () => showPastMove(i + 2);
+            if (viewingIndex === i + 2 || (viewingIndex === -1 && i + 2 === history.length)) {
+              blackMove.classList.add('active');
+            }
+            moveList.appendChild(blackMove);
+          }
+        }
+
+        document.getElementById('btnFirstMove').disabled = (history.length === 0 || viewingIndex === 0);
+        document.getElementById('btnPrevMove').disabled = (history.length === 0 || viewingIndex === 0);
+        document.getElementById('btnNextMove').disabled = (viewingIndex === -1 || viewingIndex === history.length);
+        document.getElementById('btnLastMove').disabled = (viewingIndex === -1);
+
+        if (viewingIndex === -1) {
+          moveList.scrollTop = moveList.scrollHeight;
+
+          if (history.length > 0) {
+            const lastMove = history[history.length - 1];
+            removeHighlights();
+            $board.find('.square-' + lastMove.from).addClass('highlight');
+            $board.find('.square-' + lastMove.to).addClass('highlight');
+          }
+        }
+      }
+
+      window.prevMove = function() {
+        const history = game.history();
+        let targetIndex = viewingIndex === -1 ? history.length - 1 : viewingIndex - 1;
+        if (targetIndex >= 0) {
+          showPastMove(targetIndex);
+        }
+      }
+
+      window.nextMove = function() {
+        const history = game.history();
+        if (viewingIndex !== -1 && viewingIndex < history.length) {
+          showPastMove(viewingIndex + 1);
+        }
+      }
+
+      window.toggleAutoPlay = function() {
+        const btn = document.getElementById('btnAutoPlay');
+        const playIcon = document.getElementById('playIcon');
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+          playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+          btn.classList.remove('active');
+        } else {
+          const history = game.history();
+          if (history.length === 0) return;
+
+          if (viewingIndex === -1 || viewingIndex === history.length) {
+            showPastMove(0);
+          }
+
+          playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+          btn.classList.add('active');
+          autoPlayInterval = setInterval(() => {
+            const currentHistory = game.history();
+            if (viewingIndex < currentHistory.length) {
+              nextMove();
+            } else {
+              toggleAutoPlay();
+            }
+          }, 1000);
+        }
+      }
+
+      window.showPastMove = function(index) {
+        const history = game.history({ verbose: true });
+
+        if (index === history.length || index === -1) {
+          backToPresent();
+          return;
+        }
+
+        viewingIndex = index;
+        const tempGame = new Chess();
+        for (let i = 0; i < index; i++) {
+          tempGame.move(history[i]);
+        }
+        board.position(tempGame.fen());
+
+        removeHighlights();
+        if (index > 0) {
+          const lastMove = history[index - 1];
+          $board.find('.square-' + lastMove.from).addClass('highlight');
+          $board.find('.square-' + lastMove.to).addClass('highlight');
+        }
+
+        updateHistory();
+        draggable = false;
+      }
+
+      window.backToPresent = function() {
+        if (autoPlayInterval) toggleAutoPlay();
+        viewingIndex = -1;
+        board.position(game.fen());
+
+        removeHighlights();
+        const history = game.history({ verbose: true });
+        if (history.length > 0) {
+          const lastMove = history[history.length - 1];
+          $board.find('.square-' + lastMove.from).addClass('highlight');
+          $board.find('.square-' + lastMove.to).addClass('highlight');
+        }
+
+        updateHistory();
+        draggable = true;
+      }
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - startTime) / 1000);
+          const hours = Math.floor(elapsed / 3600);
+          const mins = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+          const secs = (elapsed % 60).toString().padStart(2, '0');
+
+          if (hours > 0) {
+            document.getElementById('gameTimerDisplay').textContent = `${hours}:${mins}:${secs}`;
+          } else {
+            document.getElementById('gameTimerDisplay').textContent = `${mins}:${secs}`;
+          }
+        }, 1000);
+      }
 
       const error = document.getElementById('error');
       error.style.display = 'none';
@@ -459,12 +804,16 @@
           document.getElementById('hero').style.display = 'none';
           document.getElementById('gameHeader').style.display = 'block';
           document.getElementById('board').style.display = 'block';
+          document.getElementById('historyPanel').style.display = 'flex';
+          startTimer();
+          updateHistory();
           return;
         }
 
         if (move.startsWith("position")) {
           game.load(move.replace("position ", ""));
           board.position(game.fen());
+          updateHistory();
           return;
         }
 
@@ -500,8 +849,15 @@
         });
 
         if (moveResult !== null) {
+          if (viewingIndex !== -1) {
+            viewingIndex = -1;
+            document.getElementById('btnBackToPresent').classList.remove('visible');
+            draggable = true;
+          }
+
           await new Promise(r => setTimeout(r, 100));
           board.position(game.fen());
+          updateHistory();
           removeHighlights();
           $board.find('.square-' + from).addClass('highlight');
           $board.find('.square-' + to).addClass('highlight');
@@ -516,10 +872,12 @@
       ws.onclose = () => {
         const error = document.getElementById('error');
         const island = document.getElementById('island');
+        if (timerInterval) clearInterval(timerInterval);
 
         if (!game.game_over()) {
           document.getElementById('board').style.display = 'none';
           document.getElementById('gameHeader').style.display = 'none';
+          document.getElementById('historyPanel').style.display = 'none';
           document.getElementById('hero').style.display = 'flex';
           document.getElementById('container').style.display = 'flex';
 
@@ -590,6 +948,7 @@
             });
             if (move !== null) {
               board.position(game.fen());
+              updateHistory();
               ws.send(source + target + piece);
             }
           };
@@ -625,6 +984,7 @@
 
           if (move === null) return 'snapback';
           selected = null;
+          updateHistory();
           removeMoves();
 
           /*
@@ -663,6 +1023,7 @@
 
           document.querySelectorAll('#board .square-55d63').forEach(square => {
             square.addEventListener('click', (e) => {
+              if (viewingIndex !== -1) return;
               const target = e.currentTarget.getAttribute('data-square')
               onDrop(selected, target);
               board.position(game.fen());
