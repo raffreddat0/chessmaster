@@ -938,7 +938,7 @@
           updateHistory();
           removeMoves();
 
-          if (!startTime)
+          if (!timer)
             startTimer();
 
           if (ws.readyState === WebSocket.OPEN) {
