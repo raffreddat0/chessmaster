@@ -106,6 +106,7 @@ wss.on("connection", (ws, req) => {
 
   let level = 1;
   let chess = new Chess();
+  let timer = null;
   let wait = code ? true : false;
   let game = code;
 
@@ -133,6 +134,12 @@ wss.on("connection", (ws, req) => {
 
     if (sessions[game]?.length === 2 && message === "position"){
       sessions[game][1].emit("message", "position " + chess.fen());
+      return;
+    }
+
+    if (message.startsWith("timer")) {
+      timer = Number(message.replace("timer ", ""));
+      ws.send(message);
       return;
     }
 
@@ -187,7 +194,10 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    ws.send("valid")
+    if (!timer)
+      timer = Date.now();
+
+    ws.send("valid");
     if (chess.isGameOver())
       ws.send(chess.isDraw() ? "draw" : "win");
 
@@ -231,6 +241,12 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
+    if (message.startsWith("timer")) {
+      timer = Number(message.replace("timer ", ""));
+      ws.send(message);
+      return;
+    }
+
     if (wait) {
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
@@ -270,6 +286,7 @@ wss.on("connection", (ws, req) => {
 
   });
   sessions[game][0].emit("message", "position");
+  sessions[game][0].emit("message", "timer");
   }
 
   ws.on("close", () => {

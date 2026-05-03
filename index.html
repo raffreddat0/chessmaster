@@ -572,7 +572,7 @@
       var game = new Chess();
       var state = 0;
       var level = 0;
-      var startTime = Date.now();
+      var startTime = null;
       var timerInterval = null;
       var viewingIndex = -1;
       var autoPlayInterval = null;
@@ -784,7 +784,6 @@
           document.getElementById('gameHeader').style.display = 'block';
           document.getElementById('board').style.display = 'block';
           document.getElementById('historyPanel').style.display = 'flex';
-          startTimer();
           updateHistory();
           return;
         }
@@ -793,6 +792,11 @@
           game.load(content.replace("position ", ""));
           board.position(game.fen());
           updateHistory();
+          return;
+        }
+
+         if (content.startsWith("time")) {
+          startTime = Number(content.replace("time ", ""));
           return;
         }
 
@@ -810,6 +814,9 @@
           ws.close();
           return;
         }
+
+        if (!startTime)
+          startTimer();
 
         if (level > 0) {
           const island = document.getElementById('island');
