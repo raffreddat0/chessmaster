@@ -137,8 +137,9 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    if (message.startsWith("timer") && timer) {
-      sessions[game][1].emit("message", "timer " + (timer - 10000));
+    if (message.startsWith("timer")) {
+      if (timer)
+        sessions[game][1].emit("message", "timer " + (timer - 10000));
       return;
     }
 
