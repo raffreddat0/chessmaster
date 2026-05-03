@@ -715,9 +715,9 @@
         draggable = true;
       }
 
-      function startTimer() {
+      function startTimer(start = Date.now()) {
         if (timerInterval) clearInterval(timerInterval);
-        timer = Date.now();
+        timer = start;
         timerInterval = setInterval(() => {
           const elapsed = Math.floor((Date.now() - timer) / 1000);
           const hours = Math.floor(elapsed / 3600);
@@ -796,8 +796,7 @@
         }
 
          if (content.startsWith("timer")) {
-          startTimer();
-          timer = Number(content.replace("timer ", ""));
+          startTimer(Number(content.replace("timer ", "")));
           return;
         }
 
