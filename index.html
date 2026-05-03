@@ -744,36 +744,41 @@
       };
 
       ws.onmessage = async (message) => {
-        const move = message.data.toString();
-        console.log(move);
+        const content = message.data.toString();
+        console.log(content);
 
-        if (move.startsWith("error")) {
+        if (content.startsWith("error")) {
           const error = document.getElementById('error');
-          error.textContent = move.replace("error ", "");
+          error.textContent = content.replace("error ", "");
           error.className = 'error';
           error.style.display = 'block';
           return;
         }
 
-        if (["valid", "invalid"].includes(move))
+        if (["valid", "invalid"].includes(content))
           return;
 
-        if (move.startsWith("code")) {
-          const gameCode = move.split(" ")[1];
-          const island = document.getElementById('island');
+        const island = document.getElementById('island');
+        if (content.startsWith("code")) {
+          const gameCode = content.split(" ")[1];
           island.textContent = `Code: ${gameCode}`;
           island.style.display = 'block';
 
           board.orientation('white');
         }
 
-        if (move === "stockfish") {
+        if (content === "joined") {
+          island.style.display = 'none';
+          return;
+        }
+
+        if (content === "stockfish") {
           level = Number(localStorage.getItem("level") || "1");
           ws.send("level " + level);
           return;
         }
 
-        if (move === "start" || move.startsWith("code")) {
+        if (content === "start" || content.startsWith("code")) {
           console.log("Game started.");
           document.getElementById('hero').style.display = 'none';
           document.getElementById('gameHeader').style.display = 'block';
@@ -784,22 +789,22 @@
           return;
         }
 
-        if (move.startsWith("position")) {
-          game.load(move.replace("position ", ""));
+        if (content.startsWith("position")) {
+          game.load(content.replace("position ", ""));
           board.position(game.fen());
           updateHistory();
           return;
         }
 
-        if (move === "win" || move === "lose" || move === "draw") {
-          if (move === "win") {
+        if (content === "win" || content === "lose" || content === "draw") {
+          if (content === "win") {
             if (level > 0)
               localStorage.setItem("level", level + 1);
             state = 1;
           }
-          if (move === "lose")
+          if (content === "lose")
             state = 2;
-          if (move === "draw")
+          if (content === "draw")
             state = 3
 
           ws.close();
@@ -812,8 +817,8 @@
           island.style.display = 'block';
         }
 
-        const from = move.slice(0, 2);
-        const to = move.slice(2, 4);
+        const from = content.slice(0, 2);
+        const to = content.slice(2, 4);
 
         const moveResult = game.move({
           from: from,
@@ -837,7 +842,7 @@
           await new Promise(r => setTimeout(r, 150));
           draggable = true;
         } else {
-          console.log('Invalid move:', move);
+          console.log('Invalid:', content);
         }
 
       };
