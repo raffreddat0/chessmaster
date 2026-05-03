@@ -467,32 +467,6 @@
       transition: all 0.3s ease;
     }
 
-    #promotionMenu {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 1rem;
-      border-radius: 1rem;
-      z-index: 1000;
-      display: none;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    #promotionMenu button {
-      background: #27272a;
-      padding: 0.5rem;
-    }
-
-    #promotionMenu img {
-      width: 60px;
-      height: 60px;
-    }
-
     .highlight-square {
       background-color: var(--highlight);
       opacity: 0.8;
@@ -590,7 +564,6 @@
       </div>
     </div>
   </div>
-  <div id="promotionMenu"></div>
   <div id="island"></div>
 
   <script>
@@ -841,12 +814,11 @@
 
         const from = move.slice(0, 2);
         const to = move.slice(2, 4);
-        const promotion = move.slice(4, 5);
 
         const moveResult = game.move({
           from: from,
           to: to,
-          promotion: promotion
+          promotion: "q"
         });
 
         if (moveResult !== null) {
@@ -923,40 +895,6 @@
         }
       };
 
-      function showPromotionMenu(source, target) {
-        const promotionMenu = document.getElementById('promotionMenu');
-        promotionMenu.style.display = 'grid';
-
-        const pieces = ['q', 'r', 'b', 'n'];
-        const color = game.get(target).color;
-
-        promotionMenu.innerHTML = '';
-
-        pieces.forEach(piece => {
-          const button = document.createElement('button');
-          const img = document.createElement('img');
-          img.src = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${color}${piece.toLocaleLowerCase()}.png`;
-          img.alt = piece.toLowerCase();
-
-          button.appendChild(img);
-          button.onclick = () => {
-            promotionMenu.style.display = 'none';
-            game.undo();
-            const move = game.move({
-              from: source,
-              to: target,
-              promotion: piece
-            });
-            if (move !== null) {
-              board.position(game.fen());
-              updateHistory();
-              ws.send(source + target + piece);
-            }
-          };
-          promotionMenu.appendChild(button);
-        });
-      }
-
       let selected = null;
       let draggable = true;
       var $board = $('#board')
@@ -987,13 +925,6 @@
           selected = null;
           updateHistory();
           removeMoves();
-
-          /*
-          if (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1'))) {
-            showPromotionMenu(source, target);
-            return;
-          }
-          */
 
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);

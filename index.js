@@ -164,7 +164,7 @@ wss.on("connection", (ws, req) => {
     if (wait) {
       let piece;
       try {
-        piece = chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" }).piece;
+        piece = chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" }).piece;
       } catch(error) {
         console.log(error.description);
         sessions[game][1].emit("message", "invalid");
@@ -180,7 +180,7 @@ wss.on("connection", (ws, req) => {
 
     console.log(`Mossa dell"utente: ${message}`);
     try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
+      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
     } catch(error) {
       console.log(error.description);
       ws.send("invalid");
@@ -209,7 +209,7 @@ wss.on("connection", (ws, req) => {
       try {
         const stockfishMove = await getStockfishMove(chess.fen(), level);
         console.log(`Mossa di Stockfish: ${stockfishMove}`);
-        const piece = chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: message.substring(4, 5) || "q" }).piece;
+        const piece = chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: "q" }).piece;
         ws.send(auth === "online" ? stockfishMove : (piece + stockfishMove));
       } catch {
         return await stockfish();
@@ -233,7 +233,7 @@ wss.on("connection", (ws, req) => {
 
     if (wait) {
       try {
-        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
+        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch(error) {
         console.log(error.description);
         sessions[game][0].emit("message", "invalid");
@@ -250,7 +250,7 @@ wss.on("connection", (ws, req) => {
 
     console.log(`Mossa dell"avversario: ${message}`);
     try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: message.substring(4, 5) || "q" });
+      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
     } catch(error) {
       console.log(error.description);
       ws.send("invalid");
