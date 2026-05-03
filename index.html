@@ -938,6 +938,9 @@
           updateHistory();
           removeMoves();
 
+          if (!startTime)
+            startTimer();
+
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(source + target);
           }
