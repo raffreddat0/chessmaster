@@ -8,12 +8,8 @@ require("dotenv").config();
 const app = express();
 const port = 1707;
 
-app.get("/", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "./index.html"));
-});
-
-app.use((req, res) => {
-  res.redirect("/");
 });
 
 const server = http.createServer(app);
@@ -65,14 +61,13 @@ wss.on("connection", (ws, req) => {
     return;
   }
 
-  if (code && !games.includes(code) && code !== "ONLINE" && sessions[code].length === 1) {
-    console.log("codice non valido");
+  if (code && !games.includes(code) && code !== "ONLINE" && (!sessions[code] || sessions[code]?.length === 1)) {
+    ws.send("error");
     ws.close();
     return;
   }
 
   if (auth && process.env.auth !== auth) {
-    console.log("auth non valido");
     ws.close();
     return;
   }
