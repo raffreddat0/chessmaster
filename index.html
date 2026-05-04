@@ -456,25 +456,38 @@
       max-width: 100%;
       height: 75vh;
       border-radius: 2.5rem 2.5rem 0 0;
-      padding: 1.5rem;
       justify-content: flex-start;
       align-items: stretch;
     }
 
     #islandHandle {
-      width: 36px;
-      height: 5px;
-      background: #3f3f46;
-      border-radius: 10px;
-      margin: 0 auto 1.25rem auto;
+      width: 100%;
+      height: 24px;
       display: none;
       flex-shrink: 0;
-      opacity: 0.4;
       cursor: pointer;
+      position: relative;
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
     }
 
     #island.expanded #islandHandle {
-      display: block;
+      display: flex !important;
+    }
+
+    #islandHandle::after {
+      content: '';
+      width: 36px;
+      height: 5px;
+      background: #52525b;
+      border-radius: 10px;
+      opacity: 0.8;
+    }
+
+    #island.expanded #islandHandle:hover::after {
+      background: #71717a;
       opacity: 1;
     }
 
@@ -484,6 +497,7 @@
       justify-content: center;
       height: 100%;
       width: 100%;
+      line-height: 1;
     }
 
     #island.expanded #islandCollapsed {
@@ -496,7 +510,7 @@
       flex-grow: 1;
       overflow: hidden;
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(10px);
       transition: all 0.4s ease 0.2s;
     }
 
@@ -1056,14 +1070,22 @@
       }, { passive: true });
 
       island.addEventListener('click', (e) => {
-        if (window.innerWidth <= 1730) {
-          if (!island.classList.contains('expanded')) {
-            island.classList.add('expanded');
-          } else if (e.target.id === 'islandHandle') {
-            island.classList.remove('expanded');
-          }
-        }
-      });
+         if (window.innerWidth <= 1730) {
+           if (!island.classList.contains('expanded')) {
+             island.classList.add('expanded');
+           } else if (e.target.id === 'islandHandle' || e.target.closest('#islandHandle')) {
+             island.classList.remove('expanded');
+           }
+         }
+       });
+
+       document.addEventListener('click', (e) => {
+         if (window.innerWidth <= 1730 && island.classList.contains('expanded')) {
+           if (!island.contains(e.target)) {
+             island.classList.remove('expanded');
+           }
+         }
+       });
 
       function handleSwipe() {
           const swipeDistance = touchStartY - touchEndY;
