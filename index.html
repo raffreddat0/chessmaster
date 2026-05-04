@@ -158,7 +158,6 @@
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
       text-align: left;
     }
 
@@ -166,6 +165,7 @@
       font-size: 0.96rem;
       font-weight: 500;
       color: var(--text-muted);
+      margin-bottom: 0.5rem;
     }
 
     input[type="text"] {
@@ -182,6 +182,12 @@
     input[type="text"]:focus {
       outline: none;
       border-color: var(--primary);
+    }
+
+    input[type="text"].error {
+      border-color: var(--error);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     button {
@@ -391,28 +397,29 @@
     }
 
     #error {
-      position: absolute;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: 500;
+      font-size: 0.7rem;
+      font-weight: 600;
       display: none;
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
-      white-space: nowrap;
-      z-index: 20;
+      padding: 0.25rem 0.75rem;
+      background: var(--error);
+      color: white;
+      border-bottom-left-radius: 0.5rem;
+      border-bottom-right-radius: 0.5rem;
+      margin-top: -1px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      animation: slideDown 0.2s ease-out;
+      width: 100%;
     }
 
-    #error.error {
-      color: var(--error);
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.2);
+    @keyframes slideDown {
+      from { transform: translateY(-5px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     #error.success {
-      color: var(--success);
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.2);
+      background: var(--success);
     }
 
     #island {
@@ -624,14 +631,14 @@
     <div id="container">
       <div class="input-group">
         <label for="codeInput">Game Code</label>
-        <input type="text" id="codeInput" placeholder="Enter code or just enter..." onkeydown="if (event.key === 'Enter') connectWithCode()">
+        <input type="text" id="codeInput" placeholder="Enter code or just enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error'); document.getElementById('error').style.display = 'none';">
+        <p id="error"></p>
       </div>
       <button onclick="connectWithCode()">
            <svg style="transform: rotate(-90deg);" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
            Enter Game
          </button>
       </div>
-      <p id="error"></p>
     </div>
 
   <div id="board"></div>
@@ -902,9 +909,11 @@
 
         if (content.startsWith("error")) {
           const error = document.getElementById('error');
+          const codeInput = document.getElementById('codeInput');
           error.textContent = content.replace("error ", "");
           error.className = 'error';
           error.style.display = 'block';
+          if (codeInput) codeInput.classList.add('error');
           return;
         }
 
@@ -1023,10 +1032,10 @@
         }
 
         if (game.history().length > 0) {
-            error.style.display = 'block';
             if (state === 0) {
                 error.textContent = 'Game ended.';
                 error.className = 'success';
+                error.style.display = 'block';
                 island.classList.remove('visible');
             }
             if (state === 1) {
@@ -1045,9 +1054,11 @@
                 island.classList.add('visible');
             }
         } else {
+            const codeInput = document.getElementById('codeInput');
             error.textContent = 'Game not found.';
             error.className = 'error';
             error.style.display = 'block';
+            if (codeInput) codeInput.classList.add('error');
             island.classList.remove('visible');
 
             setTimeout(() => {
