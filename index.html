@@ -396,6 +396,12 @@
       box-shadow: inset 0 0 0 5px var(--highlight) !important;
     }
 
+    input[type="text"].success {
+      border-color: var(--success);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
     #error {
       font-size: 0.7rem;
       font-weight: 600;
@@ -631,7 +637,7 @@
     <div id="container">
       <div class="input-group">
         <label for="codeInput">Game Code</label>
-        <input type="text" id="codeInput" placeholder="Enter code or just enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error'); document.getElementById('error').style.display = 'none';">
+        <input type="text" id="codeInput" placeholder="Enter code or just enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
         <p id="error"></p>
       </div>
       <button onclick="connectWithCode()">
@@ -1033,10 +1039,16 @@
 
         if (game.history().length > 0) {
             if (state === 0) {
+                const codeInput = document.getElementById('codeInput');
                 error.textContent = 'Game ended.';
                 error.className = 'success';
                 error.style.display = 'block';
+                if (codeInput) codeInput.classList.add('success');
                 island.classList.remove('visible');
+
+                setTimeout(() => {
+                  window.location.href = '/';
+                }, 5000);
             }
             if (state === 1) {
                 islandStatus.textContent = 'You won!';
