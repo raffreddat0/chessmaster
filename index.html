@@ -1110,6 +1110,7 @@
 
       island.addEventListener('touchstart', (e) => {
         if (!canUseIslandInteractions()) return;
+        if (!island.classList.contains('expanded')) return;
         isDragging = true;
         dragStartedExpanded = island.classList.contains('expanded');
         dragStartY = e.touches[0].clientY;
@@ -1127,11 +1128,7 @@
         const moveList = document.getElementById('mobileMoveList');
         if (dragStartedExpanded && dragDeltaY > 0 && moveList && moveList.scrollTop > 0) return;
 
-        if (dragStartedExpanded) {
-          setIslandDragOffset(Math.max(0, dragDeltaY));
-        } else {
-          setIslandDragOffset(Math.min(0, dragDeltaY));
-        }
+        setIslandDragOffset(Math.max(0, dragDeltaY));
       }, { passive: true });
 
       island.addEventListener('touchend', () => {
@@ -1140,12 +1137,9 @@
         isDragging = false;
         island.classList.remove('dragging');
 
-        const openThreshold = -80;
         const closeThreshold = 120;
 
-        if (!dragStartedExpanded && dragDeltaY < openThreshold) {
-          openIsland();
-        } else if (dragStartedExpanded && dragDeltaY > closeThreshold) {
+        if (dragStartedExpanded && dragDeltaY > closeThreshold) {
           closeIsland();
         }
 
