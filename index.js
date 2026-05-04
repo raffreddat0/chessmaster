@@ -18,13 +18,26 @@ const server = http.createServer(app);
 const wss = new Server({ server });
 
 function generateCode() {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    code += characters[randomIndex];
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const numbers = "0123456789";
+
+  let codeArray = [];
+  for (let i = 0; i < 3; i++) {
+    const randomIndex = Math.floor(Math.random() * letters.length);
+    codeArray.push(letters[randomIndex]);
   }
-  return code;
+
+  for (let i = 0; i < 3; i++) {
+    const randomIndex = Math.floor(Math.random() * numbers.length);
+    codeArray.push(numbers[randomIndex]);
+  }
+
+  for (let i = codeArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [codeArray[i], codeArray[j]] = [codeArray[j], codeArray[i]];
+  }
+
+  return codeArray.join("");
 }
 
 const getStockfishMove = async (fen, level) => {
