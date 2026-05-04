@@ -27,6 +27,12 @@
           crossorigin="anonymous"></script>
 
   <style>
+    @font-face {
+      font-family: 'ChessMasterDisplay';
+      src: url('/font.otf') format('opentype');
+      font-display: swap;
+    }
+
     :root {
       --bg-color: #0c0c0c;
       --card-bg: #161616;
@@ -106,16 +112,34 @@
     }
 
     h1 {
-      font-family: 'IBM Plex Serif', serif;
-      font-size: 4.5rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-family: 'ChessMasterDisplay', 'IBM Plex Serif', serif;
+      font-size: 5.5rem;
+      font-weight: normal;
+      letter-spacing: 0.02em;
       margin-bottom: 1rem;
-      background: linear-gradient(to bottom, #fff 40%, #888 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
       position: relative;
       z-index: 10;
+      line-height: 0.9;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    h1 .title-top {
+      display: block;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+    }
+
+    h1 .title-bottom {
+      display: block;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      margin-top: 0.32em;
+    }
+
+    h1 .title-s {
+      font-variant-ligatures: none;
+      font-feature-settings: "liga" 0, "calt" 0, "salt" 0, "dlig" 0;
     }
 
     .hero-container {
@@ -134,12 +158,9 @@
     .subtitle {
       color: var(--text-muted);
       font-size: 1.25rem;
-      margin-bottom: 2.5rem;
     }
 
     #container {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
       padding: 2.5rem;
       border-radius: 1rem;
       display: flex;
@@ -147,11 +168,6 @@
       gap: 1.5rem;
       width: 100%;
       max-width: 400px;
-      margin: 0 auto;
-      box-shadow:
-        0 0 0 1px var(--border),
-        0 20px 40px rgba(0, 0, 0, 0.6),
-        0 10px 20px rgba(0, 0, 0, 0.4);
       overflow: hidden;
     }
 
@@ -216,6 +232,25 @@
     button:active {
       transform: translateY(1px) scale(0.99);
       box-shadow: none;
+    }
+
+    #enterGameLabel {
+      position: relative;
+    }
+
+    #enterGameLabel.typing::after {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: currentColor;
+      margin-left: 6px;
+      transform: translateY(2px);
+      animation: caretBlink 0.75s steps(1) infinite;
+    }
+
+    @keyframes caretBlink {
+      50% { opacity: 0; }
     }
 
     #board {
@@ -614,7 +649,7 @@
 
     @media (max-width: 640px) {
       h1 {
-        font-size: 2.8rem;
+        font-size: 4rem;
         margin-bottom: 0.5rem;
       }
       .subtitle {
@@ -635,17 +670,16 @@
   <img id="logo" alt="Chess Master Logo" onclick="window.location.href='/'">
 
   <div class="hero-container" id="hero">
-    <h1>CHESS MASTER</h1>
+    <h1><span class="title-top">CHESS</span><span class="title-bottom">MASTER</span></h1>
     <p class="subtitle">“Challenge the Future, One Move at a Time”</p>
     <div id="container">
       <div class="input-group">
-        <label for="codeInput">Game Code</label>
-        <input type="text" id="codeInput" placeholder="Enter code or just enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
+        <input type="text" id="codeInput" placeholder="Enter code or just press enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
         <p id="error"></p>
       </div>
-      <button onclick="connectWithCode()">
+      <button id="enterGameBtn" onclick="connectWithCode()">
            <svg style="transform: rotate(-90deg);" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-           Enter Game
+           <span id="enterGameLabel">Enter Game</span>
          </button>
       </div>
     </div>
@@ -787,6 +821,7 @@
 
           if (history.length > 0) {
             const lastMove = history[history.length - 1];
+            removeMoves();
             removeHighlights();
             $board.find('.square-' + lastMove.from).addClass('highlight');
             $board.find('.square-' + lastMove.to).addClass('highlight');
@@ -853,6 +888,7 @@
         }
         board.position(tempGame.fen());
 
+        removeMoves();
         removeHighlights();
         if (index > 0) {
           const lastMove = history[index - 1];
@@ -1303,6 +1339,219 @@
     }
 
     setRandomFavicon();
+    function randomizeTitleCase() {
+      const top = document.querySelector('.title-top');
+      const bottom = document.querySelector('.title-bottom');
+      if (!top || !bottom) return;
+
+      const render = (el, text) => {
+        el.innerHTML = '';
+        for (const ch of text) {
+          if (ch === ' ') {
+            el.appendChild(document.createTextNode(' '));
+            continue;
+          }
+          const span = document.createElement('span');
+          const upper = Math.random() < 0.5;
+          span.textContent = upper ? ch.toUpperCase() : ch.toLowerCase();
+          if (ch.toUpperCase() === 'S') span.className = 'title-s';
+          el.appendChild(span);
+        }
+      };
+
+      render(top, 'CHESS');
+      render(bottom, 'MASTER');
+    }
+
+    randomizeTitleCase();
+    function setupEnterGameTyping() {
+      const input = document.getElementById('codeInput');
+      const label = document.getElementById('enterGameLabel');
+      if (!input || !label) return;
+
+      const phrases = [
+        'Wanna Play?',
+        'Click Me!',
+        'Ready for Checkmate?',
+        'Make Your Move',
+        'Man vs AI: Who Wins?',
+        'Let\'s Duel',
+        'Fight the Engine!'
+      ];
+
+      const defaultText = 'Enter Game';
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let direction = 1;
+      let timeoutId = null;
+      let mode = 'phrases';
+      let startupTimeoutId = null;
+      let initialHold = true;
+
+      const speeds = {
+        type: 95,
+        erase: 55,
+        hold: 1400,
+        between: 650,
+        toDefaultType: 70,
+        toDefaultErase: 45,
+        toDefaultGap: 140
+      };
+
+      const clearTimer = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+      };
+
+      const hasInput = () => input.value.trim().length > 0;
+
+      const startToDefault = () => {
+        if (startupTimeoutId) {
+          clearTimeout(startupTimeoutId);
+          startupTimeoutId = null;
+          initialHold = false;
+        }
+        mode = 'toDefault';
+        direction = -1;
+        charIndex = label.textContent.length;
+        label.classList.add('typing');
+        clearTimer();
+        timeoutId = setTimeout(tick, 0);
+      };
+
+      const startPhrases = () => {
+        if (startupTimeoutId) {
+          clearTimeout(startupTimeoutId);
+          startupTimeoutId = null;
+          initialHold = false;
+        }
+        label.classList.add('typing');
+        clearTimer();
+        if (label.textContent.length > 0) {
+          mode = 'eraseForPhrases';
+          direction = -1;
+          charIndex = label.textContent.length;
+          timeoutId = setTimeout(tick, speeds.erase);
+          return;
+        }
+
+        mode = 'phrases';
+        direction = 1;
+        charIndex = 0;
+        timeoutId = setTimeout(tick, speeds.between);
+      };
+
+      const tick = () => {
+        if (hasInput()) {
+          if (mode === 'defaultIdle') return;
+          if (mode !== 'toDefault') {
+            mode = 'toDefault';
+            direction = -1;
+            charIndex = label.textContent.length;
+            label.classList.add('typing');
+          }
+
+          if (direction === -1) {
+            charIndex = Math.max(0, charIndex - 1);
+            label.textContent = label.textContent.slice(0, charIndex);
+            if (charIndex === 0) {
+              direction = 1;
+              timeoutId = setTimeout(tick, speeds.toDefaultGap);
+              return;
+            }
+            timeoutId = setTimeout(tick, speeds.toDefaultErase);
+            return;
+          }
+
+          charIndex = Math.min(defaultText.length, charIndex + 1);
+          label.textContent = defaultText.slice(0, charIndex);
+          if (charIndex === defaultText.length) {
+            label.classList.remove('typing');
+            mode = 'defaultIdle';
+            clearTimer();
+            return;
+          }
+          timeoutId = setTimeout(tick, speeds.toDefaultType);
+          return;
+        }
+
+        if (mode === 'defaultIdle') {
+          startPhrases();
+          return;
+        }
+
+        if (mode === 'eraseForPhrases') {
+          charIndex = Math.max(0, charIndex - 1);
+          label.textContent = label.textContent.slice(0, charIndex);
+          if (charIndex === 0) {
+            mode = 'phrases';
+            direction = 1;
+            charIndex = 0;
+            timeoutId = setTimeout(tick, speeds.between);
+            return;
+          }
+          timeoutId = setTimeout(tick, speeds.erase);
+          return;
+        }
+
+        label.classList.add('typing');
+        const current = phrases[phraseIndex];
+
+        if (direction === 1) {
+          charIndex++;
+          label.textContent = current.slice(0, charIndex);
+          if (charIndex >= current.length) {
+            direction = -1;
+            timeoutId = setTimeout(tick, speeds.hold);
+            return;
+          }
+          timeoutId = setTimeout(tick, speeds.type);
+          return;
+        }
+
+        charIndex--;
+        label.textContent = current.slice(0, charIndex);
+        if (charIndex <= 0) {
+          direction = 1;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          timeoutId = setTimeout(tick, speeds.between);
+          return;
+        }
+        timeoutId = setTimeout(tick, speeds.erase);
+      };
+
+      input.addEventListener('input', () => {
+        if (hasInput()) {
+          if (initialHold && label.textContent === defaultText) {
+            if (startupTimeoutId) {
+              clearTimeout(startupTimeoutId);
+              startupTimeoutId = null;
+            }
+            initialHold = false;
+            mode = 'defaultIdle';
+            label.classList.remove('typing');
+            clearTimer();
+            return;
+          }
+          if (mode === 'defaultIdle' || mode === 'toDefault') return;
+          startToDefault();
+          return;
+        }
+
+        if (mode !== 'phrases') {
+          startPhrases();
+        }
+      });
+
+      startupTimeoutId = setTimeout(() => {
+        initialHold = false;
+        if (!hasInput()) startPhrases();
+      }, 3000);
+    }
+
+    setupEnterGameTyping();
     const urlParams = new URLSearchParams(window.location.search);
     const param = urlParams.get('code');
     const code = window.location.pathname.substring(1).toUpperCase();
