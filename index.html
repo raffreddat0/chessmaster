@@ -303,7 +303,7 @@
       top: 50%;
       transform: translateY(-50%);
       width: 320px;
-      height: 30vh;
+      height: 50vh;
       display: none;
       overflow: hidden;
       z-index: 90;
@@ -328,6 +328,7 @@
       flex-direction: column;
       gap: 0.75rem;
       padding: 0.75rem 0;
+      margin-bottom: 50px;
     }
 
     .credits-title {
@@ -1687,11 +1688,11 @@
       if (!panel || !track || !base) return;
 
       let clone = null;
-      let baseHeight = 0;
+      let cycleHeight = 0;
       let offset = 0;
       let lastTs = null;
       let running = false;
-      const speedPxPerSec = 26;
+      const speedPxPerSec = 20;
 
       const ensureClone = () => {
         if (clone) return;
@@ -1702,7 +1703,10 @@
       };
 
       const measure = () => {
-        baseHeight = base.getBoundingClientRect().height;
+        if (!clone) return;
+        const baseTop = base.getBoundingClientRect().top;
+        const cloneTop = clone.getBoundingClientRect().top;
+        cycleHeight = cloneTop - baseTop;
       };
 
       const step = (ts) => {
@@ -1715,9 +1719,9 @@
         const dt = (ts - lastTs) / 1000;
         lastTs = ts;
 
-        if (baseHeight > 0) {
+        if (cycleHeight > 0) {
           offset += speedPxPerSec * dt;
-          if (offset >= baseHeight) offset -= baseHeight;
+          if (offset >= cycleHeight) offset -= cycleHeight;
           track.style.transform = `translate3d(0, ${-offset}px, 0)`;
         }
 
