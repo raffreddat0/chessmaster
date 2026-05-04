@@ -445,11 +445,12 @@
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
       transition:
-        width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-        height 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-        bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-        border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-        background-color 0.3s ease;
+        height 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        padding 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
+        bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
+        transform 0.25s ease 0s,
+        background-color 0.3s ease 0s;
       overflow: hidden;
       max-width: 95vw;
       width: auto;
@@ -458,7 +459,6 @@
 
     #island.visible {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
     }
@@ -469,8 +469,20 @@
       max-width: 100%;
       height: 75vh;
       border-radius: 2.5rem 2.5rem 0 0;
+      flex-direction: column;
       justify-content: flex-start;
       align-items: stretch;
+      transition:
+        width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        height 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+        bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+        padding 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+        transform 0.25s ease 0s,
+        background-color 0.3s ease 0s;
+    }
+
+    #island.dragging {
+      transition: none !important;
     }
 
     #islandHandle {
@@ -581,17 +593,8 @@
         cursor: default;
       }
 
-      #island:not(.expanded).visible {
-        min-width: 200px;
-        display: flex;
-      }
-
-      #islandHandle {
-        display: none;
-      }
-
-      #island.expanded #islandHandle {
-        display: block;
+      #island.visible:not(.expanded) {
+        width: clamp(220px, 60vw, 340px);
       }
     }
 
@@ -1080,50 +1083,90 @@
       };
 
       const island = document.getElementById('island');
-      let touchStartY = 0;
-      let touchEndY = 0;
+      let dragStartY = 0;
+      let dragDeltaY = 0;
+      let isDragging = false;
+      let dragStartedExpanded = false;
 
-      island.addEventListener('touchstart', e => {
-        touchStartY = e.changedTouches[0].screenY;
+      function openIsland() {
+        island.classList.add('expanded');
+      }
+
+      function closeIsland() {
+        island.classList.remove('expanded');
+      }
+
+      function setIslandDragOffset(px) {
+        island.style.transform = `translateX(-50%) translateY(${px}px)`;
+      }
+
+      function clearIslandDragOffset() {
+        island.style.transform = '';
+      }
+
+      function canUseIslandInteractions() {
+        return window.innerWidth <= 1730 && island.classList.contains('visible');
+      }
+
+      island.addEventListener('touchstart', (e) => {
+        if (!canUseIslandInteractions()) return;
+        isDragging = true;
+        dragStartedExpanded = island.classList.contains('expanded');
+        dragStartY = e.touches[0].clientY;
+        dragDeltaY = 0;
+        island.classList.add('dragging');
       }, { passive: true });
 
-      island.addEventListener('touchend', e => {
-        touchEndY = e.changedTouches[0].screenY;
-        handleSwipe();
+      island.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        if (!canUseIslandInteractions()) return;
+
+        const currentY = e.touches[0].clientY;
+        dragDeltaY = currentY - dragStartY;
+
+        const moveList = document.getElementById('mobileMoveList');
+        if (dragStartedExpanded && dragDeltaY > 0 && moveList && moveList.scrollTop > 0) return;
+
+        if (dragStartedExpanded) {
+          setIslandDragOffset(Math.max(0, dragDeltaY));
+        } else {
+          setIslandDragOffset(Math.min(0, dragDeltaY));
+        }
+      }, { passive: true });
+
+      island.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        if (!canUseIslandInteractions()) return;
+        isDragging = false;
+        island.classList.remove('dragging');
+
+        const openThreshold = -80;
+        const closeThreshold = 120;
+
+        if (!dragStartedExpanded && dragDeltaY < openThreshold) {
+          openIsland();
+        } else if (dragStartedExpanded && dragDeltaY > closeThreshold) {
+          closeIsland();
+        }
+
+        clearIslandDragOffset();
       }, { passive: true });
 
       island.addEventListener('click', (e) => {
-         if (window.innerWidth <= 1730) {
-           if (!island.classList.contains('expanded')) {
-             island.classList.add('expanded');
-           } else if (e.target.id === 'islandHandle' || e.target.closest('#islandHandle')) {
-             island.classList.remove('expanded');
-           }
-         }
-       });
+        if (!canUseIslandInteractions()) return;
 
-       document.addEventListener('click', (e) => {
-         if (window.innerWidth <= 1730 && island.classList.contains('expanded')) {
-           if (!island.contains(e.target)) {
-             island.classList.remove('expanded');
-           }
-         }
-       });
-
-      function handleSwipe() {
-          const swipeDistance = touchStartY - touchEndY;
-          const moveList = document.getElementById('mobileMoveList');
-
-          if (window.innerWidth <= 1730) {
-            if (swipeDistance > 40 && !island.classList.contains('expanded')) {
-              island.classList.add('expanded');
-            } else if (swipeDistance < -40 && island.classList.contains('expanded')) {
-              if (moveList.scrollTop <= 0) {
-                island.classList.remove('expanded');
-              }
-            }
-          }
+        if (!island.classList.contains('expanded')) {
+          openIsland();
+        } else if (e.target.id === 'islandHandle' || e.target.closest('#islandHandle')) {
+          closeIsland();
         }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!canUseIslandInteractions()) return;
+        if (!island.classList.contains('expanded')) return;
+        if (!island.contains(e.target)) closeIsland();
+      });
 
       let selected = null;
       let draggable = true;
