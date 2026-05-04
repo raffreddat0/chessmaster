@@ -105,28 +105,6 @@
       transform: translateX(-50%) scale(1.05);
     }
 
-    #gameHeader {
-      position: fixed;
-      top: 6.5rem;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      z-index: 100;
-      display: none;
-      pointer-events: none;
-    }
-
-    #gameHeader h2 {
-      font-family: 'IBM Plex Serif', serif;
-      font-size: clamp(2rem, 6vw, 3rem);
-      font-weight: 700;
-      letter-spacing: 0.2rem;
-      color: var(--text-main);
-      opacity: 1;
-      text-transform: uppercase;
-      margin: 0;
-    }
-
     h1 {
       font-family: 'IBM Plex Serif', serif;
       font-size: 4.5rem;
@@ -235,7 +213,7 @@
     }
 
     #board {
-      width: 40vw;
+      width: 70vh;
       max-width: 70vh;
       display: none;
       box-shadow:
@@ -379,7 +357,7 @@
       padding-right: 0.5rem;
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1730px) {
       #historyPanel {
         display: none !important;
       }
@@ -469,12 +447,6 @@
       box-shadow: 0 0 10px var(--highlight);
     }
 
-    @media (max-height: 1000px) {
-      #gameHeader {
-        display: none !important;
-      }
-    }
-
     @media (max-width: 640px) {
       h1 {
         font-size: 2.8rem;
@@ -493,14 +465,9 @@
   </style>
 </head>
 <body>
-
   <div class="bg-pattern"></div>
 
   <img id="logo" alt="Chess Master Logo" onclick="window.location.href='/'">
-
-  <div id="gameHeader">
-    <h2>Chess Master</h2>
-  </div>
 
   <div class="hero-container" id="hero">
     <h1>CHESS MASTER</h1>
@@ -765,7 +732,6 @@
         if (content === "start" || content.startsWith("code")) {
           console.log("Game started.");
           document.getElementById('hero').style.display = 'none';
-          document.getElementById('gameHeader').style.display = 'block';
           document.getElementById('board').style.display = 'block';
           document.getElementById('historyPanel').style.display = 'flex';
           updateHistory();
@@ -844,7 +810,6 @@
 
         if (!game.game_over()) {
           document.getElementById('board').style.display = 'none';
-          document.getElementById('gameHeader').style.display = 'none';
           document.getElementById('historyPanel').style.display = 'none';
           document.getElementById('hero').style.display = 'flex';
           document.getElementById('container').style.display = 'flex';
