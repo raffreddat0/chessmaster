@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,24 +8,24 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
 
-  <link rel="stylesheet"
-        href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
-        integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU"
-        crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
+    integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"
-          integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
-          crossorigin="anonymous"></script>
+    integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2"
+    crossorigin="anonymous"></script>
 
   <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
-          integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
-          crossorigin="anonymous"></script>
+    integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+    crossorigin="anonymous"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js"
-          integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz"
-          crossorigin="anonymous"></script>
+    integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz"
+    crossorigin="anonymous"></script>
 
   <style>
     @font-face {
@@ -103,7 +104,7 @@
       height: 70px;
       z-index: 200;
       cursor: pointer;
-      filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
       transition: transform 0.2s ease;
     }
 
@@ -127,13 +128,13 @@
     h1 .title-top {
       display: block;
       color: #ffffff;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
     }
 
     h1 .title-bottom {
       display: block;
-      color: rgba(255,255,255,0.85);
-      text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+      color: rgba(255, 255, 255, 0.85);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
       margin-top: 0.32em;
     }
 
@@ -158,6 +159,19 @@
     .subtitle {
       color: var(--text-muted);
       font-size: 1.25rem;
+    }
+
+    #credits {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.02em;
+      z-index: 10;
+      user-select: none;
+      pointer-events: none;
     }
 
     #container {
@@ -250,7 +264,9 @@
     }
 
     @keyframes caretBlink {
-      50% { opacity: 0; }
+      50% {
+        opacity: 0;
+      }
     }
 
     #board {
@@ -277,7 +293,7 @@
       display: none;
       flex-direction: column;
       gap: 1.5rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       z-index: 100;
     }
 
@@ -297,7 +313,7 @@
       color: var(--primary);
       text-align: center;
       padding: 1rem;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 0.5rem;
       border: 1px solid var(--border);
     }
@@ -305,7 +321,7 @@
     #moveListContent {
       flex-grow: 1;
       overflow-y: auto;
-      background: rgba(0,0,0,0.2);
+      background: rgba(0, 0, 0, 0.2);
       border-radius: 0.5rem;
       padding: 0.75rem;
       font-size: 0.9rem;
@@ -346,7 +362,7 @@
       justify-content: center;
       gap: 1rem;
       padding: 0.75rem;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 0.5rem;
       margin-top: 0.5rem;
       border: 1px solid var(--border);
@@ -373,7 +389,7 @@
     }
 
     .nav-btn:hover:not(:disabled) {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text-main);
       transform: scale(1.1);
     }
@@ -455,8 +471,15 @@
     }
 
     @keyframes slideDown {
-      from { transform: translateY(-5px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from {
+        transform: translateY(-5px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     #error.success {
@@ -592,7 +615,7 @@
     .move-list-base {
       flex-grow: 1;
       overflow-y: auto;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
       border-radius: 1rem;
       padding: 1rem;
@@ -652,18 +675,22 @@
         font-size: 4rem;
         margin-bottom: 0.5rem;
       }
+
       .subtitle {
         font-size: 1rem;
       }
+
       #island {
         bottom: 1.5rem;
       }
+
       #error {
         bottom: 1.5rem;
       }
     }
   </style>
 </head>
+
 <body>
   <div class="bg-pattern"></div>
 
@@ -674,15 +701,21 @@
     <p class="subtitle">“Challenge the Future, One Move at a Time”</p>
     <div id="container">
       <div class="input-group">
-        <input type="text" id="codeInput" placeholder="Enter code or just press enter..." onkeydown="if (event.key === 'Enter') connectWithCode()" oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
+        <input type="text" id="codeInput" placeholder="Enter code or just press enter..."
+          onkeydown="if (event.key === 'Enter') connectWithCode()"
+          oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
         <p id="error"></p>
       </div>
       <button id="enterGameBtn" onclick="connectWithCode()">
-           <svg style="transform: rotate(-90deg);" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
-           <span id="enterGameLabel">Enter Game</span>
-         </button>
-      </div>
+        <svg style="transform: rotate(-90deg);" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none"
+          stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
+        </svg>
+        <span id="enterGameLabel">Enter Game</span>
+      </button>
     </div>
+    <div id="credits">Campionati di Robotica 2026</div>
+  </div>
 
   <div id="board"></div>
 
@@ -697,19 +730,29 @@
 
       <div id="historyControls">
         <button class="nav-btn" id="btnFirstMove" onclick="showPastMove(0)" title="First Move">
-          <svg viewBox="0 0 24 24"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z" />
+          </svg>
         </button>
         <button class="nav-btn" id="btnPrevMove" onclick="prevMove()" title="Previous Move">
-          <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.82 12l4.59-4.59L14 6l-6 6 6 6z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M15.41 16.59L10.82 12l4.59-4.59L14 6l-6 6 6 6z" />
+          </svg>
         </button>
         <button class="nav-btn" id="btnAutoPlay" onclick="toggleAutoPlay()" title="Auto Play">
-          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="playIcon" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
         </button>
         <button class="nav-btn" id="btnNextMove" onclick="nextMove()" title="Next Move">
-          <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+          </svg>
         </button>
         <button class="nav-btn" id="btnLastMove" onclick="backToPresent()" title="Current Position">
-          <svg viewBox="0 0 24 24"><path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z"/></svg>
+          <svg viewBox="0 0 24 24">
+            <path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z" />
+          </svg>
         </button>
       </div>
     </div>
@@ -829,7 +872,7 @@
         }
       }
 
-      window.prevMove = function() {
+      window.prevMove = function () {
         const history = game.history();
         let targetIndex = viewingIndex === -1 ? history.length - 1 : viewingIndex - 1;
         if (targetIndex >= 0) {
@@ -837,14 +880,14 @@
         }
       }
 
-      window.nextMove = function() {
+      window.nextMove = function () {
         const history = game.history();
         if (viewingIndex !== -1 && viewingIndex < history.length) {
           showPastMove(viewingIndex + 1);
         }
       }
 
-      window.toggleAutoPlay = function() {
+      window.toggleAutoPlay = function () {
         const btn = document.getElementById('btnAutoPlay');
         const playIcon = document.getElementById('playIcon');
         if (autoPlayInterval) {
@@ -873,7 +916,7 @@
         }
       }
 
-      window.showPastMove = function(index) {
+      window.showPastMove = function (index) {
         const history = game.history({ verbose: true });
 
         if (index === history.length || index === -1) {
@@ -900,7 +943,7 @@
         draggable = false;
       }
 
-      window.backToPresent = function() {
+      window.backToPresent = function () {
         if (autoPlayInterval) toggleAutoPlay();
         viewingIndex = -1;
         board.position(game.fen());
@@ -1002,7 +1045,7 @@
           return;
         }
 
-         if (content.startsWith("timer")) {
+        if (content.startsWith("timer")) {
           startTimer(Number(content.replace("timer ", "")));
           return;
         }
@@ -1077,44 +1120,44 @@
         }
 
         if (game.history().length > 0) {
-            if (state === 0) {
-                const codeInput = document.getElementById('codeInput');
-                error.textContent = 'Game ended.';
-                error.className = 'success';
-                error.style.display = 'block';
-                if (codeInput) codeInput.classList.add('success');
-                island.classList.remove('visible');
-
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 5000);
-            }
-            if (state === 1) {
-                islandStatus.textContent = 'You won!';
-                island.style.background = 'var(--success)';
-                island.classList.add('visible');
-            }
-            if (state === 2) {
-                islandStatus.textContent = 'You lost!';
-                island.style.background = 'var(--error)';
-                island.classList.add('visible');
-            }
-            if (state === 3) {
-                islandStatus.textContent = 'Draw!';
-                island.style.background = '#f59e0b';
-                island.classList.add('visible');
-            }
-        } else {
+          if (state === 0) {
             const codeInput = document.getElementById('codeInput');
-            error.textContent = 'Game not found.';
-            error.className = 'error';
+            error.textContent = 'Game ended.';
+            error.className = 'success';
             error.style.display = 'block';
-            if (codeInput) codeInput.classList.add('error');
+            if (codeInput) codeInput.classList.add('success');
             island.classList.remove('visible');
 
             setTimeout(() => {
               window.location.href = '/';
             }, 5000);
+          }
+          if (state === 1) {
+            islandStatus.textContent = 'You won!';
+            island.style.background = 'var(--success)';
+            island.classList.add('visible');
+          }
+          if (state === 2) {
+            islandStatus.textContent = 'You lost!';
+            island.style.background = 'var(--error)';
+            island.classList.add('visible');
+          }
+          if (state === 3) {
+            islandStatus.textContent = 'Draw!';
+            island.style.background = '#f59e0b';
+            island.classList.add('visible');
+          }
+        } else {
+          const codeInput = document.getElementById('codeInput');
+          error.textContent = 'Game not found.';
+          error.className = 'error';
+          error.style.display = 'block';
+          if (codeInput) codeInput.classList.add('error');
+          island.classList.remove('visible');
+
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 5000);
         }
       };
 
@@ -1203,47 +1246,47 @@
       var $board = $('#board')
       function onDrop(source, target) {
         if (!source) return;
-          const piece = game.get(source).type;
-          const move = game.move({
-            from: source,
-            to: target,
-            promotion: 'q'
-          });
+        const piece = game.get(source).type;
+        const move = game.move({
+          from: source,
+          to: target,
+          promotion: 'q'
+        });
 
-          if (target !== source && selected !== source)
-            removeMoves();
-
-          if (source == target)
-            if (selected !== source) {
-              $board.find('.square-' + selected).removeClass('highlight');
-              $board.find('.square-' + source).addClass('highlight');
-              selected = source;
-            } else {
-              $board.find('.square-' + source).removeClass('highlight');
-              removeMoves();
-              selected = null;
-            }
-
-          if (move === null) return 'snapback';
-          selected = null;
-          updateHistory();
+        if (target !== source && selected !== source)
           removeMoves();
 
-          if (!timer)
-            startTimer();
-
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(source + target);
+        if (source == target)
+          if (selected !== source) {
+            $board.find('.square-' + selected).removeClass('highlight');
+            $board.find('.square-' + source).addClass('highlight');
+            selected = source;
+          } else {
+            $board.find('.square-' + source).removeClass('highlight');
+            removeMoves();
+            selected = null;
           }
 
-          if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8")) || (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1')))) {
-            setTimeout(() => board.position(game.fen()), 200);
-          }
+        if (move === null) return 'snapback';
+        selected = null;
+        updateHistory();
+        removeMoves();
 
-          removeHighlights();
-          $board.find('.square-' + source).addClass('highlight');
-          $board.find('.square-' + target).addClass('highlight');
-          draggable = false;
+        if (!timer)
+          startTimer();
+
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(source + target);
+        }
+
+        if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8")) || (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1')))) {
+          setTimeout(() => board.position(game.fen()), 200);
+        }
+
+        removeHighlights();
+        $board.find('.square-' + source).addClass('highlight');
+        $board.find('.square-' + target).addClass('highlight');
+        draggable = false;
       }
 
       var config = {
@@ -1253,10 +1296,10 @@
         orientation: "black",
         onDragStart: (source, piece, position, orientation) => {
           board.draggable = draggable;
-         if (game.game_over() || !draggable) return false
-         if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
-         (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
-           return false
+          if (game.game_over() || !draggable) return false
+          if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
+            (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
+            return false
           }
 
           document.querySelectorAll('#board .square-55d63').forEach(square => {
@@ -1279,7 +1322,7 @@
 
       function removeHighlights() {
         $board.find('.square-55d63')
-        .removeClass('highlight')
+          .removeClass('highlight')
       }
 
 
@@ -1566,4 +1609,5 @@
   </script>
 
 </body>
+
 </html>
