@@ -88,26 +88,26 @@
       background-size: 20px 20px;
     }
 
-    #gameLogo {
+    #logo {
       position: fixed;
       top: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
-      width: 80px;
-      height: 80px;
+      width: 70px;
+      height: 70px;
       z-index: 200;
       cursor: pointer;
       filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
       transition: transform 0.2s ease;
     }
 
-    #gameLogo:hover {
+    #logo:hover {
       transform: translateX(-50%) scale(1.05);
     }
 
     #gameHeader {
       position: fixed;
-      top: 7rem;
+      top: 6.5rem;
       left: 0;
       width: 100%;
       text-align: center;
@@ -236,7 +236,7 @@
 
     #board {
       width: 40vw;
-      max-width: 100%;
+      max-width: 70vh;
       display: none;
       box-shadow:
         0 0 0 1px var(--border),
@@ -379,26 +379,14 @@
       padding-right: 0.5rem;
     }
 
-    #btnBackToPresent {
-      display: none;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem;
-      border-radius: 0.5rem;
-      cursor: pointer;
-      font-weight: 600;
-      width: 100%;
-      margin-top: 0.5rem;
-    }
-
-    #btnBackToPresent.visible {
-      display: block;
-    }
-
     @media (max-width: 1200px) {
       #historyPanel {
         display: none !important;
+      }
+
+      #board {
+        width: 95vw;
+        margin: 1rem auto;
       }
     }
 
@@ -481,12 +469,13 @@
       box-shadow: 0 0 10px var(--highlight);
     }
 
-    @media (max-width: 640px) {
-      #gameLogo {
-        width: 60px;
-        height: 60px;
-        top: 1rem;
+    @media (max-height: 1000px) {
+      #gameHeader {
+        display: none !important;
       }
+    }
+
+    @media (max-width: 640px) {
       h1 {
         font-size: 2.8rem;
         margin-bottom: 0.5rem;
@@ -494,16 +483,11 @@
       .subtitle {
         font-size: 1rem;
       }
-      #board {
-        width: 95vw;
-        margin: 1rem auto;
-      }
       #island {
         bottom: 1.5rem;
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
-        width: auto;
-        max-width: 90vw;
+      }
+      #error {
+        bottom: 1.5rem;
       }
     }
   </style>
@@ -512,7 +496,7 @@
 
   <div class="bg-pattern"></div>
 
-  <img id="gameLogo" alt="Chess Master Logo" onclick="window.location.href='/'">
+  <img id="logo" alt="Chess Master Logo" onclick="window.location.href='/'">
 
   <div id="gameHeader">
     <h2>Chess Master</h2>
@@ -836,7 +820,6 @@
         if (moveResult !== null) {
           if (viewingIndex !== -1) {
             viewingIndex = -1;
-            document.getElementById('btnBackToPresent').classList.remove('visible');
             draggable = true;
           }
 
@@ -1041,7 +1024,7 @@
       link.href = faviconUrl;
       document.head.appendChild(link);
 
-      const logo = document.getElementById('gameLogo');
+      const logo = document.getElementById('logo');
       if (logo) {
         logo.src = faviconUrl;
       }
