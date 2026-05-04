@@ -451,21 +451,6 @@
       display: flex !important;
     }
 
-    #islandHandle {
-      width: 36px;
-      height: 5px;
-      background: #3f3f46;
-      border-radius: 10px;
-      margin: 0 auto 1.25rem auto;
-      display: none;
-      flex-shrink: 0;
-      opacity: 0.4;
-    }
-
-    #island.expanded #islandHandle {
-      display: block;
-      opacity: 1;
-    }
 
     #islandCollapsed {
       display: flex;
@@ -544,14 +529,6 @@
         display: flex !important;
         align-items: center;
         justify-content: center;
-      }
-
-      #islandHandle {
-        display: none;
-      }
-
-      #island.expanded #islandHandle {
-        display: block;
       }
     }
 
@@ -638,7 +615,6 @@
     </div>
   </div>
   <div id="island">
-    <div id="islandHandle"></div>
     <div id="islandCollapsed">
       <span id="islandStatus"></span>
     </div>
@@ -1043,14 +1019,14 @@
       }, { passive: true });
 
       island.addEventListener('click', () => {
-        if (window.innerWidth <= 768 && !island.classList.contains('expanded')) {
+        if (window.innerWidth <= 1730 && !island.classList.contains('expanded')) {
           island.classList.add('expanded');
         }
       });
 
       function handleSwipe() {
          const swipeDistance = touchStartY - touchEndY;
-         if (window.innerWidth <= 768) {
+         if (window.innerWidth <= 1730) {
            if (swipeDistance > 40 && !island.classList.contains('expanded')) {
              island.classList.add('expanded');
            } else if (swipeDistance < -40 && island.classList.contains('expanded')) {
