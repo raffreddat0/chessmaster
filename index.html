@@ -417,7 +417,7 @@
 
     #island {
       position: fixed;
-      bottom: 2rem;
+      bottom: 1.5rem;
       left: 50%;
       transform: translateX(-50%);
       background: var(--card-bg);
@@ -431,26 +431,52 @@
       z-index: 1000;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
-      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition:
+        width 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        height 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        border-radius 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.3s ease;
       overflow: hidden;
-      max-width: 90vw;
+      max-width: 95vw;
       width: auto;
       min-width: 160px;
     }
 
+    #island.visible {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
     #island.expanded {
       bottom: 0;
-      left: 0;
-      transform: translateX(0);
       width: 100%;
       max-width: 100%;
       height: 75vh;
       border-radius: 2.5rem 2.5rem 0 0;
       padding: 1.5rem;
-      flex-direction: column;
-      display: flex !important;
+      justify-content: flex-start;
+      align-items: stretch;
     }
 
+    #islandHandle {
+      width: 36px;
+      height: 5px;
+      background: #3f3f46;
+      border-radius: 10px;
+      margin: 0 auto 1.25rem auto;
+      display: none;
+      flex-shrink: 0;
+      opacity: 0.4;
+      cursor: pointer;
+    }
+
+    #island.expanded #islandHandle {
+      display: block;
+      opacity: 1;
+    }
 
     #islandCollapsed {
       display: flex;
@@ -524,11 +550,21 @@
         touch-action: none;
       }
 
-      #island:not(.expanded) {
+      #island.expanded {
+        cursor: default;
+      }
+
+      #island:not(.expanded).visible {
         min-width: 200px;
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
+        display: flex;
+      }
+
+      #islandHandle {
+        display: none;
+      }
+
+      #island.expanded #islandHandle {
+        display: block;
       }
     }
 
@@ -615,6 +651,7 @@
     </div>
   </div>
   <div id="island">
+    <div id="islandHandle"></div>
     <div id="islandCollapsed">
       <span id="islandStatus"></span>
     </div>
@@ -865,13 +902,13 @@
         if (content.startsWith("code")) {
           const gameCode = content.split(" ")[1];
           islandStatus.textContent = `Code: ${gameCode}`;
-          island.style.display = 'block';
+          island.classList.add('visible');
 
           board.orientation('white');
         }
 
         if (content === "joined") {
-          island.style.display = 'none';
+          island.classList.remove('visible');
           return;
         }
 
@@ -919,7 +956,7 @@
 
         if (level > 0) {
           islandStatus.textContent = `Level: ${level}`;
-          island.style.display = 'block';
+          island.classList.add('visible');
         }
 
         const from = content.slice(0, 2);
@@ -976,28 +1013,28 @@
             if (state === 0) {
                 error.textContent = 'Game ended.';
                 error.className = 'success';
-                island.style.display = 'none';
+                island.classList.remove('visible');
             }
             if (state === 1) {
                 islandStatus.textContent = 'You won!';
                 island.style.background = 'var(--success)';
-                island.style.display = 'block';
+                island.classList.add('visible');
             }
             if (state === 2) {
                 islandStatus.textContent = 'You lost!';
                 island.style.background = 'var(--error)';
-                island.style.display = 'block';
+                island.classList.add('visible');
             }
             if (state === 3) {
                 islandStatus.textContent = 'Draw!';
                 island.style.background = '#f59e0b';
-                island.style.display = 'block';
+                island.classList.add('visible');
             }
         } else {
             error.textContent = 'Game not found.';
             error.className = 'error';
             error.style.display = 'block';
-            island.style.display = 'none';
+            island.classList.remove('visible');
 
             setTimeout(() => {
               window.location.href = '/';
@@ -1018,22 +1055,30 @@
         handleSwipe();
       }, { passive: true });
 
-      island.addEventListener('click', () => {
-        if (window.innerWidth <= 1730 && !island.classList.contains('expanded')) {
-          island.classList.add('expanded');
+      island.addEventListener('click', (e) => {
+        if (window.innerWidth <= 1730) {
+          if (!island.classList.contains('expanded')) {
+            island.classList.add('expanded');
+          } else if (e.target.id === 'islandHandle') {
+            island.classList.remove('expanded');
+          }
         }
       });
 
       function handleSwipe() {
-         const swipeDistance = touchStartY - touchEndY;
-         if (window.innerWidth <= 1730) {
-           if (swipeDistance > 40 && !island.classList.contains('expanded')) {
-             island.classList.add('expanded');
-           } else if (swipeDistance < -40 && island.classList.contains('expanded')) {
-             island.classList.remove('expanded');
-           }
-         }
-       }
+          const swipeDistance = touchStartY - touchEndY;
+          const moveList = document.getElementById('mobileMoveList');
+
+          if (window.innerWidth <= 1730) {
+            if (swipeDistance > 40 && !island.classList.contains('expanded')) {
+              island.classList.add('expanded');
+            } else if (swipeDistance < -40 && island.classList.contains('expanded')) {
+              if (moveList.scrollTop <= 0) {
+                island.classList.remove('expanded');
+              }
+            }
+          }
+        }
 
       let selected = null;
       let draggable = true;
