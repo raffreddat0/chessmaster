@@ -1546,10 +1546,45 @@
       $(window).resize(board.resize);
     }
 
-    function connectWithCode() {
-      let code = document.getElementById('codeInput').value || "online";
+    async function connectWithCode() {
+      const codeInput = document.getElementById('codeInput');
+      const error = document.getElementById('error');
+      if (!codeInput) return;
+
+      let code = codeInput.value.trim();
+      if (!code) {
+        window.location.href = "/ONLINE";
+        return;
+      }
       code = code.toUpperCase();
-      window.location.href = "/" + code;
+      if (code === 'ONLINE') {
+        window.location.href = "/ONLINE";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/game/${encodeURIComponent(code)}`);
+        if (!res.ok) throw new Error('bad status');
+        const data = await res.json();
+        if (data?.exists) {
+          window.location.href = "/" + code;
+          return;
+        }
+
+        if (error) {
+          error.textContent = 'Game not found.';
+          error.className = 'error';
+          error.style.display = 'block';
+        }
+        codeInput.classList.add('error');
+      } catch {
+        if (error) {
+          error.textContent = 'Connection error.';
+          error.className = 'error';
+          error.style.display = 'block';
+        }
+        codeInput.classList.add('error');
+      }
     }
 
     function setRandomFavicon() {
