@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credits</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #0c0c0c;
+      --card-bg: #161616;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --border: #27272a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    input,
+    textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    img,
+    svg {
+      -webkit-user-drag: none;
+      user-drag: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      line-height: 1.5;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.2;
+      pointer-events: none;
+      background-image:
+        linear-gradient(var(--border) 1.5px, transparent 1.5px),
+        linear-gradient(90deg, var(--border) 1.5px, transparent 1.5px);
+      background-size: 100px 100px;
+    }
+
+    .bg-pattern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(rgba(39, 39, 42, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39, 39, 42, 0.3) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    #logo {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 70px;
+      z-index: 20;
+      cursor: pointer;
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+      transition: transform 0.2s ease;
+    }
+
+    #logo:hover {
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    #creditsPage {
+      width: min(720px, 92vw);
+      height: 60vh;
+      overflow: hidden;
+      text-align: center;
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 100%);
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 100%);
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+    }
+
+    .credits-roll-track {
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+      user-select: none;
+    }
+
+    .credits-roll-set {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+    }
+
+    .credits-title {
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.25rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .credits-line {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.92);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .credits-muted {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    #footer {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.02em;
+      z-index: 10;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      #logo {
+        top: 1rem;
+        width: 60px;
+        height: 60px;
+      }
+
+      #creditsPage {
+        height: 65vh;
+      }
+
+      #footer {
+        bottom: 1.25rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-pattern"></div>
+  <img id="logo" alt="Chess Master Logo" onclick="window.location.href='/'">
+  <div id="creditsPage">
+    <div class="credits-roll-track">
+      <div class="credits-roll-set" id="creditsRollSet">
+        <div class="credits-title">Credits</div>
+        <div class="credits-line">Chess Master</div>
+        <div class="credits-muted">Campionati di Robotica 2026</div>
+        <div class="credits-muted">Created by</div>
+        <div class="credits-line">Giovanni Paolo Montagna</div>
+        <div class="credits-line">Matteo Geusa</div>
+        <div class="credits-line">Samuele Putignani</div>
+        <div class="credits-line">Lorenzo Afrune</div>
+        <div class="credits-line">Camilla Torresin</div>
+        <div class="credits-line">Paola Candido</div>
+        <div class="credits-line">Alessandro Meraglia</div>
+        <div class="credits-line">Niccolò Amato</div>
+        <div class="credits-line">Andrea Mangia</div>
+        <div class="credits-muted">Special Thanks to</div>
+        <div class="credits-line">Frankie & Franco</div>
+      </div>
+    </div>
+  </div>
+  <div id="footer">Campionati di Robotica 2026</div>
+
+  <script>
+    (function () {
+      const page = document.getElementById('creditsPage');
+      const track = page?.querySelector('.credits-roll-track');
+      const base = document.getElementById('creditsRollSet');
+      if (!page || !track || !base) return;
+
+      let baseHeight = 0;
+      let startOffsetPx = 0;
+      let offset = 0;
+      let lastTs = null;
+      const speedPxPerSec = 30;
+
+      const measure = () => {
+        baseHeight = base.getBoundingClientRect().height;
+        startOffsetPx = page.getBoundingClientRect().height;
+      };
+
+      const step = (ts) => {
+        if (lastTs == null) lastTs = ts;
+        const dt = (ts - lastTs) / 1000;
+        lastTs = ts;
+
+        if (baseHeight > 0) {
+          offset += speedPxPerSec * dt;
+          const y = startOffsetPx - offset;
+          if (y <= -baseHeight) {
+            offset = 0;
+            lastTs = ts;
+            track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+          } else {
+            track.style.transform = `translate3d(0, ${y}px, 0)`;
+          }
+        }
+
+        requestAnimationFrame(step);
+      };
+
+      measure();
+      offset = 0;
+      track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+      window.addEventListener('resize', () => {
+        offset = 0;
+        lastTs = null;
+        measure();
+        track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+      });
+      requestAnimationFrame(step);
+    })();
+
+    function setRandomFavicon() {
+      const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
+      const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+      const faviconUrl = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${randomPiece}.png`;
+
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = faviconUrl;
+      document.head.appendChild(link);
+
+      const logo = document.getElementById('logo');
+      if (logo) {
+        logo.src = faviconUrl;
+      }
+    }
+
+    setRandomFavicon();
+  </script>
+</body>
+
+</html>

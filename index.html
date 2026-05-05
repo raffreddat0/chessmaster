@@ -53,6 +53,25 @@
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    input,
+    textarea {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    img,
+    svg {
+      -webkit-user-drag: none;
+      user-drag: none;
+      -webkit-touch-callout: none;
+    }
+
     body {
       font-family: 'IBM Plex Mono', monospace;
       background-color: var(--bg-color);
@@ -172,6 +191,27 @@
       z-index: 10;
       user-select: none;
       pointer-events: none;
+    }
+
+    #footerCreditsLink {
+      position: absolute;
+      bottom: 2.15rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.02em;
+      z-index: 10;
+      text-decoration-line: underline;
+      text-decoration-color: rgba(255, 255, 255, 0.2);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+      pointer-events: auto;
+    }
+
+    #footerCreditsLink:hover {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration-color: rgba(255, 255, 255, 1);
     }
 
     #container {
@@ -297,60 +337,6 @@
       z-index: 100;
     }
 
-    #creditsRollPanel {
-      position: fixed;
-      left: 2rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 320px;
-      height: 50vh;
-      display: none;
-      overflow: hidden;
-      z-index: 90;
-      pointer-events: none;
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 100%);
-      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 18%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 100%);
-      -webkit-mask-size: 100% 100%;
-      mask-size: 100% 100%;
-    }
-
-    .credits-roll-track {
-      position: relative;
-      z-index: 1;
-      will-change: transform;
-      transform: translate3d(0, 0, 0);
-      user-select: none;
-      text-align: center;
-    }
-
-    .credits-roll-set {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.75rem 0;
-      margin-bottom: 50px;
-    }
-
-    .credits-title {
-      font-size: 0.8rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.65);
-      margin-bottom: 0.25rem;
-    }
-
-    .credits-line {
-      font-size: 1rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.92);
-    }
-
-    .credits-muted {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.6);
-    }
-
     .history-header {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -473,10 +459,6 @@
         display: none !important;
       }
 
-      #creditsRollPanel {
-        display: none !important;
-      }
-
       #board {
         width: 95vw;
         margin: 1rem auto;
@@ -560,11 +542,12 @@
       z-index: 1000;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
       white-space: nowrap;
+      cursor: pointer;
       transition:
-        height 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0s,
-        padding 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0s,
-        width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
-        bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s,
+        height 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        padding 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0s,
+        width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.25s,
         transform 0.25s ease 0s,
         background-color 0.3s ease 0s;
       overflow: hidden;
@@ -579,10 +562,35 @@
       justify-content: center;
     }
 
+    #island.copied {
+      background: color-mix(in srgb, white 6%, var(--card-bg));
+      border-color: rgba(255, 255, 255, 0.28);
+      animation: islandCopied 700ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes islandCopied {
+      0% {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      }
+
+      45% {
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.18),
+          0 0 18px rgba(255, 255, 255, 0.12),
+          0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      }
+
+      100% {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      }
+    }
+
     #island.expanded {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
       bottom: 0;
-      width: 100%;
-      max-width: 100%;
+      width: min(640px, 100vw);
+      max-width: 100vw;
       height: 75vh;
       border-radius: 2.5rem 2.5rem 0 0;
       flex-direction: column;
@@ -670,6 +678,10 @@
       font-variant-numeric: tabular-nums;
     }
 
+    #island.expanded #mobileTimer {
+      display: none;
+    }
+
     .move-list-base {
       flex-grow: 1;
       overflow-y: auto;
@@ -710,7 +722,7 @@
       }
 
       #island.visible:not(.expanded) {
-        width: clamp(220px, 60vw, 340px);
+        width: clamp(180px, 46vw, 260px);
       }
     }
 
@@ -772,32 +784,11 @@
         <span id="enterGameLabel">Enter Game</span>
       </button>
     </div>
+    <a id="footerCreditsLink" href="/credits">Credits</a>
     <div id="footer">Campionati di Robotica 2026</div>
   </div>
 
   <div id="board"></div>
-
-  <div id="creditsRollPanel">
-    <div class="credits-roll-track">
-      <div class="credits-roll-set" id="creditsRollSet">
-        <div class="credits-title">Credits</div>
-        <div class="credits-line">Chess Master</div>
-        <div class="credits-muted">Campionati di Robotica 2026</div>
-        <div class="credits-muted">Created by</div>
-        <div class="credits-line">Giovanni Paolo Montagna</div>
-        <div class="credits-line">Matteo Geusa</div>
-        <div class="credits-line">Samuele Putignani</div>
-        <div class="credits-line">Lorenzo Afrune</div>
-        <div class="credits-line">Camilla Torresin</div>
-        <div class="credits-line">Paola Candido</div>
-        <div class="credits-line">Alessandro Meraglia</div>
-        <div class="credits-line">Niccolò Amato</div>
-        <div class="credits-line">Andrea Mangia</div>
-        <div class="credits-muted">Special Thanks to</div>
-        <div class="credits-line">Frankie & Franco</div>
-      </div>
-    </div>
-  </div>
 
   <div id="historyPanel">
     <div>
@@ -1040,6 +1031,78 @@
         draggable = true;
       }
 
+      let islandMode = 'hidden';
+      let currentShareCode = '';
+      let copiedTimeoutId = null;
+      let lastIslandTimeStr = '00:00';
+
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          try {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.setAttribute('readonly', '');
+            el.style.position = 'fixed';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+      }
+
+      function showIslandCopiedFeedback() {
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (!island || !islandStatus) return;
+
+        if (copiedTimeoutId) clearTimeout(copiedTimeoutId);
+        island.classList.add('copied');
+        islandStatus.textContent = 'Copied!';
+        copiedTimeoutId = setTimeout(() => {
+          island.classList.remove('copied');
+          if (islandMode === 'code' && currentShareCode) islandStatus.textContent = `Code: ${currentShareCode}`;
+        }, 900);
+      }
+
+      function isHistoryPanelVisible() {
+        const historyPanel = document.getElementById('historyPanel');
+        if (!historyPanel) return false;
+        return getComputedStyle(historyPanel).display !== 'none';
+      }
+
+      function updateIslandVisibility() {
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (!island || !islandStatus) return;
+
+        island.dataset.mode = islandMode || 'hidden';
+
+        if (islandMode === 'hidden') {
+          island.classList.remove('visible');
+          island.classList.remove('expanded');
+          return;
+        }
+
+        if (islandMode === 'timer' && isHistoryPanelVisible()) {
+          island.classList.remove('visible');
+          island.classList.remove('expanded');
+          return;
+        }
+
+        island.classList.add('visible');
+        if (islandMode === 'timer' && !island.classList.contains('expanded')) {
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+        }
+      }
+
       function startTimer(start = Date.now()) {
         if (timerInterval) clearInterval(timerInterval);
         timer = start;
@@ -1057,6 +1120,12 @@
           }
           document.getElementById('gameTimerDisplay').textContent = timeStr;
           document.getElementById('mobileTimer').textContent = timeStr;
+          lastIslandTimeStr = timeStr;
+          const island = document.getElementById('island');
+          const islandStatus = document.getElementById('islandStatus');
+          if (island && islandStatus && island.classList.contains('visible') && islandMode === 'timer' && !island.classList.contains('expanded')) {
+            islandStatus.textContent = timeStr;
+          }
         }, 1000);
       }
 
@@ -1070,6 +1139,10 @@
       ws.onopen = () => {
         console.log(`Connected to WebSocket with code: ${code}`);
       };
+
+      window.addEventListener('resize', () => {
+        updateIslandVisibility();
+      });
 
       ws.onmessage = async (message) => {
         const content = message.data.toString();
@@ -1092,20 +1165,32 @@
         const islandStatus = document.getElementById('islandStatus');
         if (content.startsWith("code")) {
           const gameCode = content.split(" ")[1];
+          currentShareCode = gameCode;
+          islandMode = 'code';
+          island.classList.remove('expanded');
           islandStatus.textContent = `Code: ${gameCode}`;
-          island.classList.add('visible');
+          updateIslandVisibility();
 
           board.orientation('white');
         }
 
         if (content === "joined") {
-          island.classList.remove('visible');
+          islandMode = 'timer';
+          island.classList.remove('expanded');
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+          updateIslandVisibility();
           return;
         }
 
         if (content === "stockfish") {
           level = Number(localStorage.getItem("level") || "1");
           ws.send("level " + level);
+          if (island && islandStatus) {
+            islandMode = 'timer';
+            island.classList.remove('expanded');
+            islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+            updateIslandVisibility();
+          }
           return;
         }
 
@@ -1114,9 +1199,12 @@
           document.getElementById('hero').style.display = 'none';
           document.getElementById('board').style.display = 'block';
           document.getElementById('historyPanel').style.display = 'flex';
-          const creditsRollPanel = document.getElementById('creditsRollPanel');
-          if (creditsRollPanel) creditsRollPanel.style.display = 'block';
-          if (window.startCreditsRoll) window.startCreditsRoll();
+          if (content === "start") {
+            islandMode = 'timer';
+            island.classList.remove('expanded');
+            islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+            updateIslandVisibility();
+          }
           updateHistory();
           return;
         }
@@ -1149,8 +1237,9 @@
         }
 
         if (level > 0) {
-          islandStatus.textContent = `Level: ${level}`;
-          island.classList.add('visible');
+          islandMode = 'timer';
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+          updateIslandVisibility();
         }
 
         const from = content.slice(0, 2);
@@ -1192,9 +1281,6 @@
         if (!game.game_over()) {
           document.getElementById('board').style.display = 'none';
           document.getElementById('historyPanel').style.display = 'none';
-          const creditsRollPanel = document.getElementById('creditsRollPanel');
-          if (creditsRollPanel) creditsRollPanel.style.display = 'none';
-          if (window.stopCreditsRoll) window.stopCreditsRoll();
           document.getElementById('hero').style.display = 'flex';
           document.getElementById('container').style.display = 'flex';
 
@@ -1254,6 +1340,7 @@
       let dragStartedExpanded = false;
 
       function openIsland() {
+        if (islandMode === 'code') return;
         island.classList.add('expanded');
       }
 
@@ -1312,6 +1399,14 @@
       }, { passive: true });
 
       island.addEventListener('click', (e) => {
+        if (islandMode === 'code' && currentShareCode) {
+          if (island.classList.contains('expanded')) closeIsland();
+          copyToClipboard(currentShareCode).then((ok) => {
+            if (ok) showIslandCopiedFeedback();
+          });
+          return;
+        }
+
         if (!canUseIslandInteractions()) return;
 
         if (!island.classList.contains('expanded')) {
@@ -1681,74 +1776,6 @@
     }
 
     setupEnterGameTyping();
-    function setupCreditsRoll() {
-      const panel = document.getElementById('creditsRollPanel');
-      const track = panel?.querySelector('.credits-roll-track');
-      const base = document.getElementById('creditsRollSet');
-      if (!panel || !track || !base) return;
-
-      let clone = null;
-      let cycleHeight = 0;
-      let offset = 0;
-      let lastTs = null;
-      let running = false;
-      const speedPxPerSec = 20;
-
-      const ensureClone = () => {
-        if (clone) return;
-        clone = base.cloneNode(true);
-        clone.removeAttribute('id');
-        clone.setAttribute('aria-hidden', 'true');
-        track.appendChild(clone);
-      };
-
-      const measure = () => {
-        if (!clone) return;
-        const baseTop = base.getBoundingClientRect().top;
-        const cloneTop = clone.getBoundingClientRect().top;
-        cycleHeight = cloneTop - baseTop;
-      };
-
-      const step = (ts) => {
-        if (!running) {
-          lastTs = null;
-          return;
-        }
-
-        if (lastTs == null) lastTs = ts;
-        const dt = (ts - lastTs) / 1000;
-        lastTs = ts;
-
-        if (cycleHeight > 0) {
-          offset += speedPxPerSec * dt;
-          if (offset >= cycleHeight) offset -= cycleHeight;
-          track.style.transform = `translate3d(0, ${-offset}px, 0)`;
-        }
-
-        requestAnimationFrame(step);
-      };
-
-      window.startCreditsRoll = () => {
-        ensureClone();
-        measure();
-        if (getComputedStyle(panel).display === 'none') return;
-        if (running) return;
-        running = true;
-        requestAnimationFrame(step);
-      };
-
-      window.stopCreditsRoll = () => {
-        running = false;
-      };
-
-      window.addEventListener('resize', () => {
-        offset = 0;
-        measure();
-        track.style.transform = 'translate3d(0, 0, 0)';
-      });
-    }
-
-    setupCreditsRoll();
     const urlParams = new URLSearchParams(window.location.search);
     const param = urlParams.get('code');
     const code = window.location.pathname.substring(1).toUpperCase();

@@ -10,6 +10,10 @@ const port = 1707;
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/credits", (req, res) => {
+  res.sendFile(path.join(__dirname, "./credits.html"));
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "./index.html"));
 });
@@ -108,7 +112,7 @@ wss.on("connection", (ws, req) => {
       pongTimeout = setTimeout(() => {
         try {
           ws.terminate();
-        } catch {}
+        } catch { }
       }, 5000);
     }
   };
@@ -137,171 +141,171 @@ wss.on("connection", (ws, req) => {
   }
 
   if (!code)
-  ws.on("message", async (data) => {
-    const message = data.toString();
-    if (message.startsWith("level")) {
-      level = parseInt(message.split(" ")[1]) || 3;
-      if (level > 15)
-        level = 15;
-      console.log(`Livello impostato a ${level}`);
-      return;
-    }
-
-    if (sessions[game]?.length === 2 && message === "position"){
-      sessions[game][1].emit("message", "position " + chess.fen());
-      return;
-    }
-
-    if (message.startsWith("timer")) {
-      if (timer)
-        sessions[game][1].emit("message", "timer " + (timer + 10000));
-      return;
-    }
-
-    if (message === "start") {
-      chess = new Chess();
-      wait = false;
-      if (!code) {
-        game = generateCode();
-        games.push(game);
-        sessions[game] = [ws];
-      }
-
-      console.log("Partita create con codice", game);
-      ws.send("code " + game);
-      return;
-    }
-
-    if (message === "exit") {
-      console.log("Partita terminata");
-      wait = false;
-      if (sessions[game]?.length === 2)
-        sessions[game][1].close();
-      sessions[game] = [];
-      games = games.filter(code => code !== game);
-      game = null;
-      return;
-    }
-
-    if (wait) {
-      let piece;
-      try {
-        piece = chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" }).piece;
-      } catch(error) {
-        console.log(error.description);
-        sessions[game][1].emit("message", "invalid");
+    ws.on("message", async (data) => {
+      const message = data.toString();
+      if (message.startsWith("level")) {
+        level = parseInt(message.split(" ")[1]) || 3;
+        if (level > 15)
+          level = 15;
+        console.log(`Livello impostato a ${level}`);
         return;
       }
 
-      wait = false;
-      ws.send(auth === "online" ? message : (piece + message));
-      if (chess.isGameOver())
-        ws.send(chess.isDraw() ? "draw" : "lose");
-      return;
-    }
-
-    console.log(`Mossa dell"utente: ${message}`);
-    try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
-    } catch(error) {
-      console.log(error.description);
-      ws.send("invalid");
-      return;
-    }
-
-    if (!timer)
-      timer = Date.now();
-
-    ws.send("valid");
-    if (chess.isGameOver())
-      ws.send(chess.isDraw() ? "draw" : "win");
-
-    if (sessions[game].length === 2) {
-      sessions[game][1].emit("message", message);
-      wait = true;
-      return;
-    }
-
-    if (chess.history().length > 1 && games.includes(game))
-      return;
-
-    if (games.includes(game)) {
-      ws.send("stockfish");
-      games = games.filter(code => code !== game);
-    }
-
-    async function stockfish() {
-      try {
-        const stockfishMove = await getStockfishMove(chess.fen(), level);
-        console.log(`Mossa di Stockfish: ${stockfishMove}`);
-        const piece = chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: "q" }).piece;
-        ws.send(auth === "online" ? stockfishMove : (piece + stockfishMove));
-      } catch {
-        return await stockfish();
+      if (sessions[game]?.length === 2 && message === "position") {
+        sessions[game][1].emit("message", "position " + chess.fen());
+        return;
       }
-    }
 
-    await stockfish();
-    if (chess.isGameOver())
-      ws.send(chess.isDraw() ? "draw" : "lose");
-  });
-  else {
-  ws.on("message", async (data) => {
-    const message = data.toString();
+      if (message.startsWith("timer")) {
+        if (timer)
+          sessions[game][1].emit("message", "timer " + (timer + 10000));
+        return;
+      }
 
-    if (message.startsWith("position")) {
-      chess.load(message.replace("position ", ""));
-      wait = chess.turn() === "w";
-      ws.send(message);
-      return;
-    }
+      if (message === "start") {
+        chess = new Chess();
+        wait = false;
+        if (!code) {
+          game = generateCode();
+          games.push(game);
+          sessions[game] = [ws];
+        }
 
-    if (message.startsWith("timer")) {
-      timer = Number(message.replace("timer ", ""));
-      ws.send(message);
-      return;
-    }
+        console.log("Partita create con codice", game);
+        ws.send("code " + game);
+        return;
+      }
 
-    if (wait) {
+      if (message === "exit") {
+        console.log("Partita terminata");
+        wait = false;
+        if (sessions[game]?.length === 2)
+          sessions[game][1].close();
+        sessions[game] = [];
+        games = games.filter(code => code !== game);
+        game = null;
+        return;
+      }
+
+      if (wait) {
+        let piece;
+        try {
+          piece = chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" }).piece;
+        } catch (error) {
+          console.log(error.description);
+          sessions[game][1].emit("message", "invalid");
+          return;
+        }
+
+        wait = false;
+        ws.send(auth === "online" ? message : (piece + message));
+        if (chess.isGameOver())
+          ws.send(chess.isDraw() ? "draw" : "lose");
+        return;
+      }
+
+      console.log(`Mossa dell"utente: ${message}`);
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
-      } catch(error) {
+      } catch (error) {
         console.log(error.description);
-        sessions[game][0].emit("message", "invalid");
+        ws.send("invalid");
         return;
       }
 
-      wait = false;
-      ws.send(message);
+      if (!timer)
+        timer = Date.now();
 
+      ws.send("valid");
+      if (chess.isGameOver())
+        ws.send(chess.isDraw() ? "draw" : "win");
+
+      if (sessions[game].length === 2) {
+        sessions[game][1].emit("message", message);
+        wait = true;
+        return;
+      }
+
+      if (chess.history().length > 1 && games.includes(game))
+        return;
+
+      if (games.includes(game)) {
+        ws.send("stockfish");
+        games = games.filter(code => code !== game);
+      }
+
+      async function stockfish() {
+        try {
+          const stockfishMove = await getStockfishMove(chess.fen(), level);
+          console.log(`Mossa di Stockfish: ${stockfishMove}`);
+          const piece = chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: "q" }).piece;
+          ws.send(auth === "online" ? stockfishMove : (piece + stockfishMove));
+        } catch {
+          return await stockfish();
+        }
+      }
+
+      await stockfish();
       if (chess.isGameOver())
         ws.send(chess.isDraw() ? "draw" : "lose");
-      return;
-    }
+    });
+  else {
+    ws.on("message", async (data) => {
+      const message = data.toString();
 
-    console.log(`Mossa dell"avversario: ${message}`);
-    try {
-      chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
-    } catch(error) {
-      console.log(error.description);
-      ws.send("invalid");
-      return;
-    }
+      if (message.startsWith("position")) {
+        chess.load(message.replace("position ", ""));
+        wait = chess.turn() === "w";
+        ws.send(message);
+        return;
+      }
 
-    ws.send("valid");
-    if (chess.isGameOver()) {
-      ws.send(chess.isDraw() ? "draw" : "win");
-    }
+      if (message.startsWith("timer")) {
+        timer = Number(message.replace("timer ", ""));
+        ws.send(message);
+        return;
+      }
 
-    if (sessions[game].length === 2) {
-      sessions[game][0].emit("message", message);
-      wait = true;
-      return;
-    }
+      if (wait) {
+        try {
+          chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
+        } catch (error) {
+          console.log(error.description);
+          sessions[game][0].emit("message", "invalid");
+          return;
+        }
 
-  });
-  sessions[game][0].emit("message", "position");
-  sessions[game][0].emit("message", "timer");
+        wait = false;
+        ws.send(message);
+
+        if (chess.isGameOver())
+          ws.send(chess.isDraw() ? "draw" : "lose");
+        return;
+      }
+
+      console.log(`Mossa dell"avversario: ${message}`);
+      try {
+        chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
+      } catch (error) {
+        console.log(error.description);
+        ws.send("invalid");
+        return;
+      }
+
+      ws.send("valid");
+      if (chess.isGameOver()) {
+        ws.send(chess.isDraw() ? "draw" : "win");
+      }
+
+      if (sessions[game].length === 2) {
+        sessions[game][0].emit("message", message);
+        wait = true;
+        return;
+      }
+
+    });
+    sessions[game][0].emit("message", "position");
+    sessions[game][0].emit("message", "timer");
   }
 
   ws.on("close", () => {
@@ -310,7 +314,7 @@ wss.on("connection", (ws, req) => {
       if (sessions[game]?.length === 2)
         sessions[game][1].close();
       sessions[game] = [];
-      games = games.filter(code => code!== game);
+      games = games.filter(code => code !== game);
       game = null;
     } else
       sessions[game] = [sessions[game][0]];
