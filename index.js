@@ -10,7 +10,7 @@ const port = 1707;
 
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/api/game/:code", (req, res) => {
+app.get("/api/games/:code", (req, res) => {
   const code = (req.params.code || "").toString().trim().toUpperCase();
   if (!code) return res.json({ exists: false });
   if (code === "ONLINE") return res.json({ exists: true });

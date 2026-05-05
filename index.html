@@ -1563,7 +1563,7 @@
       }
 
       try {
-        const res = await fetch(`/api/game/${encodeURIComponent(code)}`);
+        const res = await fetch(`/api/games/${encodeURIComponent(code)}`);
         if (!res.ok) throw new Error('bad status');
         const data = await res.json();
         if (data?.exists) {
