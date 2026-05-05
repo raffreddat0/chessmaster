@@ -1112,6 +1112,7 @@
       function startTimer(start = Date.now()) {
         if (timerInterval) clearInterval(timerInterval);
         timer = start;
+        ws.send("timer " + timer);
         timerInterval = setInterval(() => {
           const elapsed = Math.floor((Date.now() - timer) / 1000);
           const hours = Math.floor(elapsed / 3600);
@@ -1132,7 +1133,7 @@
           if (island && islandStatus && island.classList.contains('visible') && islandMode === 'timer' && !island.classList.contains('expanded')) {
             islandStatus.textContent = timeStr;
           }
-        }, 1000);
+        }, 200);
       }
 
       const error = document.getElementById('error');

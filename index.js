@@ -170,8 +170,11 @@ wss.on("connection", (ws, req) => {
       }
 
       if (message.startsWith("timer")) {
-        if (timer)
-          sessions[game][1].emit("message", "timer " + (timer - 150));
+        const timestamp = message.replace("timer", "").trim();
+        if (timer && !timestamp)
+          sessions[game][1].emit("message", "timer " + timer);
+        else if (timestamp)
+          timer = Number(timestamp);
         return;
       }
 
@@ -225,9 +228,6 @@ wss.on("connection", (ws, req) => {
         ws.send("invalid");
         return;
       }
-
-      if (!timer)
-        timer = Date.now();
 
       ws.send("valid");
       if (chess.isGameOver())
@@ -287,7 +287,8 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      if (message.startsWith("timer")) {
+      if (message.startsWith("timer ")) {
+        if (timer) return;
         timer = Number(message.replace("timer ", ""));
         ws.send(message);
         return;
