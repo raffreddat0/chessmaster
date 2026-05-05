@@ -1222,6 +1222,27 @@
           return;
         }
 
+        if (content.startsWith("history")) {
+          try {
+            const raw = content.replace("history ", "");
+            const moves = JSON.parse(raw);
+            if (Array.isArray(moves)) {
+              game = new Chess();
+              for (const m of moves) {
+                if (typeof m !== 'string') continue;
+                const from = m.slice(0, 2);
+                const to = m.slice(2, 4);
+                game.move({ from, to, promotion: 'q' });
+              }
+              viewingIndex = -1;
+              draggable = true;
+              board.position(game.fen());
+              updateHistory();
+            }
+          } catch { }
+          return;
+        }
+
         if (content.startsWith("timer")) {
           startTimer(Number(content.replace("timer ", "")));
           return;

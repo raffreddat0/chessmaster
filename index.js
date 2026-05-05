@@ -160,14 +160,18 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      if (sessions[game]?.length === 2 && message === "position") {
-        sessions[game][1].emit("message", "position " + chess.fen());
+      if (sessions[game]?.length === 2 && message === "history") {
+        const moves = chess.history({ verbose: true }).map((m) => {
+          const promo = m.promotion ? String(m.promotion) : "";
+          return `${m.from}${m.to}${promo}`;
+        });
+        sessions[game][1].emit("message", "history " + JSON.stringify(moves));
         return;
       }
 
       if (message.startsWith("timer")) {
         if (timer)
-          sessions[game][1].emit("message", "timer " + (timer + 10000));
+          sessions[game][1].emit("message", "timer " + (timer - 150));
         return;
       }
 
@@ -262,8 +266,22 @@ wss.on("connection", (ws, req) => {
     ws.on("message", async (data) => {
       const message = data.toString();
 
-      if (message.startsWith("position")) {
-        chess.load(message.replace("position ", ""));
+      if (message.startsWith("history")) {
+        try {
+          const payload = JSON.parse(message.replace("history ", ""));
+          if (Array.isArray(payload)) {
+            chess = new Chess();
+            for (const m of payload) {
+              if (typeof m !== "string") continue;
+              const from = m.slice(0, 2);
+              const to = m.slice(2, 4);
+              const promotion = m.length > 4 ? m.slice(4, 5) : "q";
+              chess.move({ from, to, promotion });
+            }
+          } else if (typeof payload === "string") {
+            chess.load(payload);
+          }
+        } catch { }
         wait = chess.turn() === "w";
         ws.send(message);
         return;
@@ -313,7 +331,7 @@ wss.on("connection", (ws, req) => {
       }
 
     });
-    sessions[game][0].emit("message", "position");
+    sessions[game][0].emit("message", "history");
     sessions[game][0].emit("message", "timer");
   }
 
