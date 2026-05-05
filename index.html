@@ -348,6 +348,7 @@
       letter-spacing: 0.05em;
       font-weight: 600;
       margin-bottom: 0.5rem;
+      text-align: center;
     }
 
     #gameTimerDisplay {
@@ -553,7 +554,7 @@
         padding 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0s,
         width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.35s,
         transform 0.25s ease 0s,
-        background-color 0.3s ease 0s;
+        background-color var(--islandBgDur, 0.3s) ease var(--islandBgDelay, 0s);
       overflow: hidden;
       max-width: 95vw;
       width: auto;
@@ -564,6 +565,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    #island[data-mode="result"] {
+      background-color: var(--result-bg, var(--card-bg));
+      --islandBgDur: 0.35s;
+      --islandBgDelay: 0.30s;
+      cursor: default;
+    }
+
+    #island[data-mode="result"].expanded {
+      background-color: var(--card-bg);
+      --islandBgDelay: 0s;
     }
 
     #island.copied {
@@ -606,7 +619,7 @@
         bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0s,
         padding 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
         transform 0.25s ease 0s,
-        background-color 0.3s ease 0s;
+        background-color var(--islandBgDur, 0.3s) ease var(--islandBgDelay, 0s);
     }
 
     #island.dragging {
@@ -1089,6 +1102,7 @@
         const islandStatus = document.getElementById('islandStatus');
         if (!island || !islandStatus) return;
 
+        if (islandMode !== 'result') island.style.removeProperty('--result-bg');
         island.dataset.mode = islandMode || 'hidden';
 
         if (islandMode === 'hidden') {
@@ -1333,19 +1347,25 @@
             }, 5000);
           }
           if (state === 1) {
+            islandMode = 'result';
             islandStatus.textContent = 'You won!';
-            island.style.background = 'var(--success)';
-            island.classList.add('visible');
+            island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
           }
           if (state === 2) {
+            islandMode = 'result';
             islandStatus.textContent = 'You lost!';
-            island.style.background = 'var(--error)';
-            island.classList.add('visible');
+            island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
           }
           if (state === 3) {
+            islandMode = 'result';
             islandStatus.textContent = 'Draw!';
-            island.style.background = '#f59e0b';
-            island.classList.add('visible');
+            island.style.setProperty('--result-bg', '#f59e0b');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
           }
         } else {
           const codeInput = document.getElementById('codeInput');
