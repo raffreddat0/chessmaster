@@ -180,28 +180,32 @@
       font-size: 1.25rem;
     }
 
-    #footer {
+    #footerWrap {
       position: absolute;
       bottom: 1rem;
       left: 50%;
       transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      width: min(92vw, 520px);
+      text-align: center;
+      z-index: 10;
+    }
+
+    #footer {
       font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.55);
       letter-spacing: 0.02em;
-      z-index: 10;
       user-select: none;
       pointer-events: none;
     }
 
     #footerCreditsLink {
-      position: absolute;
-      bottom: 2.15rem;
-      left: 50%;
-      transform: translateX(-50%);
       font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.7);
       letter-spacing: 0.02em;
-      z-index: 10;
       text-decoration-line: underline;
       text-decoration-color: rgba(255, 255, 255, 0.2);
       text-decoration-thickness: 1px;
@@ -589,7 +593,7 @@
       padding-left: 1.5rem;
       padding-right: 1.5rem;
       bottom: 0;
-      width: min(640px, 100vw);
+      width: 100vw;
       max-width: 100vw;
       height: 75vh;
       border-radius: 2.5rem 2.5rem 0 0;
@@ -598,8 +602,8 @@
       align-items: stretch;
       transition:
         width 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0s,
-        height 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
-        bottom 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
+        height 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.35s,
+        bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
         padding 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s,
         transform 0.25s ease 0s,
         background-color 0.3s ease 0s;
@@ -722,7 +726,7 @@
       }
 
       #island.visible:not(.expanded) {
-        width: clamp(180px, 46vw, 260px);
+        width: 180px;
       }
     }
 
@@ -784,8 +788,10 @@
         <span id="enterGameLabel">Enter Game</span>
       </button>
     </div>
-    <a id="footerCreditsLink" href="/credits">Credits</a>
-    <div id="footer">Campionati di Robotica 2026</div>
+    <div id="footerWrap">
+      <a id="footerCreditsLink" href="/credits">Credits</a>
+      <div id="footer">Campionati di Robotica 2026</div>
+    </div>
   </div>
 
   <div id="board"></div>
