@@ -1475,17 +1475,37 @@
 
       const render = (el, text) => {
         el.innerHTML = '';
-        for (const ch of text) {
+
+        const letters = [...text];
+        const n = letters.filter(ch => ch !== ' ').length;
+
+        const capsCount = Math.random() < 0.5
+          ? Math.floor(n / 2)
+          : Math.ceil(n / 2);
+
+        const indices = [];
+        while (indices.length < capsCount) {
+          const i = Math.floor(Math.random() * letters.length);
+          if (letters[i] !== ' ' && !indices.includes(i)) {
+            indices.push(i);
+          }
+        }
+
+        letters.forEach((ch, i) => {
           if (ch === ' ') {
             el.appendChild(document.createTextNode(' '));
-            continue;
+            return;
           }
+
           const span = document.createElement('span');
-          const upper = Math.random() < 0.5;
+          const upper = indices.includes(i);
+
           span.textContent = upper ? ch.toUpperCase() : ch.toLowerCase();
+
           if (ch.toUpperCase() === 'S') span.className = 'title-s';
+
           el.appendChild(span);
-        }
+        });
       };
 
       render(top, 'CHESS');
