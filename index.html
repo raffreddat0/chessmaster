@@ -182,7 +182,7 @@
 
     #footerWrap {
       position: absolute;
-      bottom: 1rem;
+      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
       left: 50%;
       transform: translateX(-50%);
       display: flex;
@@ -195,17 +195,20 @@
     }
 
     #footer {
-      font-size: 0.75rem;
+      font-size: clamp(0.68rem, 2.9vw, 0.75rem);
       color: rgba(255, 255, 255, 0.55);
       letter-spacing: 0.02em;
+      line-height: 1;
+      white-space: nowrap;
       user-select: none;
       pointer-events: none;
     }
 
     #footerCreditsLink {
-      font-size: 0.75rem;
+      font-size: clamp(0.68rem, 2.9vw, 0.75rem);
       color: rgba(255, 255, 255, 0.7);
       letter-spacing: 0.02em;
+      line-height: 1;
       text-decoration-line: underline;
       text-decoration-color: rgba(255, 255, 255, 0.2);
       text-decoration-thickness: 1px;
@@ -314,8 +317,8 @@
     }
 
     #board {
-      width: 70vh;
-      max-width: 70vh;
+      width: min(70vh, 92vw);
+      max-width: min(70vh, 92vw);
       display: none;
       box-shadow:
         0 0 0 1px var(--border),
@@ -460,12 +463,7 @@
     }
 
     @media (max-width: 1730px) {
-      #historyPanel {
-        display: none !important;
-      }
-
       #board {
-        width: 95vw;
         margin: 1rem auto;
       }
     }
@@ -1097,6 +1095,28 @@
         return getComputedStyle(historyPanel).display !== 'none';
       }
 
+      function updateHistoryPanelVisibility() {
+        const historyPanel = document.getElementById('historyPanel');
+        const boardEl = document.getElementById('board');
+        if (!historyPanel || !boardEl) return;
+
+        const boardVisible = getComputedStyle(boardEl).display !== 'none';
+        if (!boardVisible) {
+          historyPanel.style.display = 'none';
+          return;
+        }
+
+        const historyStyle = getComputedStyle(historyPanel);
+        const historyWidth = parseFloat(historyStyle.width) || 320;
+        const historyRight = parseFloat(historyStyle.right) || 0;
+        const historyLeft = window.innerWidth - historyRight - historyWidth;
+
+        const boardRect = boardEl.getBoundingClientRect();
+        const gap = 24;
+        const canShow = (boardRect.right + gap) <= historyLeft;
+        historyPanel.style.display = canShow ? 'flex' : 'none';
+      }
+
       function updateIslandVisibility() {
         const island = document.getElementById('island');
         const islandStatus = document.getElementById('islandStatus');
@@ -1162,7 +1182,10 @@
       };
 
       window.addEventListener('resize', () => {
-        updateIslandVisibility();
+        requestAnimationFrame(() => {
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
+        });
       });
 
       ws.onmessage = async (message) => {
@@ -1219,7 +1242,7 @@
           console.log("Game started.");
           document.getElementById('hero').style.display = 'none';
           document.getElementById('board').style.display = 'block';
-          document.getElementById('historyPanel').style.display = 'flex';
+          updateHistoryPanelVisibility();
           if (content === "start") {
             islandMode = 'timer';
             island.classList.remove('expanded');
@@ -1227,6 +1250,8 @@
             updateIslandVisibility();
           }
           updateHistory();
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
           return;
         }
 
@@ -1234,6 +1259,8 @@
           game.load(content.replace("position ", ""));
           board.position(game.fen());
           updateHistory();
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
           return;
         }
 
@@ -1253,6 +1280,8 @@
               draggable = true;
               board.position(game.fen());
               updateHistory();
+              updateHistoryPanelVisibility();
+              updateIslandVisibility();
             }
           } catch { }
           return;
