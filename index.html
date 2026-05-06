@@ -175,6 +175,12 @@
       position: relative;
     }
 
+    @supports (height: 100dvh) {
+      .hero-container {
+        min-height: 100dvh;
+      }
+    }
+
     .subtitle {
       color: var(--text-muted);
       font-size: 1.25rem;
@@ -756,6 +762,11 @@
     }
 
     @media (max-width: 640px) {
+      #logo {
+        width: 60px;
+        height: 60px;
+      }
+
       h1 {
         font-size: 4rem;
         margin-bottom: 0.5rem;
