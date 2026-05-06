@@ -187,8 +187,8 @@
     }
 
     #footerWrap {
-      position: absolute;
-      bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+      position: fixed;
+      bottom: max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem));
       left: 50%;
       transform: translateX(-50%);
       display: flex;
