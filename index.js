@@ -57,7 +57,7 @@ const getStockfishMove = async (fen, level) => {
   const url = "https://stockfish.online/api/s/v2.php";
   const params = new URLSearchParams({
     fen: fen,
-    depth: Math.max(level, 5)
+    depth: level
   });
 
   try {
@@ -153,9 +153,9 @@ wss.on("connection", (ws, req) => {
     ws.on("message", async (data) => {
       const message = data.toString();
       if (message.startsWith("level")) {
-        level = parseInt(message.split(" ")[1]) || 3;
-        if (level > 15)
-          level = 15;
+        level = parseInt(message.split(" ")[1]) || 1;
+        level = Math.max(level, 1);
+        level = Math.min(level, 15);
         console.log(`Livello impostato a ${level}`);
         return;
       }
