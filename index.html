@@ -733,7 +733,6 @@
     @media (max-width: 1730px) {
       #island {
         bottom: 1.5rem;
-        cursor: pointer;
         user-select: none;
         touch-action: none;
       }
@@ -1133,6 +1132,9 @@
         const islandStatus = document.getElementById('islandStatus');
         if (!island || !islandStatus) return;
 
+        if (canUseIslandInteractions())
+          island.style.cursor = 'pointer';
+
         if (islandMode !== 'result') island.style.removeProperty('--result-bg');
         island.dataset.mode = islandMode || 'hidden';
 
@@ -1445,7 +1447,7 @@
       }
 
       function canUseIslandInteractions() {
-        return window.innerWidth <= 1730 && island.classList.contains('visible');
+        return !isHistoryPanelVisible() && island.classList.contains('visible');
       }
 
       island.addEventListener('touchstart', (e) => {
