@@ -1238,7 +1238,7 @@
         }
 
         if (content === "stockfish") {
-          level = Number(localStorage.getItem("level") || "1");
+          level = Math.max(1, Math.min(Number(localStorage.getItem("level") || "1"), 15));
           ws.send("level " + level);
           if (island && islandStatus) {
             islandMode = 'timer';
@@ -1306,7 +1306,7 @@
         if (content === "win" || content === "lose" || content === "draw") {
           if (content === "win") {
             if (level > 0)
-              localStorage.setItem("level", level + 1);
+              localStorage.setItem("level", Math.min(15, level + 1));
             state = 1;
           }
           if (content === "lose")
