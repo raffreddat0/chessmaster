@@ -57,7 +57,7 @@ const getStockfishMove = async (fen, level) => {
   const url = "https://stockfish.online/api/s/v2.php";
   const params = new URLSearchParams({
     fen: fen,
-    depth: level
+    depth: Math.max(level, 5)
   });
 
   try {
