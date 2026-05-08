@@ -157,11 +157,6 @@
       margin-top: 0.32em;
     }
 
-    h1 .title-s {
-      font-variant-ligatures: none;
-      font-feature-settings: "liga" 0, "calt" 0, "salt" 0, "dlig" 0;
-    }
-
     .hero-container {
       text-align: center;
       max-width: 800px;
@@ -1703,7 +1698,6 @@
           const span = document.createElement('span');
           const upper = Math.random() < 0.5;
           span.textContent = upper ? ch.toUpperCase() : ch.toLowerCase();
-          if (ch.toUpperCase() === 'S') span.className = 'title-s';
           el.appendChild(span);
         }
       };

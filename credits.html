@@ -215,14 +215,14 @@
       if (!page || !track || !base) return;
 
       let baseHeight = 0;
-      let startOffsetPx = 0;
+      let startOffsetPx = 10;
       let offset = 0;
       let lastTs = null;
-      const speedPxPerSec = 30;
+      const speedPxPerSec = 65;
 
       const measure = () => {
-        baseHeight = base.getBoundingClientRect().height;
-        startOffsetPx = page.getBoundingClientRect().height;
+        baseHeight = base.getBoundingClientRect().height - baseHeight;
+        startOffsetPx = page.getBoundingClientRect().height - startOffsetPx;
       };
 
       const step = (ts) => {
