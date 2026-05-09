@@ -3,6 +3,7 @@
 int M[cell][cell], M0[cell][cell];
 char position[5] = "";
 int moved[2] = {0, 0};
+int invalid[2] = {-1, -1};
 
 void setup() {
   Serial.begin(9600);
@@ -27,7 +28,7 @@ void setup() {
 }
 
 void loop() {
-  int playing = lcdloop(M, position);
+  int playing = lcdloop(M, position, invalid);
   serloop();
 
   if (ddlay(500)) {
@@ -57,17 +58,23 @@ void loop() {
         }
 
         M0[row][col] = M[row][col];
-        Serial.print(M[row][col]);
+        //Serial.print(M[row][col]);
       }
-      Serial.print("\n");
+      //Serial.print("\n");
     }
   }
 
   if (moved[0] == 1 && moved[1] == 1) {
-    if (playing == 1) {
+    if (playing == 1 && invalid[0] == -1 && invalid[1] == -1) {
       // Serial.println(String(position));
       Serial1.println(String("move ") + String(position));
     }
+    if (invalid[0] != -1 && invalid[1] != -1 &&
+        M[invalid[0]][invalid[1]] == 1) {
+      invalid[0] = -1;
+      invalid[1] = -1;
+    }
+
     moved[0] = 0;
     moved[1] = 0;
   }

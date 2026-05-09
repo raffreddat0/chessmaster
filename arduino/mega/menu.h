@@ -58,7 +58,6 @@ bool connected = false;
 long int time[3] = {0, 0, 0};
 char code[7] = "";
 int playing = -1;
-int invalid[2] = {-1, -1};
 int turn = 0;
 
 void ditch() {
@@ -747,7 +746,7 @@ void stats() {
   }
 }
 
-void play(int M[cell][cell], char position[4]) {
+void play(int M[cell][cell], char position[4], int invalid[2]) {
   if (!connected) {
     page = -3;
     lcd.clear();
@@ -818,12 +817,6 @@ void play(int M[cell][cell], char position[4]) {
   }
 
   if (confirm == 0) {
-    if (invalid[0] != -1 && invalid[1] != -1 &&
-        M[invalid[0]][invalid[1]] == 1) {
-      invalid[0] = -1;
-      invalid[1] = -1;
-    }
-
     lcd.setCursor(6, 3);
     lcd.print("        ");
     if ((invalid[0] == -1 && invalid[1] == -1)) {
@@ -868,9 +861,8 @@ void play(int M[cell][cell], char position[4]) {
           Serial1.println("exit");
         config.games += 1;
         EEPROM.put(0, config);
-      } else {
-        confirm = 0;
       }
+      confirm = 0;
     }
   }
 }
@@ -988,7 +980,7 @@ void home() {
   }
 }
 
-int lcdloop(int M[cell][cell], char position[4]) {
+int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
   if (Serial1.available()) {
     input = Serial1.readStringUntil('\n');
     input.trim();
@@ -1189,7 +1181,7 @@ int lcdloop(int M[cell][cell], char position[4]) {
     home();
     break;
   case 1:
-    play(M, position);
+    play(M, position, invalid);
     break;
   case 2:
     online(M);

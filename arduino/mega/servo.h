@@ -78,7 +78,7 @@ void up(int ms) {
   for (int i = 1; i < ms * 1.5 / 100 + 3; i++) {
     if (digitalRead(pinBreak)) {
       dwn = 0;
-      break;
+      return;
     }
 
     servo2.attach(servoUD);
@@ -92,7 +92,7 @@ void up(int ms) {
 }
 
 void down(int ms) {
-  for (int i = 1; i < ms / 100 + 1; i++) {
+  for (int i = 1; i < (ms / 100) + 1; i++) {
     servo2.attach(servoUD);
     servo2.writeMicroseconds(3000);
     delay(100);
@@ -125,10 +125,10 @@ void move(String position, int magnet = 0) {
     reset();
     moveH(h < 0 ? 0 : h);
     moveV(v < 0 ? 0 : v);
-    down(d < 0 ? 0 : d * 100);
-    delay(100);
+    down(d < 0 ? 0 : (d * 100));
+    delay(250);
     pinMode(pinMagnet, magnet);
-    delay(100);
+    delay(250);
     reset();
   }
 }
@@ -137,10 +137,10 @@ void eat() {
   reset();
   moveH(S0.turn < 0 ? 0 : S0.turn);
   moveV(S0.move < 0 ? 0 : S0.move);
-  down(S0.down < 0 ? 0 : S0.down * 100);
-  delay(100);
+  down(S0.down < 0 ? 0 : (S0.down * 100));
+  delay(250);
   pinMode(pinMagnet, 0);
-  delay(100);
+  delay(250);
   reset();
 }
 
