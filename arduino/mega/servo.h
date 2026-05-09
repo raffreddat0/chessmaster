@@ -6,7 +6,6 @@ Servo servo2;
 Servo servo3;
 Servo servo4;
 
-int prev = 0, prev1 = 85, prev2 = 0;
 float dwn = 0;
 
 struct Square {
@@ -31,53 +30,52 @@ void serbegin() {
   servo3.detach();
   servo4.detach();
 
-  servo1.attach(servoH);
-  servo1.write(85);
-
   servo3.attach(servoM1);
   servo4.attach(servoM2);
   servo3.write(0);
   servo4.write(180);
 
-  delay(1000);
+  servo1.attach(servoH);
+  servo1.write(80);
+
+  delay(200);
+}
+
+void moveH(int degree) {
+  servo1.attach(servoH);
+  int prev = servo1.read();
+  if (degree > prev)
+    for (int angolo = prev; angolo <= degree; angolo++) {
+      servo1.write(angolo);
+      delay(15);
+    }
+  else
+    for (int angolo = prev; angolo >= degree; angolo--) {
+      servo1.write(angolo);
+      delay(15);
+    }
 }
 
 void moveV(int degree) {
   servo3.attach(servoM1);
   servo4.attach(servoM2);
+  int prev = servo3.read();
   if (degree > prev) {
     for (int angolo = prev; angolo <= degree; angolo++) {
       servo3.write(angolo);
       servo4.write(180 - angolo);
       delay(20);
     }
-  } else {
+  } else
     for (int angolo = prev; angolo >= degree; angolo--) {
       servo3.write(angolo);
       servo4.write(180 - angolo);
       delay(20);
     }
-  }
-  prev = degree;
-}
-
-void moveH(int degree) {
-  servo1.attach(servoH);
-  if (degree > prev1)
-    for (int angolo = prev1; angolo <= degree; angolo++) {
-      servo1.write(angolo);
-      delay(10);
-    }
-  else
-    for (int angolo = prev1; angolo >= degree; angolo--) {
-      servo1.write(angolo);
-      delay(10);
-    }
-  prev1 = degree;
 }
 
 void up(int ms) {
-  for (int i = 1; i < ms / 100 + 3; i++) {
+  for (int i = 1; i < ms * 1.5 / 100 + 3; i++) {
     if (digitalRead(pinBreak)) {
       dwn = 0;
       break;
@@ -108,8 +106,8 @@ void down(int ms) {
 void reset() {
   if (dwn > 0)
     up(dwn * 100);
-  moveH(85);
   moveV(0);
+  moveH(80);
 }
 
 void move(String position, int magnet = 0) {

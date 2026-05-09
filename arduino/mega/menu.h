@@ -1082,9 +1082,9 @@ int lcdloop(int M[cell][cell], char position[4]) {
           }
         }
         if (piece == "p") {
-          char lstart = input.chatAt(0);
+          char lstart = input.charAt(0);
           if (lstart != lettera && M[rigaIndex][colIndex] == 0) {
-            move(String(lettera) + String(input.chatAt(1)), 1);
+            move(String(lettera) + String(input.charAt(1)), 1);
             eat();
           }
         }
