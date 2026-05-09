@@ -57,7 +57,7 @@ const getStockfishMove = async (fen, level) => {
   const url = "https://stockfish.online/api/s/v2.php";
   const params = new URLSearchParams({
     fen: fen,
-    depth: Math.max(level, 5)
+    depth: Math.max(Math.min(level + 3, 15), 5)
   });
 
   try {
@@ -230,8 +230,10 @@ wss.on("connection", (ws, req) => {
       }
 
       ws.send("valid");
-      if (chess.isGameOver())
+      if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "win");
+        return;
+      }
 
       if (sessions[game].length === 2) {
         sessions[game][1].emit("message", message);
@@ -249,18 +251,38 @@ wss.on("connection", (ws, req) => {
 
       async function stockfish() {
         try {
-          const stockfishMove = await getStockfishMove(chess.fen(), level);
-          console.log(`Mossa di Stockfish: ${stockfishMove}`);
-          const piece = chess.move({ from: stockfishMove.substring(0, 2), to: stockfishMove.substring(2, 4), promotion: "q" }).piece;
-          ws.send(auth === "online" ? stockfishMove : (piece + stockfishMove));
+          const legalMoves = chess.moves({ verbose: true });
+          const mistakeChance = Math.max(0.6 - level * 0.08, 0.05);
+
+          let chosen;
+          if (Math.random() < mistakeChance) {
+            chosen = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+            await new Promise(r => setTimeout(r, 500));
+          } else {
+            const bestMove = await getStockfishMove(chess.fen(), level);
+            const from = bestMove.substring(0, 2);
+            const to = bestMove.substring(2, 4);
+
+            chosen = { from, to, promotion: "q" };
+          }
+
+          const result = chess.move(chosen);
+          if (!result) throw new Error("invalid");
+
+          const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
+          const piece = result.piece;
+
+          ws.send(auth === "online" ? uci : (piece + uci));
         } catch {
           return await stockfish();
         }
       }
 
       await stockfish();
-      if (chess.isGameOver())
+      if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "lose");
+        return;
+      }
     });
   else {
     ws.on("message", async (data) => {
