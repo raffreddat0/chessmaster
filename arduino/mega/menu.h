@@ -804,7 +804,7 @@ void play(int t, char position[4], int invalid[2]) {
   }
 
   lcd.setCursor(0, 0);
-  if (hour > 0 && timer > 1000 && hour < 1000) {
+  if (hour > 0 && timer > 1000 && hour < 1000 && playing == 1) {
     lcd.print("      ");
     lcd.print(buffer);
     lcd.print("      ");
