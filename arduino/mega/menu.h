@@ -55,7 +55,7 @@ int redirect = 0;
 int scanning = 0;
 bool connected = false;
 
-long int time[3] = {0, 0, 0};
+unsigned long time = 0;
 char code[7] = "";
 int playing = -1;
 
@@ -773,14 +773,6 @@ void play(int t, char position[4], int invalid[2]) {
     playing = 0;
   }
 
-  if (ddlay(1000)) {
-    time[1]++;
-    if (time[1] > 59) {
-      time[1] = 0;
-      time[0]++;
-    }
-  }
-
   if (x != x0) {
     if (x < 0)
       x = 1;
@@ -788,17 +780,25 @@ void play(int t, char position[4], int invalid[2]) {
       x = 0;
   }
 
-  if (playing == 0)
+  if (playing == 0) {
     playing = 1;
+  }
 
-  lcd.setCursor(7, 0);
-  if (time[0] < 10)
-    lcd.print("0");
-  lcd.print(time[0]);
-  lcd.print(":");
-  if (time[1] < 10)
-    lcd.print("0");
-  lcd.print(time[1]);
+  unsigned long seconds = time / 1000;
+  unsigned int sec = seconds % 60;
+  unsigned int min = (seconds / 60) % 60;
+  unsigned int hour = seconds / 3600;
+
+  char buffer[12];
+
+  if (hour > 0) {
+    lcd.setCursor(6, 0);
+    sprintf(buffer, "%02u:%02u:%02u", hour, min, sec);
+  } else {
+    lcd.setCursor(7, 0);
+    sprintf(buffer, "%02u:%02u", min, sec);
+  }
+  lcd.print(buffer);
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
@@ -843,7 +843,7 @@ void play(int t, char position[4], int invalid[2]) {
     }
   }
 
-  if (click && (time[0] > 0 || time[1] > 1)) {
+  if (click && sec > 1) {
     click = 0;
     prevent = 1;
     lcd.clear();
@@ -855,8 +855,7 @@ void play(int t, char position[4], int invalid[2]) {
       if (x == 1) {
         x = x0 = 0;
         page = 0;
-        time[0] = 0;
-        time[1] = 0;
+        time = 0;
         playing = -1;
         t = 0;
         input = "";
@@ -904,7 +903,7 @@ void online() {
     lcd.print(code);
 
     if (ddlay(1000))
-      time[2]++;
+      time++;
 
     if (ddlay(500)) {
       if (status % 2 == 1) {
@@ -920,14 +919,14 @@ void online() {
         status = 0;
     }
 
-    if (click && time[2] > 1) {
+    if (click && time > 1) {
       playing = -1;
       strcpy(code, "");
       click = 0;
       prevent = 1;
+      time = 0;
       x = x0 = 0;
       y = y0 = 0;
-      time[2] = 0;
       page = 0;
       input = "";
       lcd.clear();
@@ -935,8 +934,10 @@ void online() {
     }
   }
 
-  if (playing == 0)
+  if (playing == 0) {
+    time = 0;
     page = 1;
+  }
 }
 
 void home() {
@@ -1002,6 +1003,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
 
     if (page == 1) {
       int skip = 0;
+
+      if (input.startsWith("timer ")) {
+        time = input.substring(6).toInt();
+        skip = 1;
+      }
 
       if (input == "win") {
         config.wins += 1;
@@ -1076,7 +1082,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         }
         movePiece(input, 1);
         movePiece(input.substring(2), 0);
-        if (piece == "k") {
+        if (piece == 'k') {
           if (input == "e8c8") {
             movePiece("a8", 1);
             movePiece("d8", 0);
@@ -1086,7 +1092,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
             movePiece("f8", 0);
           }
         }
-        if (piece == "p") {
+        if (piece == 'p') {
           char lstart = input.charAt(0);
           if (lstart != lettera && M[rigaIndex][colIndex] == 0) {
             movePiece(String(lettera) + String(input.charAt(1)), 1);

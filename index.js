@@ -243,6 +243,8 @@ wss.on("connection", (ws, req) => {
 
       if (games.includes(game)) {
         ws.send("stockfish");
+        timer = Date.now();
+        ws.send("timer " + timer);
         games = games.filter(code => code !== game);
       }
 
