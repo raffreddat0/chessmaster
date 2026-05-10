@@ -109,7 +109,8 @@ wss.on("connection", (ws, req) => {
     sessions[code].push(ws);
     sessions[code][0].send("joined");
     ws.send("start");
-  }
+  } else
+    ws.send("time " + Date.now());
 
   console.log("Client connesso");
 

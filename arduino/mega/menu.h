@@ -55,6 +55,8 @@ int redirect = 0;
 int scanning = 0;
 bool connected = false;
 
+unsigned long gap = 0;
+unsigned long timer = 0;
 unsigned long time = 0;
 char code[7] = "";
 int playing = -1;
@@ -784,7 +786,7 @@ void play(int t, char position[4], int invalid[2]) {
     playing = 1;
   }
 
-  unsigned long seconds = time / 1000;
+  unsigned long seconds = (time + (millis() - gap) - timer) / 1000;
   unsigned int sec = seconds % 60;
   unsigned int min = (seconds / 60) % 60;
   unsigned int hour = seconds / 3600;
@@ -855,7 +857,7 @@ void play(int t, char position[4], int invalid[2]) {
       if (x == 1) {
         x = x0 = 0;
         page = 0;
-        time = 0;
+        timer = 0;
         playing = -1;
         t = 0;
         input = "";
@@ -919,12 +921,12 @@ void online() {
         status = 0;
     }
 
-    if (click && time > 1) {
+    if (click && timer > 1) {
       playing = -1;
       strcpy(code, "");
       click = 0;
       prevent = 1;
-      time = 0;
+      timer = 0;
       x = x0 = 0;
       y = y0 = 0;
       page = 0;
@@ -935,7 +937,7 @@ void online() {
   }
 
   if (playing == 0) {
-    time = 0;
+    timer = 0;
     page = 1;
   }
 }
@@ -995,6 +997,12 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
       input = "";
     }
 
+    if (input.startsWith("time ")) {
+      time = input.substring(5).toInt();
+      gap = millis();
+    }
+
+
     if (input == "connected")
       connected = true;
 
@@ -1005,7 +1013,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
       int skip = 0;
 
       if (input.startsWith("timer ")) {
-        time = input.substring(6).toInt();
+        timer = input.substring(6).toInt();
         skip = 1;
       }
 
