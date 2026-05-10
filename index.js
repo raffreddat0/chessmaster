@@ -230,7 +230,6 @@ wss.on("connection", (ws, req) => {
       ws.send("valid");
       if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "win");
-        return;
       }
 
       if (sessions[game].length === 2) {
@@ -239,7 +238,7 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      if (chess.history().length > 1 && games.includes(game))
+      if ((chess.history().length > 1 && games.includes(game)) || chess.isGameOver())
         return;
 
       if (games.includes(game)) {

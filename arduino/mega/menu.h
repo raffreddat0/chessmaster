@@ -808,17 +808,17 @@ void play(int t, char position[4], int invalid[2]) {
 
   if (playing > 1) {
     confirm = x = 1;
-    lcd.setCursor(8, 1);
+    lcd.setCursor(6, 1);
 
     if (playing == 2)
-      lcd.print("WIN!");
+      lcd.print("  WIN!  ");
     if (playing == 3)
-      lcd.print("DRAW");
+      lcd.print("  DRAW  ");
     if (playing == 4)
-      lcd.print("LOSE");
+      lcd.print("  LOSE  ");
   }
 
-  if (confirm == 0) {
+  if (confirm == 0 && playing == 1) {
     lcd.setCursor(6, 3);
     lcd.print("        ");
     if ((invalid[0] == -1 && invalid[1] == -1)) {
@@ -858,6 +858,7 @@ void play(int t, char position[4], int invalid[2]) {
         time[0] = 0;
         time[1] = 0;
         playing = -1;
+        t = 0;
         input = "";
         if (playing == 1)
           Serial1.println("exit");
@@ -1006,34 +1007,41 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         config.wins += 1;
         config.streak += 1;
         playing = 2;
+        skip = 1;
+        strcpy(position, "");
+        t = 0;
 
         if (config.level < 15)
           config.level += 1;
 
         EEPROM.put(0, config);
-        skip = 1;
       }
 
       if (input == "draw") {
         config.draws += 1;
         playing = 3;
+        skip = 1;
+        strcpy(position, "");
+        t = 0;
 
         EEPROM.put(0, config);
-        skip = 1;
       }
 
       if (input == "lose") {
         config.losses += 1;
         config.streak = 0;
         playing = 4;
+        skip = 1;
+        strcpy(position, "");
+        t = 0;
 
         EEPROM.put(0, config);
-        skip = 1;
       }
 
       if (input == "valid") {
         t = 1;
         skip = 1;
+        delay(100);
       }
 
       if (input == "invalid") {
