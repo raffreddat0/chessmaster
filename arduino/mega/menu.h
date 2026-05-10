@@ -1270,7 +1270,7 @@ void lcdbegin() {
   lcd.setCursor(4, 1);
   lcd.print("CHESS MASTER");
   lcd.setCursor(7, 3);
-  lcd.print("v1.0.0");
+  lcd.print("v3.4.5");
 
   delay(2000);
 
