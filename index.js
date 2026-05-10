@@ -208,7 +208,6 @@ wss.on("connection", (ws, req) => {
         try {
           piece = chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" }).piece;
         } catch (error) {
-          console.log(error.description);
           sessions[game][1].emit("message", "invalid");
           return;
         }
@@ -224,7 +223,6 @@ wss.on("connection", (ws, req) => {
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch (error) {
-        console.log(error.description);
         ws.send("invalid");
         return;
       }
@@ -272,6 +270,7 @@ wss.on("connection", (ws, req) => {
           const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
           const piece = result.piece;
 
+          console.log(`Mossa di stockfish: ${uci}`);
           ws.send(auth === "online" ? uci : (piece + uci));
         } catch {
           return await stockfish();

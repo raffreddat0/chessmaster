@@ -41,7 +41,7 @@ void serbegin() {
   delay(200);
 }
 
-void moveH(int degree) {
+void turn(int degree) {
   servo1.attach(servoH);
   int prev = servo1.read();
   if (degree > prev)
@@ -56,7 +56,7 @@ void moveH(int degree) {
     }
 }
 
-void moveV(int degree) {
+void move(int degree) {
   servo3.attach(servoM1);
   servo4.attach(servoM2);
   int prev = servo3.read();
@@ -106,11 +106,12 @@ void down(int ms) {
 void reset() {
   if (dwn > 0)
     up(dwn * 100);
-  moveV(0);
-  moveH(80);
+  move(0);
+  turn(80);
+  delay(200);
 }
 
-void move(String position, int magnet = 0) {
+void movePiece(String position, int magnet = 0) {
   char lettera = position.charAt(0);
   int colonna = position.substring(1).toInt();
 
@@ -123,8 +124,8 @@ void move(String position, int magnet = 0) {
     int d = S[rigaIndex][colIndex].down;
 
     reset();
-    moveH(h < 0 ? 0 : h);
-    moveV(v < 0 ? 0 : v);
+    turn(h < 0 ? 0 : h);
+    move(v < 0 ? 0 : v);
     down(d < 0 ? 0 : (d * 100));
     delay(250);
     pinMode(pinMagnet, magnet);
@@ -135,8 +136,8 @@ void move(String position, int magnet = 0) {
 
 void eat() {
   reset();
-  moveH(S0.turn < 0 ? 0 : S0.turn);
-  moveV(S0.move < 0 ? 0 : S0.move);
+  turn(S0.turn < 0 ? 0 : S0.turn);
+  move(S0.move < 0 ? 0 : S0.move);
   down(S0.down < 0 ? 0 : (S0.down * 100));
   delay(250);
   pinMode(pinMagnet, 0);
@@ -166,14 +167,14 @@ void serloop() {
       down(delayTime);
     } else if (input.startsWith("turn")) {
       int degree = input.substring(5).toInt();
-      moveH(degree);
+      turn(degree);
     } else if (input.startsWith("move")) {
       int degree = input.substring(5).toInt();
-      moveV(degree);
+      move(degree);
     } else {
-      move(input, 1);
+      movePiece(input, 1);
       if (input.length() > 2)
-        move(input.substring(2), 0);
+        movePiece(input.substring(2), 0);
     }
   }
 }

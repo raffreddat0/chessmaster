@@ -58,7 +58,6 @@ bool connected = false;
 long int time[3] = {0, 0, 0};
 char code[7] = "";
 int playing = -1;
-int turn = 0;
 
 void ditch() {
   const char *settings[] = {
@@ -152,7 +151,7 @@ void ditch() {
     }
 
     if (strcmp(settings[i], "Save") == 0) {
-      if (memcmp(S, T, sizeof(S)) == 0)
+      if (S0.turn == T0.turn && S0.move == T0.move && S0.down == T0.down)
         lcd.print("d");
       else
         lcd.print(" ");
@@ -164,8 +163,8 @@ void ditch() {
     prevent = 1;
     if (y == numItems - 3) {
       reset();
-      moveH(T0.turn);
-      moveV(T0.move);
+      turn(T0.turn);
+      move(T0.move);
       down(T0.down * 100);
     } else if (y == numItems - 2) {
       S0 = T0;
@@ -283,6 +282,8 @@ void squares() {
   if (T[7 - z][z0].down < 0)
     T[7 - z][z0].down = 0;
 
+  pinMode(pinMagnet, 1);
+
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
     lcd.setCursor(0, row);
@@ -398,8 +399,8 @@ void squares() {
     prevent = 1;
     if (y == numItems - 3) {
       reset();
-      moveH(T[7 - z][z0].turn);
-      moveV(T[7 - z][z0].move);
+      turn(T[7 - z][z0].turn);
+      move(T[7 - z][z0].move);
       down(T[7 - z][z0].down * 100);
     } else if (y == numItems - 2) {
       memcpy(S, T, sizeof(T));
@@ -409,6 +410,7 @@ void squares() {
       y = x = 0;
       y0 = x0 = 0;
       reset();
+      pinMode(pinMagnet, 0);
       editing = 0;
       lcd.clear();
       delay(100);
@@ -746,7 +748,7 @@ void stats() {
   }
 }
 
-void play(int M[cell][cell], char position[4], int invalid[2]) {
+void play(int t, char position[4], int invalid[2]) {
   if (!connected) {
     page = -3;
     lcd.clear();
@@ -800,7 +802,7 @@ void play(int M[cell][cell], char position[4], int invalid[2]) {
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
-    lcd.print(confirm == 0 ? (turn == 0 ? " WHITE  " : " BLACK  ")
+    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ")
                            : "  Exit? ");
   }
 
@@ -811,9 +813,9 @@ void play(int M[cell][cell], char position[4], int invalid[2]) {
     if (playing == 2)
       lcd.print("WIN!");
     if (playing == 3)
-      lcd.print("LOSE");
-    if (playing == 4)
       lcd.print("DRAW");
+    if (playing == 4)
+      lcd.print("LOSE");
   }
 
   if (confirm == 0) {
@@ -867,7 +869,7 @@ void play(int M[cell][cell], char position[4], int invalid[2]) {
   }
 }
 
-void online(int M[cell][cell]) {
+void online() {
   if (!connected) {
     page = -3;
     lcd.clear();
@@ -980,7 +982,7 @@ void home() {
   }
 }
 
-int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
+int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
   if (Serial1.available()) {
     input = Serial1.readStringUntil('\n');
     input.trim();
@@ -1003,6 +1005,7 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
       if (input == "win") {
         config.wins += 1;
         config.streak += 1;
+        playing = 2;
 
         if (config.level < 15)
           config.level += 1;
@@ -1013,6 +1016,7 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
 
       if (input == "draw") {
         config.draws += 1;
+        playing = 3;
 
         EEPROM.put(0, config);
         skip = 1;
@@ -1021,13 +1025,14 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
       if (input == "lose") {
         config.losses += 1;
         config.streak = 0;
+        playing = 4;
 
         EEPROM.put(0, config);
         skip = 1;
       }
 
       if (input == "valid") {
-        turn = 1;
+        t = 1;
         skip = 1;
       }
 
@@ -1042,7 +1047,7 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
         invalid[1] = colIndex;
         strcpy(position, "");
 
-        turn = 0;
+        t = 0;
         skip = 1;
       }
 
@@ -1058,30 +1063,30 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
         int colIndex = lettera - 'a';
 
         if (M[rigaIndex][colIndex] == 1) {
-          move(input.substring(2), 1);
+          movePiece(input.substring(2), 1);
           eat();
         }
-        move(input, 1);
-        move(input.substring(2), 0);
+        movePiece(input, 1);
+        movePiece(input.substring(2), 0);
         if (piece == "k") {
-          if (input == "e1c1") {
-            move("a1", 1);
-            move("d1", 0);
+          if (input == "e8c8") {
+            movePiece("a8", 1);
+            movePiece("d8", 0);
           }
-          if (input == "e1g1") {
-            move("h1", 1);
-            move("f1", 0);
+          if (input == "e8g8") {
+            movePiece("h8", 1);
+            movePiece("f8", 0);
           }
         }
         if (piece == "p") {
           char lstart = input.charAt(0);
           if (lstart != lettera && M[rigaIndex][colIndex] == 0) {
-            move(String(lettera) + String(input.charAt(1)), 1);
+            movePiece(String(lettera) + String(input.charAt(1)), 1);
             eat();
           }
         }
 
-        turn = 0;
+        t = 0;
         invalid[0] = -1;
         invalid[1] = -1;
       }
@@ -1181,10 +1186,10 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
     home();
     break;
   case 1:
-    play(M, position, invalid);
+    play(t, position, invalid);
     break;
   case 2:
-    online(M);
+    online();
     break;
   case 3:
     stats();
@@ -1198,7 +1203,6 @@ int lcdloop(int M[cell][cell], char position[4], int invalid[2]) {
   }
 
   delay(5);
-
   return playing;
 }
 
