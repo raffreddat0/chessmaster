@@ -786,7 +786,7 @@ void play(int t, char position[4], int invalid[2]) {
     playing = 1;
   }
 
-  unsigned long seconds = (time + (millis() - gap) - timer) / 1000;
+  unsigned long seconds = (time + (gap - millis()) - timer) / 1000;
   unsigned int sec = seconds % 60;
   unsigned int min = (seconds / 60) % 60;
   unsigned int hour = seconds / 3600;

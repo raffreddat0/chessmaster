@@ -228,6 +228,11 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
+      if (!timer) {
+        timer = Date.now();
+        ws.send("timer " + timer);
+      }
+
       ws.send("valid");
       if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "win");
@@ -244,8 +249,6 @@ wss.on("connection", (ws, req) => {
 
       if (games.includes(game)) {
         ws.send("stockfish");
-        timer = Date.now();
-        ws.send("timer " + timer);
         games = games.filter(code => code !== game);
       }
 
