@@ -54,6 +54,7 @@ char tssid[20] = "";
 int redirect = 0;
 int scanning = 0;
 bool connected = false;
+bool stockfish = false;
 
 unsigned long gap = 0;
 unsigned long timer = 0;
@@ -783,24 +784,35 @@ void play(int t, char position[4], int invalid[2]) {
   }
 
   if (playing == 0) {
+    t = 0;
     playing = 1;
   }
 
-  unsigned long seconds = (time + (gap - millis()) - timer) / 1000;
+  if (ddlay(1000))
+    timer++;
+
+  unsigned long seconds = (time + (millis() - gap) - timer) / 1000;
   unsigned int sec = seconds % 60;
   unsigned int min = (seconds / 60) % 60;
   unsigned int hour = seconds / 3600;
 
-  char buffer[12];
+  char buffer[12] = "00:00";
 
-  if (hour > 0) {
-    lcd.setCursor(6, 0);
-    sprintf(buffer, "%02u:%02u:%02u", hour, min, sec);
-  } else {
-    lcd.setCursor(7, 0);
-    sprintf(buffer, "%02u:%02u", min, sec);
+  if (timer > 1000 && hour < 1000) {
+    if (hour > 0) sprintf(buffer, "%02u:%02u:%02u", hour, min, sec);
+    else sprintf(buffer, "%02u:%02u", min, sec);
   }
-  lcd.print(buffer);
+
+  lcd.setCursor(0, 0);
+  if (hour > 0 && timer > 1000 && hour < 1000) {
+    lcd.print("      ");
+    lcd.print(buffer);
+    lcd.print("      ");
+  } else {
+    lcd.print("       ");
+    lcd.print(buffer);
+    lcd.print("        ");
+  }
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
@@ -818,34 +830,39 @@ void play(int t, char position[4], int invalid[2]) {
       lcd.print("  DRAW  ");
     if (playing == 4)
       lcd.print("  LOSE  ");
-  }
 
-  if (confirm == 0 && playing == 1) {
-    lcd.setCursor(6, 3);
-    lcd.print("        ");
-    if ((invalid[0] == -1 && invalid[1] == -1)) {
-      lcd.setCursor(8, 3);
-      lcd.print(position);
-    } else {
-      lcd.setCursor(6, 3);
-      lcd.print("Invalid!");
-    }
-  } else {
     lcd.setCursor(4, 3);
-    if (ddlay(500)) {
-      lcd.setCursor(4, 3);
-      if (x == 1) {
-        lcd.print(status % 2 == 0 ? "<Yes>" : "     ");
-        lcd.print("   No");
+    lcd.print("         ");
+  }
+
+  if (playing < 2) {
+    if (confirm == 0 && playing == 1) {
+      lcd.setCursor(6, 3);
+      lcd.print("        ");
+      if ((invalid[0] == -1 && invalid[1] == -1)) {
+        lcd.setCursor(8, 3);
+        lcd.print(position);
       } else {
-        lcd.print("Yes   ");
-        lcd.print(status % 2 == 0 ? "<No>" : "     ");
+        lcd.setCursor(6, 3);
+        lcd.print("Invalid!");
       }
-      status = (status + 1) % 2;
+    } else {
+      lcd.setCursor(4, 3);
+      if (ddlay(500)) {
+        lcd.setCursor(4, 3);
+        if (x == 1) {
+          lcd.print(status % 2 == 0 ? "<Yes>" : "     ");
+          lcd.print("   No");
+        } else {
+          lcd.print("Yes   ");
+          lcd.print(status % 2 == 0 ? "<No>" : "     ");
+        }
+        status = (status + 1) % 2;
+      }
     }
   }
 
-  if (click && sec > 1) {
+  if (click && timer > 1) {
     click = 0;
     prevent = 1;
     lcd.clear();
@@ -854,11 +871,13 @@ void play(int t, char position[4], int invalid[2]) {
       confirm = 1;
       x = x0 = 0;
     } else {
+      confirm = 0;
       if (x == 1) {
         x = x0 = 0;
         page = 0;
         timer = 0;
         playing = -1;
+        stockfish = false;
         t = 0;
         input = "";
         if (playing == 1)
@@ -866,7 +885,6 @@ void play(int t, char position[4], int invalid[2]) {
         config.games += 1;
         EEPROM.put(0, config);
       }
-      confirm = 0;
     }
   }
 }
@@ -905,7 +923,7 @@ void online() {
     lcd.print(code);
 
     if (ddlay(1000))
-      time++;
+      timer++;
 
     if (ddlay(500)) {
       if (status % 2 == 1) {
@@ -978,10 +996,12 @@ void home() {
 
   if (click) {
     page = x + 1;
+    click = 0;
     x = 0;
     x0 = 0;
     y = 0;
     y0 = 0;
+    confirm = 0;
     lcd.clear();
   }
 }
@@ -1012,6 +1032,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     if (page == 1) {
       int skip = 0;
 
+      if (input == "stockfish") {
+        stockfish = true;
+        skip = 1;
+      }
+
       if (input.startsWith("timer ")) {
         timer = input.substring(6).toInt();
         skip = 1;
@@ -1025,7 +1050,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         strcpy(position, "");
         t = 0;
 
-        if (config.level < 15)
+        if (config.level < 15 && stockfish)
           config.level += 1;
 
         EEPROM.put(0, config);
@@ -1073,7 +1098,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         skip = 1;
       }
 
-      if (skip == 0 && !input.startsWith("code") && !input.startsWith("stockfish") && input != "joined") {
+      if (skip == 0 && !input.startsWith("code") && input != "joined") {
         char piece = input[0];
         input.remove(0, 1);
         strcpy(position, input.c_str());
