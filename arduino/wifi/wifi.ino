@@ -89,13 +89,12 @@ bool findReachableHost() {
     Serial.println(host);
 
     if (WiFi.hostByName(host.c_str(), ip) == 1) {
-
       Serial.print("Resolved IP: ");
       Serial.println(ip);
 
       WiFiSSLClient client;
-
       EEPROM.put(0, i);
+
       return true;
     } else Serial.println("DNS failed");
   }
