@@ -84,7 +84,7 @@ bool findReachableHost() {
     startIndex = 26;
 
   for (int i = startIndex; i < startIndex + 3; i++) {
-    String host = "chessmaster" + String(i) + ".lol";
+    String host = "ws.chessmaster" + String(i) + ".lol";
     Serial.print("Trying: ");
     Serial.println(host);
 
@@ -109,7 +109,9 @@ void handleSerial(Stream &serial) {
     input.trim();
 
     if (input == "wifi") {
-      serial.println(getWifiNetworks());
+      String wifi = getWifiNetworks();
+      serial.println(wifi);
+      Serial.println(wifi);
     }
 
     if (input.startsWith("wifi ")) {
@@ -124,6 +126,7 @@ void handleSerial(Stream &serial) {
         if (status == WL_CONNECTED) {
           if (!findReachableHost()) {
             WiFi.disconnect();
+            Serial.println("connection error");
             serial.println("connection error");
           } else {
             socket.begin(ip, 1707, auth);
@@ -131,6 +134,7 @@ void handleSerial(Stream &serial) {
           }
         } else {
           WiFi.disconnect();
+          Serial.println("connection error");
           serial.println("connection error");
         }
       }
