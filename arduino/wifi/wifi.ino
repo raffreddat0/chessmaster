@@ -1,15 +1,17 @@
 #include <SoftwareSerial.h>
 #include <WiFiS3.h>
 #include <WebSocketsClient.h>
+#include <EEPROM.h>
 #include "led.h"
+#include "config.h"
 
 String ssid;
 String password;
 int status = WL_IDLE_STATUS;
 
 WebSocketsClient socket;
-char ip[] = "IP";
-char auth[] = "/?auth=AUTH";
+IPAddress ip;
+char auth[] = "/?auth=" AUTH;
 SoftwareSerial mySerial(2, 3);
 
 void onEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -34,7 +36,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
-  
+
 
   loadLed();
 
@@ -74,6 +76,33 @@ String getWifiNetworks() {
   return ssidList;
 }
 
+bool findReachableHost() {
+  int startIndex;
+  EEPROM.get(0, startIndex);
+
+  if (startIndex < 26 || startIndex > 99)
+    startIndex = 26;
+
+  for (int i = startIndex; i < startIndex + 3; i++) {
+    String host = "chessmaster" + String(i) + ".lol";
+    Serial.print("Trying: ");
+    Serial.println(host);
+
+    if (WiFi.hostByName(host.c_str(), ip) == 1) {
+
+      Serial.print("Resolved IP: ");
+      Serial.println(ip);
+
+      WiFiSSLClient client;
+
+      EEPROM.put(0, i);
+      return true;
+    } else Serial.println("DNS failed");
+  }
+
+  return false;
+}
+
 void handleSerial(Stream &serial) {
   if (serial.available()) {
     String input = serial.readStringUntil('\n');
@@ -93,8 +122,13 @@ void handleSerial(Stream &serial) {
 
         int status = WiFi.begin(ssid.c_str(), password.c_str());
         if (status == WL_CONNECTED) {
-          socket.begin(ip, 1707, auth);
-          socket.onEvent(onEvent);
+          if (!findReachableHost()) {
+            WiFi.disconnect();
+            serial.println("connection error");
+          } else {
+            socket.begin(ip, 1707, auth);
+            socket.onEvent(onEvent);
+          }
         } else {
           WiFi.disconnect();
           serial.println("connection error");

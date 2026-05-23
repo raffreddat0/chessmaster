@@ -1187,7 +1187,7 @@
       error.style.display = 'none';
       error.textContent = '';
 
-      const wsUrl = `ws${window.location.protocol === "https:" ? "s" : ""}://${window.location.host}?code=${code}`;
+      const wsUrl = `ws://${window.location.host}?code=${code}`;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {

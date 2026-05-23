@@ -751,7 +751,7 @@ void stats() {
   }
 }
 
-void play(int t, char position[4], int invalid[2]) {
+void play(int &t, char position[4], int invalid[2]) {
   if (!connected) {
     page = -3;
     lcd.clear();
