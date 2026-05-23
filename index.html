@@ -796,7 +796,7 @@
     <p class="subtitle">“Challenge the Future, One Move at a Time”</p>
     <div id="container">
       <div class="input-group">
-        <input type="text" autocomplete="off" id="codeInput" placeholder="Enter code or just enter..."
+        <input type="text" autocomplete="off" maxlength="6" id="codeInput" placeholder="Enter code or just enter..."
           onkeydown="if (event.key === 'Enter') connectWithCode()"
           oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
         <p id="error"></p>
@@ -1643,6 +1643,14 @@
       code = code.toUpperCase();
       if (code === 'ONLINE') {
         window.location.href = "/ONLINE";
+        return;
+      }
+
+      if (code.length !== 6) {
+        error.textContent = 'Invalid code length.';
+        error.className = 'error';
+        error.style.display = 'block';
+        codeInput.classList.add('error');
         return;
       }
 
