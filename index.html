@@ -796,7 +796,7 @@
     <p class="subtitle">“Challenge the Future, One Move at a Time”</p>
     <div id="container">
       <div class="input-group">
-        <input type="text" id="codeInput" placeholder="Enter code or just enter..."
+        <input type="text" autocomplete="off" id="codeInput" placeholder="Enter code or just enter..."
           onkeydown="if (event.key === 'Enter') connectWithCode()"
           oninput="this.classList.remove('error', 'success'); document.getElementById('error').style.display = 'none';">
         <p id="error"></p>
@@ -1870,7 +1870,8 @@
         timeoutId = setTimeout(tick, speeds.erase);
       };
 
-      input.addEventListener('input', () => {
+      input.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
         if (hasInput()) {
           if (initialHold && label.textContent === defaultText) {
             if (startupTimeoutId) {
