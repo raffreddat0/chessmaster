@@ -13,23 +13,35 @@ WebSocketsClient socket;
 IPAddress ip;
 char auth[] = "/?auth=" AUTH;
 SoftwareSerial mySerial(2, 3);
+unsigned long last = 0;
 
 void onEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
       case WStype_CONNECTED:
-          mySerial.println("connected");
-          Serial.println("connected");
-          break;
+        last = 0;
+        mySerial.println("connected");
+        Serial.println("connected");
+        break;
       case WStype_DISCONNECTED:
+        if (millis() - last >= 5000) {
+          if (last > 0) {
+            WiFi.disconnect();
+            mySerial.println("connection error");
+            Serial.println("connection error");
+            break;
+          }
+
           mySerial.println("disconnected");
           Serial.println("disconnected");
-          break;
+          last = millis();
+        }
+        break;
       case WStype_PING:
-          socket.sendPing(NULL);
+        socket.sendPing(NULL);
       case WStype_TEXT:
-          mySerial.println((char *)payload);
-          Serial.println((char *)payload);
-          break;
+        mySerial.println((char *)payload);
+        Serial.println((char *)payload);
+        break;
   }
 }
 
@@ -110,7 +122,6 @@ void handleSerial(Stream &serial) {
     if (input == "wifi") {
       String wifi = getWifiNetworks();
       serial.println(wifi);
-      Serial.println(wifi);
     }
 
     if (input.startsWith("wifi ")) {
@@ -125,7 +136,6 @@ void handleSerial(Stream &serial) {
         if (status == WL_CONNECTED) {
           if (!findReachableHost()) {
             WiFi.disconnect();
-            Serial.println("connection error");
             serial.println("connection error");
           } else {
             socket.begin(ip, 1707, auth);
@@ -133,7 +143,6 @@ void handleSerial(Stream &serial) {
           }
         } else {
           WiFi.disconnect();
-          Serial.println("connection error");
           serial.println("connection error");
         }
       }

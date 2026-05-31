@@ -327,7 +327,6 @@
       max-width: min(70vh, 92vw);
       display: none;
       box-shadow:
-        0 0 0 1px var(--border),
         0 20px 50px -12px rgba(0, 0, 0, 0.8),
         0 10px 20px -5px rgba(0, 0, 0, 0.5);
     }
@@ -494,6 +493,10 @@
 
     .highlight2-9c5d2 {
       box-shadow: inset 0 0 0 5px var(--highlight) !important;
+    }
+
+    [class^="notation-"] {
+      font-family: 'IBM Plex Mono', monospace;
     }
 
     input[type="text"].success {
@@ -1566,7 +1569,6 @@
 
       var config = {
         draggable,
-        showNotation: false,
         position: 'start',
         orientation: "black",
         onDragStart: (source, piece, position, orientation) => {
