@@ -15,6 +15,13 @@ char auth[] = "/?auth=" AUTH;
 SoftwareSerial mySerial(2, 3);
 unsigned long last = 0;
 
+struct Config {
+  int index;
+  IPAddress ip;
+};
+
+Config config;
+
 void onEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
       case WStype_CONNECTED:
@@ -25,6 +32,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
       case WStype_DISCONNECTED:
         if (millis() - last >= 5000) {
           if (last > 0) {
+            findReachableHost();
             WiFi.disconnect();
             mySerial.println("connection error");
             Serial.println("connection error");
@@ -49,7 +57,7 @@ void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
 
-
+  EEPROM.get(0, config);
   loadLed();
 
   if (WiFi.status() == WL_NO_MODULE) {
@@ -89,13 +97,10 @@ String getWifiNetworks() {
 }
 
 bool findReachableHost() {
-  int startIndex;
-  EEPROM.get(0, startIndex);
+  if (config.index < 26 || config.index > 99)
+    config.index = 26;
 
-  if (startIndex < 26 || startIndex > 99)
-    startIndex = 26;
-
-  for (int i = startIndex; i < startIndex + 3; i++) {
+  for (int i = config.index; i < config.index + 3; i++) {
     String host = "ws.chessmaster" + String(i) + ".lol";
     Serial.print("Trying: ");
     Serial.println(host);
@@ -103,9 +108,11 @@ bool findReachableHost() {
     if (WiFi.hostByName(host.c_str(), ip) == 1) {
       Serial.print("Resolved IP: ");
       Serial.println(ip);
+      config.ip = ip;
 
       WiFiSSLClient client;
-      EEPROM.put(0, i);
+      config.index = i;
+      EEPROM.put(0, config);
 
       return true;
     } else Serial.println("DNS failed");
@@ -134,13 +141,9 @@ void handleSerial(Stream &serial) {
 
         int status = WiFi.begin(ssid.c_str(), password.c_str());
         if (status == WL_CONNECTED) {
-          if (!findReachableHost()) {
-            WiFi.disconnect();
-            serial.println("connection error");
-          } else {
-            socket.begin(ip, 1707, auth);
-            socket.onEvent(onEvent);
-          }
+          findReachableHost();
+          socket.begin(config.ip, 1707, auth);
+          socket.onEvent(onEvent);
         } else {
           WiFi.disconnect();
           serial.println("connection error");
