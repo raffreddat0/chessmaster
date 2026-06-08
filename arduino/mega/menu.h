@@ -9,7 +9,6 @@ void lcdbegin();
 
 struct Config {
   int level;
-  int lang;
   char ssid[32];
   int streak;
   int wins;
@@ -599,7 +598,7 @@ void debug() {
     } else if (y == numItems - 1) {
       page = redirect = 4;
       x = x0 = 0;
-      y = y0 = 3;
+      y = y0 = 2;
       lcd.clear();
       delay(100);
     }
@@ -647,7 +646,7 @@ void credits() {
     prevent = 1;
     page = 4;
     x = x0 = 0;
-    y = y0 = 4;
+    y = y0 = 3;
     lcd.clear();
   }
 }
@@ -732,7 +731,7 @@ void wifi() {
       x = x0 = 0;
       y = y0 = 0;
       if (redirect == 4)
-        y = y0 = 2;
+        y = y0 = 1;
       input = "";
       lcd.clear();
     } else {
@@ -751,7 +750,7 @@ void settings() {
     int page;
   };
 
-  const MenuItem settings[] = {{"Level: ", 0}, {"Language: ", 0}, {"Wifi", -3},
+  const MenuItem settings[] = {{"Level: ", 0}, {"Wifi", -3},
                                {"Debug", -4},  {"Credits", 5},    {"Exit", 0}};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
@@ -791,21 +790,6 @@ void settings() {
       }
       lcd.print("<");
       lcd.print(config.level);
-      lcd.print(">");
-    }
-
-    if (strcmp(settings[i].label, "Language: ") == 0) {
-      if (i == y && x != x0) {
-        config.lang += (x - x0);
-        if (config.lang < 0)
-          config.lang = 0;
-        if (config.lang > 0)
-          config.lang = 0;
-        x = x0 = 0;
-        EEPROM.put(0, config);
-      }
-      lcd.print("<");
-      lcd.print(config.lang == 1 ? "it" : "en");
       lcd.print(">");
     }
   }
