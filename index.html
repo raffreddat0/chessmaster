@@ -849,7 +849,7 @@
           </svg>
         </button>
         <button class="nav-btn" id="btnAutoPlay" onclick="toggleAutoPlay()" title="Auto Play">
-          <svg id="playIcon" viewBox="0 0 24 24">
+          <svg viewBox="0 0 24 24">
             <path d="M8 5v14l11-7z" />
           </svg>
         </button>
@@ -901,7 +901,11 @@
           const moveItem = document.createElement('span');
           moveItem.className = 'move-item';
           moveItem.textContent = history[i].from + history[i].to;
-          moveItem.onclick = () => showPastMove(i + 1);
+          moveItem.onclick = (e) => {
+            e.stopPropagation();
+            showPastMove(i + 1);
+            closeIsland();
+          };
           if (viewingIndex === i + 1 || (viewingIndex === -1 && i + 1 === history.length)) {
             moveItem.classList.add('active');
           }
@@ -920,13 +924,21 @@
           const whiteMove = createMoveItem(i);
           moveList.appendChild(whiteMove);
           mobileMoveList.appendChild(whiteMove.cloneNode(true));
-          mobileMoveList.lastChild.onclick = () => showPastMove(i + 1);
+          mobileMoveList.lastChild.onclick = (e) => {
+            e.stopPropagation();
+            showPastMove(i + 1);
+            closeIsland();
+          };
 
           if (history[i + 1]) {
             const blackMove = createMoveItem(i + 1, true);
             moveList.appendChild(blackMove);
             mobileMoveList.appendChild(blackMove.cloneNode(true));
-            mobileMoveList.lastChild.onclick = () => showPastMove(i + 2);
+            mobileMoveList.lastChild.onclick = (e) => {
+              e.stopPropagation();
+              showPastMove(i + 2);
+              closeIsland();
+            };
           }
         }
 
@@ -952,7 +964,11 @@
             if (originalId) {
               btn.id = 'mobile_' + originalId;
               const originalBtn = document.getElementById(originalId);
-              btn.onclick = () => originalBtn.click();
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                originalBtn.click();
+                closeIsland();
+              };
             }
           });
         }
@@ -997,13 +1013,16 @@
       }
 
       window.toggleAutoPlay = function () {
-        const btn = document.getElementById('btnAutoPlay');
-        const playIcon = document.getElementById('playIcon');
+        const btns = [document.getElementById('btnAutoPlay'), document.getElementById('mobile_btnAutoPlay')].filter(Boolean);
+
         if (autoPlayInterval) {
           clearInterval(autoPlayInterval);
           autoPlayInterval = null;
-          playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
-          btn.classList.remove('active');
+          btns.forEach(btn => {
+            btn.classList.remove('active');
+            const icon = btn.querySelector('svg');
+            if (icon) icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+          });
         } else {
           const history = game.history();
           if (history.length === 0) return;
@@ -1012,8 +1031,12 @@
             showPastMove(0);
           }
 
-          playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-          btn.classList.add('active');
+          btns.forEach(btn => {
+            btn.classList.add('active');
+            const icon = btn.querySelector('svg');
+            if (icon) icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+          });
+
           autoPlayInterval = setInterval(() => {
             const currentHistory = game.history();
             if (viewingIndex < currentHistory.length) {
