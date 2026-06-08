@@ -23,6 +23,8 @@ Square T[8][8] = {};
 Square T0 = {};
 int addr = sizeof(config);
 int addr0 = addr + sizeof(S);
+String ip;
+String ip0;
 
 int value1 = 0;
 int value2 = 0;
@@ -174,8 +176,8 @@ void ditch() {
       EEPROM.put(addr0, S0);
     } else if (y == numItems - 1) {
       page = redirect;
-      y = x = 0;
-      y0 = x0 = 0;
+      x = x0 = 0;
+      y = y0 = 2;
       reset();
       editing = 0;
       lcd.clear();
@@ -238,8 +240,8 @@ void calibration() {
     } else {
       page = redirect;
       e = f = 0;
-      y = x = 0;
-      y0 = x0 = 0;
+      x = x0 = 0;
+      y = y0 = 1;
       lcd.clear();
       delay(100);
     }
@@ -429,6 +431,124 @@ void squares() {
   }
 }
 
+void ipaddress() {
+  if (input == "invalid ip") {
+    lcd.noCursor();
+    lcd.setCursor(2, 0);
+    lcd.print("     Invalid!     ");
+    input = "";
+    delay(1000);
+  }
+
+  if (input == "valid ip") {
+    lcd.noCursor();
+    lcd.clear();
+    delay(100);
+    lcd.setCursor(7, 1);
+    lcd.print("Saved!");
+    delay(1000);
+    ip = ip0;
+    page = redirect;
+    x = x0 = 0;
+    y = y0 = 3;
+    editing = 0;
+    input = "";
+    lcd.clear();
+  } else {
+    if (!editing) {
+      ip0 = ip;
+      editing = 1;
+    }
+
+    lcd.setCursor(2, 0);
+    lcd.print(ip0);
+    for (int i = 0; i < 16 - ip0.length(); i++)
+      lcd.print(" ");
+
+    lcd.setCursor(5, 2);
+    lcd.print("1234567890");
+    lcd.setCursor(1, 3);
+    lcd.print("CANCEL . DEL ENTER");
+
+    if (y != y0) {
+      x = 0;
+    }
+
+    y = constrain(y, 0, 1);
+    lcd.cursor();
+    switch (y) {
+      case 0:
+      if (x > 9)
+        x = 0;
+      if (x < 0)
+        x = 9;
+      lcd.setCursor(5 + x, 2);
+      break;
+    case 1:
+      x = constrain(x, 0, 3);
+      switch (x) {
+      case 0:
+        lcd.setCursor(1, 3);
+        break;
+      case 1:
+        lcd.setCursor(8, 3);
+        break;
+      case 2:
+        lcd.setCursor(10, 3);
+        break;
+      case 3:
+        lcd.setCursor(14, 3);
+        break;
+      }
+      break;
+    }
+    delay(150);
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    switch (y) {
+    case 0:
+      if (ip0.length() < 16) {
+        int val = x + 1;
+        if (val == 10)
+          val = 0;
+        ip0 += String(val);
+      }
+      break;
+    case 1:
+      switch (x) {
+      case 0:
+        page = redirect;
+        x = x0 = 0;
+        y = y0 = 3;
+        editing = 0;
+        input = "";
+        lcd.noCursor();
+        lcd.clear();
+        delay(100);
+        break;
+      case 1:
+        if (ip0.length() < 16)
+          ip0 += '.';
+        break;
+      case 2:
+        if (ip0.length() > 0)
+          ip0.remove(ip0.length() - 1);
+        break;
+      case 3:
+        if (ip0.length() < 7)
+          input = "invalid ip";
+        else
+          Serial1.println("ip " + ip0);
+        break;
+      }
+      break;
+    }
+  }
+}
+
 void debug() {
   struct MenuItem {
     const char *label;
@@ -436,7 +556,7 @@ void debug() {
   };
 
   const MenuItem settings[] = {
-      {"Squares", -6}, {"Calibration", -5}, {"Ditch", -7}, {"Exit", 0}};
+      {"Squares", -5}, {"Calibration", -6}, {"Ditch", -7}, {"IP Address", -8}, {"Exit", 0}};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -470,14 +590,14 @@ void debug() {
     if (settings[y].page) {
       redirect = -4;
       page = settings[y].page;
-      y = x = 0;
-      y0 = x0 = 0;
+      x = x0 = 0;
+      y = y0 = 0;
       lcd.clear();
       delay(100);
     } else if (y == numItems - 1) {
       page = redirect = 4;
-      y = x = 0;
-      y0 = x0 = 0;
+      x = x0 = 0;
+      y = y0 = 3;
       lcd.clear();
       delay(100);
     }
@@ -524,8 +644,8 @@ void credits() {
     click = 0;
     prevent = 1;
     page = 4;
-    y = x = 0;
-    y0 = x0 = 0;
+    x = x0 = 0;
+    y = y0 = 4;
     lcd.clear();
   }
 }
@@ -548,6 +668,8 @@ void wifi() {
   }
 
   if (input == "connection error") {
+    lcd.clear();
+    delay(100);
     lcd.setCursor(7, 1);
     lcd.print("Error!");
     scanning = 1;
@@ -558,6 +680,8 @@ void wifi() {
   }
 
   if (scanning == 2) {
+    lcd.clear();
+    delay(100);
     lcd.setCursor(3, 0);
     lcd.print("Connecting to");
     lcd.setCursor((20 - strlen(tssid)) / 2, 1);
@@ -603,8 +727,10 @@ void wifi() {
     if (y == numItems - 1) {
       page = redirect;
       scanning = 0;
-      y = x = 0;
-      y0 = x0 = 0;
+      x = x0 = 0;
+      y = y0 = 0;
+      if (redirect == 4)
+        y = y0 = 2;
       input = "";
       lcd.clear();
     } else {
@@ -694,8 +820,8 @@ void settings() {
       delay(100);
     } else if (y == numItems - 1) {
       page = redirect = 0;
-      y = x = 0;
-      y0 = x0 = 0;
+      y = y0 = 0;
+      x = x0 = 3;
       lcd.clear();
       delay(100);
     }
@@ -745,9 +871,10 @@ void stats() {
     click = 0;
     prevent = 1;
     page = 0;
-    y = x = 0;
-    y0 = x0 = 0;
+    y = y0 = 0;
+    x = x0 = 2;
     lcd.clear();
+    delay(100);
   }
 }
 
@@ -873,7 +1000,8 @@ void play(int &t, char position[4], int invalid[2]) {
     } else {
       confirm = 0;
       if (x == 1) {
-        x = x0 = 0;
+        x = x0 = stockfish ? 0 : 1;
+        y = y0 = 0;
         page = 0;
         timer = 0;
         playing = -1;
@@ -945,7 +1073,7 @@ void online() {
       click = 0;
       prevent = 1;
       timer = 0;
-      x = x0 = 0;
+      x = x0 = 1;
       y = y0 = 0;
       page = 0;
       input = "";
@@ -1017,9 +1145,15 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
       input = "";
     }
 
+    if (input.startsWith("ip ")) {
+      ip = input.substring(3);
+      input = "";
+    }
+
     if (input.startsWith("time ")) {
       time = input.substring(5).toInt();
       gap = millis();
+      input = "";
     }
 
 
@@ -1214,14 +1348,17 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
   }
 
   switch (page) {
+  case -8:
+    ipaddress();
+    break;
   case -7:
     ditch();
     break;
   case -6:
-    squares();
+    calibration();
     break;
   case -5:
-    calibration();
+    squares();
     break;
   case -4:
     debug();
@@ -1280,6 +1417,8 @@ void lcdbegin() {
   Serial.println(config.ssid);
 
   Serial1.println("wifi");
+  Serial1.println("ip");
+
   if (config.ssid && strlen(config.ssid) > 0) {
     Serial1.println(String("wifi ") + config.ssid + ":chessmaster");
   }

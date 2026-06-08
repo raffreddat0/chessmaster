@@ -32,7 +32,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
       case WStype_DISCONNECTED:
         if (millis() - last >= 5000) {
           if (last > 0) {
-            findReachableHost();
+            resolveDNS();
             WiFi.disconnect();
             mySerial.println("connection error");
             Serial.println("connection error");
@@ -96,7 +96,7 @@ String getWifiNetworks() {
   return ssidList;
 }
 
-bool findReachableHost() {
+void resolveDNS() {
   if (config.index < 26 || config.index > 99)
     config.index = 26;
 
@@ -113,12 +113,8 @@ bool findReachableHost() {
       WiFiSSLClient client;
       config.index = i;
       EEPROM.put(0, config);
-
-      return true;
     } else Serial.println("DNS failed");
   }
-
-  return false;
 }
 
 void handleSerial(Stream &serial) {
@@ -141,13 +137,34 @@ void handleSerial(Stream &serial) {
 
         int status = WiFi.begin(ssid.c_str(), password.c_str());
         if (status == WL_CONNECTED) {
-          findReachableHost();
+          resolveDNS();
           socket.begin(config.ip, 1707, auth);
           socket.onEvent(onEvent);
         } else {
           WiFi.disconnect();
           serial.println("connection error");
         }
+      }
+    }
+
+    if (input == "ip") {
+      serial.println("ip " + config.ip.toString());
+    }
+
+    if (input.startsWith("ip ")) {
+      String ip = input.substring(3);
+
+      if (config.ip.fromString(ip)) {
+        serial.println("valid ip");
+        if (status == WL_CONNECTED) {
+          socket.disconnect();
+          serial.println("disconnected");
+          socket.begin(config.ip, 1707, auth);
+          socket.onEvent(onEvent);
+        }
+      } else {
+        serial.println("invalid ip");
+        resolveDNS();
       }
     }
 
