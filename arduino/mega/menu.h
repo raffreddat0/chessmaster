@@ -458,6 +458,8 @@ void ipaddress() {
     if (!editing) {
       ip0 = ip;
       editing = 1;
+      y = y0 = 1;
+      x = x0 = 0;
     }
 
     lcd.setCursor(2, 0);
