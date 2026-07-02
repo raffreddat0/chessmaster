@@ -1,11 +1,13 @@
 const express = require("express");
 const path = require("path");
 const http = require("http");
+const helmet = require('helmet');
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
 require("dotenv").config();
 
 const app = express();
+app.use(helmet());
 const port = 1707;
 
 app.use(express.static(path.join(__dirname, "public")));
