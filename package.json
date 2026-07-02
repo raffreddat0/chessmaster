@@ -6,7 +6,6 @@
     "chess.js": "^1.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "helmet": "^8.2.0",
     "http": "^0.0.1-security",
     "ws": "^8.18.1"
   },
