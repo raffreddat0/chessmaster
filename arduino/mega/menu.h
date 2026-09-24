@@ -609,7 +609,7 @@ void credits() {
   const char *credits[] = {
     "Giovanni Montagna", "Matteo Geusa",   "Samuele Putignani",
     "Lorenzo Afrune", "Camilla Torresin", "Paola Candido",
-    "Alessandro Meraglia", "Giulia Levanto", "--------------------",
+    "Alessandro Meraglia", "Giulia Levanto", "     ----------     ",
     "Niccolo' Amato", "Andrea Mangia", ""
   };
 
