@@ -607,9 +607,11 @@ void debug() {
 
 void credits() {
   const char *credits[] = {
-      "Giovanni Montagna", "Matteo Geusa",   "Samuele Putignani",
-      "Camilla Torresin",  "Lorenzo Afrune", "Alessandro Meraglia",
-      "Paola Candido",     "Niccolo' Amato", "Andrea Mangia", ""};
+    "Giovanni Montagna", "Matteo Geusa",   "Samuele Putignani",
+    "Lorenzo Afrune", "Camilla Torresin", "Paola Candido",
+    "Alessandro Meraglia", "Giulia Levanto", "--------------------",
+    "Niccolo' Amato", "Andrea Mangia", ""
+  };
 
   const int numItems = sizeof(credits) / sizeof(credits[0]);
 
