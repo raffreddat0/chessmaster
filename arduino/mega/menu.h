@@ -55,7 +55,7 @@ char tssid[20] = "";
 int redirect = 0;
 int scanning = 0;
 bool connected = false;
-bool stockfish = false;
+int stockfish = 0;
 
 unsigned long gap = 0;
 unsigned long timer = 0;
@@ -91,6 +91,14 @@ void ditch() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
+
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
 
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
@@ -275,6 +283,14 @@ void squares() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
+
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
 
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
@@ -570,6 +586,14 @@ void debug() {
   lcd.setCursor(8, 0);
   lcd.print("Debug");
 
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
+
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
 
@@ -625,6 +649,14 @@ void credits() {
   lcd.setCursor(6, 0);
   lcd.print("Credits");
 
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
+
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
 
@@ -646,10 +678,11 @@ void credits() {
   if (click) {
     click = 0;
     prevent = 1;
-    page = 4;
+    page = redirect;
     x = x0 = 0;
-    y = y0 = 3;
+    y = y0 = 0;
     lcd.clear();
+    delay(100);
   }
 }
 
@@ -746,14 +779,72 @@ void wifi() {
   }
 }
 
+void about() {
+  struct MenuItem {
+    const char *label;
+    int page;
+  };
+
+  const MenuItem items[] = {{"Credits", 6}, {"Exit", 0}};
+
+  const int numItems = sizeof(items) / sizeof(items[0]);
+
+  if (y != y0 || x != x0) {
+    lcd.clear();
+    delay(100);
+    y = constrain(y, 0, numItems - 1);
+  }
+
+  lcd.setCursor(7, 0);
+  lcd.print("About");
+  lcd.setCursor(0, 1);
+  lcd.print("  ChessOS " + version);
+
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  for (int i = start; i < end; i++) {
+    int row = i - start + 2;
+    lcd.setCursor(0, row);
+
+    if (i == y)
+      lcd.print("> ");
+    else
+      lcd.print("  ");
+
+    lcd.print(items[i].label);
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (items[y].page) {
+      redirect = 5;
+      page = items[y].page;
+      y = x = 0;
+      y0 = x0 = 0;
+      lcd.clear();
+      delay(100);
+    } else if (y == numItems - 1) {
+      page = redirect = 4;
+      y = y0 = 0;
+      x = x0 = 0;
+      lcd.clear();
+      delay(100);
+    }
+  }
+}
+
 void settings() {
   struct MenuItem {
     const char *label;
     int page;
   };
 
-  const MenuItem settings[] = {{"Level: ", 0}, {"Wifi", -3},
-                               {"Debug", -4},  {"Credits", 5},    {"Exit", 0}};
+  const MenuItem settings[] = {
+    {"About", 5}, {"Level: ", 0}, {"Wifi", -3},
+    {"Debug", -4}, {"Exit", 0}
+  };
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -765,6 +856,14 @@ void settings() {
 
   lcd.setCursor(6, 0);
   lcd.print("Settings");
+
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
 
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
@@ -831,6 +930,14 @@ void stats() {
   lcd.setCursor(7, 0);
   lcd.print("Stats");
 
+  if (y < 3) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  }
+
   int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
   int end = min(start + 3, numItems);
 
@@ -887,6 +994,25 @@ void play(int &t, char position[4], int invalid[2]) {
   }*/
 
   if (playing == -1) {
+    switch(stockfish) {
+      case 1:
+        Serial1.println("level " + String(config.level));
+        break;
+      case 2:
+        Serial1.println("level 5");
+        break;
+      case 3:
+        Serial1.println("level 8");
+        break;
+      case 4:
+        Serial1.println("level 12");
+        break;
+      case 5:
+        Serial1.println("level 15");
+        break;
+      default:
+        break;
+    }
     Serial1.println("start");
     playing = 0;
   }
@@ -931,8 +1057,7 @@ void play(int &t, char position[4], int invalid[2]) {
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
-    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ")
-                           : "  Exit? ");
+    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ") : "  Exit? ");
   }
 
   if (playing > 1) {
@@ -988,12 +1113,12 @@ void play(int &t, char position[4], int invalid[2]) {
     } else {
       confirm = 0;
       if (x == 1) {
-        x = x0 = stockfish ? 0 : 1;
+        x = x0 = stockfish > 0 ? 0 : 1;
         y = y0 = 0;
         page = 0;
         timer = 0;
         playing = -1;
-        stockfish = false;
+        stockfish = 0;
         t = 0;
         input = "";
         if (playing == 1)
@@ -1072,7 +1197,72 @@ void online() {
 
   if (playing == 0) {
     timer = 0;
-    page = 1;
+    page = 7;
+  }
+}
+
+void mode() {
+  if (y != y0) {
+    lcd.clear();
+    delay(100);
+    status = 0;
+
+    if (y > 4)
+      y = 0;
+
+    if (y < 0)
+      y = 4;
+  }
+
+  lcd.setCursor(8, 0);
+  lcd.print("Mode");
+
+  lcd.setCursor(19, 1);
+  lcd.write(byte(1));
+  lcd.setCursor(19, 3);
+  lcd.write(byte(0));
+
+  switch (y) {
+  case 0:
+    lcd.setCursor(8, 2);
+    lcd.print("Auto");
+    break;
+  case 1:
+    lcd.setCursor(8, 2);
+    lcd.print("Easy");
+    break;
+  case 2:
+    lcd.setCursor(7, 2);
+    lcd.print("Medium");
+    break;
+  case 3:
+    lcd.setCursor(8, 2);
+    lcd.print("Hard");
+    break;
+  case 4:
+    lcd.setCursor(7, 2);
+    lcd.print("Insane");
+    break;
+  case 5:
+    lcd.setCursor(8, 2);
+    lcd.print("Exit");
+    break;
+  }
+
+  if (click) {
+    if (y == 5) {
+      page = 1;
+    } else {
+      stockfish = y + 1;
+      page = 7;
+    }
+    click = 0;
+    x = 0;
+    x0 = 0;
+    y = 0;
+    y0 = 0;
+    confirm = 0;
+    lcd.clear();
   }
 }
 
@@ -1091,20 +1281,20 @@ void home() {
 
   switch (x) {
   case 0:
-    lcd.setCursor(7, 1);
-    lcd.print("<Play>");
+    lcd.setCursor(6, 1);
+    lcd.print("< Play >");
     break;
   case 1:
-    lcd.setCursor(6, 1);
-    lcd.print("<Online>");
+    lcd.setCursor(5, 1);
+    lcd.print("< Online >");
     break;
   case 2:
-    lcd.setCursor(6, 1);
-    lcd.print("<Stats>");
+    lcd.setCursor(5, 1);
+    lcd.print("< Stats >");
     break;
   case 3:
     lcd.setCursor(5, 1);
-    lcd.print("<Settings>");
+    lcd.print("< Settings >");
     break;
   }
 
@@ -1155,7 +1345,8 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
       int skip = 0;
 
       if (input == "stockfish") {
-        stockfish = true;
+        if (stockfish == 0)
+          stockfish = 1;
         skip = 1;
       }
 
@@ -1172,7 +1363,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         strcpy(position, "");
         t = 0;
 
-        if (config.level < 15 && stockfish)
+        if (config.level < 15 && stockfish == 1)
           config.level += 1;
 
         EEPROM.put(0, config);
@@ -1358,7 +1549,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     home();
     break;
   case 1:
-    play(t, position, invalid);
+    mode();
     break;
   case 2:
     online();
@@ -1370,7 +1561,12 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     settings();
     break;
   case 5:
+    about();
+  case 6:
     credits();
+    break;
+  case 7:
+    play(t, position, invalid);
     break;
   }
 
@@ -1382,6 +1578,7 @@ void lcdbegin() {
   lcd.begin(20, 4);
   randomSeed(analogRead(0));
   lcd.createChar(0, arrowDown);
+  lcd.createChar(1, arrowUp);
 
   pinMode(switchPin, INPUT_PULLUP);
   pinMode(resetlcd, OUTPUT);
@@ -1395,7 +1592,7 @@ void lcdbegin() {
   lcd.setCursor(4, 1);
   lcd.print("CHESS MASTER");
   lcd.setCursor(7, 3);
-  lcd.print("v3.4.5");
+  lcd.print(version);
 
   delay(2000);
 

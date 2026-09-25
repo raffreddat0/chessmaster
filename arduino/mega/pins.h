@@ -11,3 +11,5 @@ int resetlcd = 53;
 
 int pinBreak = 48, pinBreakOutput = 46, pinMagnet = 44;
 int servoH = 5, servoM1 = 2, servoM2 = 3, servoUD = 4;
+
+String version = "v3.5.2";
