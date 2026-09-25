@@ -173,6 +173,11 @@ void handleSerial(Stream &serial) {
       socket.sendTXT(move);
     }
 
+    if (input.startsWith("level ")) {
+      String level = input.substring(6);
+      socket.sendTXT(level);
+    }
+
     if (input == "start") {
       socket.sendTXT("start");
     }
