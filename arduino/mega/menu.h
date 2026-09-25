@@ -92,16 +92,24 @@ void ditch() {
   } else
     lcd.print(range[r]);
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   if (T0.turn < 0)
     T0.turn = 90;
@@ -284,16 +292,24 @@ void squares() {
   } else
     lcd.print(range[r]);
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   if (T[7 - z][z0].turn < 0)
     T[7 - z][z0].turn = 90;
@@ -586,16 +602,24 @@ void debug() {
   lcd.setCursor(8, 0);
   lcd.print("Debug");
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
@@ -649,16 +673,24 @@ void credits() {
   lcd.setCursor(6, 0);
   lcd.print("Credits");
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
     lcd.setCursor(0, i - start + 1);
@@ -857,16 +889,24 @@ void settings() {
   lcd.setCursor(6, 0);
   lcd.print("Settings");
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
@@ -930,16 +970,24 @@ void stats() {
   lcd.setCursor(7, 0);
   lcd.print("Stats");
 
-  if (y < 3) {
+  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
     lcd.setCursor(19, 3);
     lcd.write(byte(0));
   } else {
-    lcd.setCursor(19, 1);
-    lcd.write(byte(1));
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
   }
-
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
-  int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
     lcd.setCursor(0, i - start + 1);
