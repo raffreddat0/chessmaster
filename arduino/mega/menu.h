@@ -74,25 +74,27 @@ void ditch() {
     editing = 1;
   }
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   char square[3] = "";
   int range[4] = {1, 5, 10, 20};
 
   lcd.setCursor(7, 0);
   lcd.print("Ditch");
-  lcd.setCursor(17, 0);
+  lcd.setCursor(18, 0);
   if (range[r] < 10) {
     lcd.print(" ");
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   if (start > 0) {
@@ -127,7 +129,11 @@ void ditch() {
     else
       lcd.print("  ");
 
-    lcd.print(settings[i]);
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", settings[i]);
+    lcd.print(buffer);
+
+    lcd.setCursor(strlen(settings[i]) + 2, i - start + 1);
     if (strcmp(settings[i], "Turn: ") == 0) {
       if (i == y && x != x0) {
         T0.turn += range[r] * (x - x0);
@@ -274,25 +280,27 @@ void squares() {
     editing = 1;
   }
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   char square[3] = "";
   int range[4] = {1, 5, 10, 20};
 
   lcd.setCursor(6, 0);
   lcd.print("Squares");
-  lcd.setCursor(17, 0);
+  lcd.setCursor(18, 0);
   if (range[r] < 10) {
     lcd.print(" ");
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   if (start > 0) {
@@ -329,7 +337,11 @@ void squares() {
     else
       lcd.print("  ");
 
-    lcd.print(settings[i]);
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", settings[i]);
+    lcd.print(buffer);
+
+    lcd.setCursor(strlen(settings[i]) + 2, i - start + 1);
     if (strcmp(settings[i], "Square: ") == 0) {
       if (i == y && x != x0) {
         if (s == 1)
@@ -593,16 +605,18 @@ void debug() {
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(8, 0);
   lcd.print("Debug");
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   if (start > 0) {
@@ -630,7 +644,9 @@ void debug() {
     else
       lcd.print("  ");
 
-    lcd.print(settings[i].label);
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", settings[i].label);
+    lcd.print(buffer);
   }
 
   if (click) {
@@ -658,17 +674,12 @@ void credits() {
     "Giovanni Montagna", "Matteo Geusa",   "Samuele Putignani",
     "Lorenzo Afrune", "Camilla Torresin", "Paola Candido",
     "Alessandro Meraglia", "Giulia Levanto", "    >----------<    ",
-    "Niccolo' Amato", "Andrea Mangia", ""
+    "Niccolo' Amato", "Andrea Mangia", "       <Exit>       "
   };
 
   const int numItems = sizeof(credits) / sizeof(credits[0]);
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(6, 0);
   lcd.print("Credits");
@@ -694,18 +705,11 @@ void credits() {
 
   for (int i = start; i < end; i++) {
     lcd.setCursor(0, i - start + 1);
-    lcd.print(credits[i]);
-  }
 
-  if (end == numItems)
-    if (ddlay(500)) {
-      lcd.setCursor(6, 3);
-      if (status % 2 == 0)
-        lcd.print("<Exit>");
-      else
-        lcd.print("           ");
-      status = (status + 1) % 2;
-    }
+    char buffer[20];
+    snprintf(buffer, sizeof(buffer), "%-19.19s", credits[i]);
+    lcd.print(buffer);
+  }
 
   if (click) {
     click = 0;
@@ -748,8 +752,6 @@ void wifi() {
   }
 
   if (scanning == 2) {
-    lcd.clear();
-    delay(100);
     lcd.setCursor(3, 0);
     lcd.print("Connecting to");
     lcd.setCursor((20 - strlen(tssid)) / 2, 1);
@@ -762,19 +764,21 @@ void wifi() {
     scanning = 1;
   }
 
-  int numItems = size;
+  int numItems = size + 1;
   strcpy(wifis[numItems - 1], "Exit");
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(8, 0);
   lcd.print("Wifi");
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
@@ -786,7 +790,9 @@ void wifi() {
     else
       lcd.print("  ");
 
-    lcd.print(wifis[i]);
+    char buffer[19];
+    snprintf(buffer, sizeof(buffer), "%-18.18s", wifis[i]);
+    lcd.print(buffer);
   }
 
   if (click) {
@@ -821,18 +827,20 @@ void about() {
 
   const int numItems = sizeof(items) / sizeof(items[0]);
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(7, 0);
   lcd.print("About");
   lcd.setCursor(0, 1);
   lcd.print("  ChessOS " + version);
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   for (int i = start; i < end; i++) {
@@ -855,6 +863,9 @@ void about() {
       page = items[y].page;
       y = x = 0;
       y0 = x0 = 0;
+      if (items[y].page == 6) {
+        y = y0 = 1;
+      }
       lcd.clear();
       delay(100);
     } else if (y == numItems - 1) {
@@ -880,16 +891,18 @@ void settings() {
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(6, 0);
   lcd.print("Settings");
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   if (start > 0) {
@@ -917,8 +930,11 @@ void settings() {
     else
       lcd.print("  ");
 
-    lcd.print(settings[i].label);
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", settings[i].label);
+    lcd.print(buffer);
 
+    lcd.setCursor(strlen(settings[i].label) + 2, row);
     if (strcmp(settings[i].label, "Level: ") == 0) {
       if (i == y && x != x0) {
         config.level += (x - x0);
@@ -929,9 +945,10 @@ void settings() {
         x = x0 = 0;
         EEPROM.put(0, config);
       }
+
       lcd.print("<");
       lcd.print(config.level);
-      lcd.print(">");
+      lcd.print("> ");
     }
   }
 
@@ -960,17 +977,18 @@ void stats() {
       "Streak: ", "Wins: ", "Losses: ", "Draws: ", "Games: ", "Exit"};
   const int numItems = sizeof(stats) / sizeof(stats[0]);
 
-  if (y != y0 || x != x0) {
-    lcd.clear();
-    delay(100);
-
-    y = constrain(y, 0, numItems - 1);
-  }
+  y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(7, 0);
   lcd.print("Stats");
 
-  int start = numItems - 1 == y ? max(0, y - 2) : max(0, y - 1);
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
   int end = min(start + 3, numItems);
 
   if (start > 0) {
@@ -996,8 +1014,11 @@ void stats() {
     else
       lcd.print("  ");
 
-    lcd.print(stats[i]);
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", stats[i]);
+    lcd.print(buffer);
 
+    lcd.setCursor(strlen(stats[i]) + 2, i - start + 1);
     if (strcmp(stats[i], "Streak: ") == 0)
       lcd.print(config.streak);
     else if (strcmp(stats[i], "Wins: ") == 0)
@@ -1024,8 +1045,9 @@ void stats() {
 void play(int &t, char position[4], int invalid[2]) {
   if (!connected) {
     page = -3;
+    redirect = 7;
     lcd.clear();
-    delay(200);
+    delay(100);
     return;
   }
 
@@ -1074,6 +1096,8 @@ void play(int &t, char position[4], int invalid[2]) {
 
   if (playing == 0) {
     t = 0;
+    invalid[0] = -1;
+    invalid[1] = -1;
     playing = 1;
   }
 
@@ -1105,7 +1129,7 @@ void play(int &t, char position[4], int invalid[2]) {
 
   if (playing == 1) {
     lcd.setCursor(6, 1);
-    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ") : "  Exit? ");
+    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ") : "        ");
   }
 
   if (playing > 1) {
@@ -1135,17 +1159,15 @@ void play(int &t, char position[4], int invalid[2]) {
         lcd.print("Invalid!");
       }
     } else {
+      lcd.setCursor(7, 2);
+      lcd.print("Exit?");
       lcd.setCursor(4, 3);
-      if (ddlay(500)) {
-        lcd.setCursor(4, 3);
-        if (x == 1) {
-          lcd.print(status % 2 == 0 ? "<Yes>" : "     ");
-          lcd.print("   No");
-        } else {
-          lcd.print("Yes   ");
-          lcd.print(status % 2 == 0 ? "<No>" : "     ");
-        }
-        status = (status + 1) % 2;
+      if (x == 1) {
+        lcd.print("<Yes>");
+        lcd.print("   No");
+      } else {
+        lcd.print("Yes   ");
+        lcd.print("<No>");
       }
     }
   }
@@ -1163,7 +1185,7 @@ void play(int &t, char position[4], int invalid[2]) {
       if (x == 1) {
         x = x0 = stockfish > 0 ? 0 : 1;
         y = y0 = 0;
-        page = 0;
+        page = redirect = 0;
         timer = 0;
         playing = -1;
         stockfish = 0;
@@ -1181,8 +1203,9 @@ void play(int &t, char position[4], int invalid[2]) {
 void online() {
   if (!connected) {
     page = -3;
+    redirect = 2;
     lcd.clear();
-    delay(200);
+    delay(100);
     return;
   }
 
@@ -1239,7 +1262,7 @@ void online() {
       page = 0;
       input = "";
       lcd.clear();
-      delay(200);
+      delay(100);
     }
   }
 
@@ -1251,15 +1274,13 @@ void online() {
 
 void mode() {
   if (y != y0) {
-    lcd.clear();
-    delay(100);
     status = 0;
 
-    if (y > 4)
+    if (y > 5)
       y = 0;
 
     if (y < 0)
-      y = 4;
+      y = 5;
   }
 
   lcd.setCursor(8, 0);
@@ -1272,39 +1293,40 @@ void mode() {
 
   switch (y) {
   case 0:
-    lcd.setCursor(8, 2);
-    lcd.print("Auto");
+    lcd.setCursor(7, 2);
+    lcd.print(" Auto ");
     break;
   case 1:
-    lcd.setCursor(8, 2);
-    lcd.print("Easy");
+    lcd.setCursor(7, 2);
+    lcd.print(" Easy ");
     break;
   case 2:
     lcd.setCursor(7, 2);
     lcd.print("Medium");
     break;
   case 3:
-    lcd.setCursor(8, 2);
-    lcd.print("Hard");
+    lcd.setCursor(7, 2);
+    lcd.print(" Hard ");
     break;
   case 4:
     lcd.setCursor(7, 2);
     lcd.print("Insane");
     break;
   case 5:
-    lcd.setCursor(8, 2);
-    lcd.print("Exit");
+    lcd.setCursor(7, 2);
+    lcd.print(" Exit ");
     break;
   }
 
   if (click) {
     if (y == 5) {
-      page = 1;
+      page = 0;
     } else {
       stockfish = y + 1;
       page = 7;
     }
     click = 0;
+    prevent = 1;
     x = 0;
     x0 = 0;
     y = 0;
@@ -1316,8 +1338,9 @@ void mode() {
 
 void home() {
   if (x != x0) {
-    lcd.clear();
-    delay(100);
+    lcd.setCursor(6, 3);
+    lcd.print("       ");
+    delay(50);
     status = 0;
 
     if (x > 3)
@@ -1329,19 +1352,19 @@ void home() {
 
   switch (x) {
   case 0:
-    lcd.setCursor(6, 1);
-    lcd.print("< Play >");
+    lcd.setCursor(4, 1);
+    lcd.print("  < Play >  ");
     break;
   case 1:
-    lcd.setCursor(5, 1);
-    lcd.print("< Online >");
+    lcd.setCursor(4, 1);
+    lcd.print(" < Online > ");
     break;
   case 2:
-    lcd.setCursor(5, 1);
-    lcd.print("< Stats >");
+    lcd.setCursor(4, 1);
+    lcd.print(" < Stats >  ");
     break;
   case 3:
-    lcd.setCursor(5, 1);
+    lcd.setCursor(4, 1);
     lcd.print("< Settings >");
     break;
   }
@@ -1351,12 +1374,14 @@ void home() {
   if (click) {
     page = x + 1;
     click = 0;
+    prevent = 1;
     x = 0;
     x0 = 0;
     y = 0;
     y0 = 0;
     confirm = 0;
     lcd.clear();
+    delay(100);
   }
 }
 
@@ -1364,139 +1389,173 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
   if (Serial1.available()) {
     input = Serial1.readStringUntil('\n');
     input.trim();
-    Serial.println(input);
 
-    if (input.startsWith("wifi ")) {
-      size = splitString(input.substring(5), wifis);
-      input = "";
-    }
+    if (input.length() != 0) {
+      Serial.println(input);
 
-    if (input.startsWith("ip ")) {
-      ip = input.substring(3);
-      input = "";
-    }
-
-    if (input.startsWith("time ")) {
-      time = input.substring(5).toInt();
-      gap = millis();
-      input = "";
-    }
-
-
-    if (input == "connected")
-      connected = true;
-
-    if (input == "disconnected")
-      connected = false;
-
-    if (page == 1) {
-      int skip = 0;
-
-      if (input == "stockfish") {
-        if (stockfish == 0)
-          stockfish = 1;
-        skip = 1;
+      if (input.startsWith("wifi ")) {
+        size = splitString(input.substring(5), wifis);
+        input = "";
       }
 
-      if (input.startsWith("timer ")) {
-        timer = input.substring(6).toInt();
-        skip = 1;
+      if (input.startsWith("ip ")) {
+        ip = input.substring(3);
+        input = "";
       }
 
-      if (input == "win") {
-        config.wins += 1;
-        config.streak += 1;
-        playing = 2;
-        skip = 1;
-        strcpy(position, "");
-        t = 0;
-
-        if (config.level < 15 && stockfish == 1)
-          config.level += 1;
-
-        EEPROM.put(0, config);
+      if (input.startsWith("time ")) {
+        time = input.substring(5).toInt();
+        gap = millis();
+        input = "";
       }
 
-      if (input == "draw") {
-        config.draws += 1;
-        playing = 3;
-        skip = 1;
-        strcpy(position, "");
-        t = 0;
 
-        EEPROM.put(0, config);
-      }
+      if (input == "connected")
+        connected = true;
 
-      if (input == "lose") {
-        config.losses += 1;
-        config.streak = 0;
-        playing = 4;
-        skip = 1;
-        strcpy(position, "");
-        t = 0;
+      if (input == "disconnected")
+        connected = false;
 
-        EEPROM.put(0, config);
-      }
+      if (page == 7) {
+        int skip = 0;
 
-      if (input == "valid") {
-        t = 1;
-        skip = 1;
-        delay(100);
-      }
-
-      if (input == "invalid") {
-        char lettera = position[0];
-        int colonna = position[1] - '0';
-
-        int rigaIndex = 7 - (colonna - 1);
-        int colIndex = lettera - 'a';
-
-        invalid[0] = rigaIndex;
-        invalid[1] = colIndex;
-        strcpy(position, "");
-
-        t = 0;
-        skip = 1;
-      }
-
-      if (skip == 0 && !input.startsWith("code") && input != "joined") {
-        char piece = input[0];
-        input.remove(0, 1);
-        strcpy(position, input.c_str());
-
-        char lettera = input.charAt(2);
-        int colonna = input.substring(3).toInt();
-
-        int rigaIndex = 7 - (colonna - 1);
-        int colIndex = lettera - 'a';
-
-        if (M[rigaIndex][colIndex] == 1) {
-          movePiece(input.substring(2), 1);
-          eat();
+        if (input == "stockfish") {
+          if (stockfish == 0)
+            stockfish = 1;
+          skip = 1;
         }
-        movePiece(input, 1);
-        movePiece(input.substring(2), 0);
-        if (piece == 'k') {
-          if (input == "e8c8") {
-            movePiece("a8", 1);
-            movePiece("d8", 0);
-          }
-          if (input == "e8g8") {
-            movePiece("h8", 1);
-            movePiece("f8", 0);
-          }
+
+        if (input.startsWith("timer ")) {
+          timer = input.substring(6).toInt();
+          skip = 1;
         }
-        if (piece == 'p') {
-          char lstart = input.charAt(0);
-          if (lstart != lettera && M[rigaIndex][colIndex] == 0) {
-            movePiece(String(lettera) + String(input.charAt(1)), 1);
+
+        if (input == "win") {
+          config.wins += 1;
+          config.streak += 1;
+          playing = 2;
+          skip = 1;
+          strcpy(position, "");
+          t = 0;
+
+          if (config.level < 15 && stockfish == 1)
+            config.level += 1;
+
+          EEPROM.put(0, config);
+        }
+
+        if (input == "draw") {
+          config.draws += 1;
+          playing = 3;
+          skip = 1;
+          strcpy(position, "");
+          t = 0;
+
+          EEPROM.put(0, config);
+        }
+
+        if (input == "lose") {
+          config.losses += 1;
+          config.streak = 0;
+          playing = 4;
+          skip = 1;
+          strcpy(position, "");
+          t = 0;
+
+          EEPROM.put(0, config);
+        }
+
+        if (input == "lose") {
+          config.losses += 1;
+          config.streak = 0;
+          playing = 4;
+          skip = 1;
+          strcpy(position, "");
+          t = 0;
+
+          EEPROM.put(0, config);
+        }
+
+        if (input == "valid") {
+          t = 1;
+          skip = 1;
+          delay(100);
+        }
+
+        if (input == "invalid" && playing == 1) {
+          char lettera = position[0];
+          int colonna = position[1] - '0';
+
+          int rigaIndex = 7 - (colonna - 1);
+          int colIndex = lettera - 'a';
+
+          invalid[0] = rigaIndex;
+          invalid[1] = colIndex;
+          strcpy(position, "");
+
+          t = 0;
+          skip = 1;
+        }
+
+        if (input.startsWith("code")) {
+          invalid[0] = -1;
+          invalid[1] = -1;
+          t = 0;
+          skip = 1;
+        }
+
+        if (skip == 0 && input != "joined" && playing == 1) {
+          char piece = input[0];
+          input.remove(0, 1);
+          strcpy(position, input.c_str());
+
+          if (confirm == 0) {
+            lcd.setCursor(6, 1);
+            lcd.print(t == 0 ? " WHITE  " : " BLACK  ");
+
+            lcd.setCursor(6, 3);
+            lcd.print("  ");
+            lcd.print(position);
+            lcd.print("  ");
+          }
+
+          char lettera = input.charAt(2);
+          int colonna = input.substring(3).toInt();
+
+          int rigaIndex = 7 - (colonna - 1);
+          int colIndex = lettera - 'a';
+
+          if (M[rigaIndex][colIndex] == 1) {
+            movePiece(input.substring(2), 1);
             eat();
           }
-        }
+          movePiece(input, 1);
+          movePiece(input.substring(2), 0);
+          if (piece == 'k') {
+            if (input == "e8c8") {
+              movePiece("a8", 1);
+              movePiece("d8", 0);
+            }
+            if (input == "e8g8") {
+              movePiece("h8", 1);
+              movePiece("f8", 0);
+            }
+          }
+          if (piece == 'p') {
+            char lstart = input.charAt(0);
+            if (lstart != lettera && M[rigaIndex][colIndex] == 0) {
+              movePiece(String(lettera) + String(input.charAt(1)), 1);
+              eat();
+            }
+          }
 
-        t = 0;
-        invalid[0] = -1;
-        invalid[1] = -1;
+          lcd.setCursor(6, 3);
+          lcd.print("        ");
+
+          t = 0;
+          invalid[0] = -1;
+          invalid[1] = -1;
+        }
       }
     }
   }
@@ -1610,6 +1669,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     break;
   case 5:
     about();
+    break;
   case 6:
     credits();
     break;

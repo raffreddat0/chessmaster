@@ -49,11 +49,14 @@ String checkEdges(int M[cell][cell]) {
 int splitString(String input, char output[][20], char sep = ',') {
   int start = 0;
   int size = 0;
+  int len = input.length();
 
-  while (size < 10) {
+  while (start < len && size < 10) {
     int idx = input.indexOf(sep, start);
-    if (idx == -1)
-      idx = input.length();
+    
+    if (idx == -1) {
+      idx = len;
+    }
 
     String temp = input.substring(start, idx);
     temp.trim();
@@ -71,14 +74,11 @@ int splitString(String input, char output[][20], char sep = ',') {
       size++;
     }
 
-    if (idx == input.length())
-      break;
     start = idx + 1;
   }
 
   return size;
 }
-
 int treatValue(int data) { return (data * 9 / 1024); }
 
 const int MAX_KEYS = 20;
@@ -90,12 +90,18 @@ bool ddlay(unsigned long interval) {
 
   for (int i = 0; i < MAX_KEYS; i++) {
     if (intervals[i] == interval) {
-      if (now - lastTimes[i] >= interval) {
+      unsigned long elapsed = now - lastTimes[i];
+
+      if (elapsed < 10) {
+        return true;
+      }
+
+      if (elapsed >= interval) {
         lastTimes[i] = now;
         return true;
-      } else {
-        return false;
       }
+
+      return false;
     }
   }
 

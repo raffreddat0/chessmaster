@@ -75,7 +75,6 @@ void loop() {
     position[1] != position[3])) {
       // Serial.println(String(position));
       Serial1.println(String("move ") + String(position));
-      t = 1;
     } else {
       strcpy(position, "");
     }
