@@ -41,14 +41,16 @@ int r = 0;
 int e = 0;
 int f = 0;
 int s = 0;
+int l = 0;
 
 String input = "";
 int page = -2;
 int status = 0;
 int confirm = 0;
 int yes = 0;
-int size = -1;
+int size = 0;
 int editing = 0;
+int year = 0;
 
 char wifis[10][20];
 char tssid[20] = "";
@@ -679,7 +681,7 @@ void credits() {
 
   const int numItems = sizeof(credits) / sizeof(credits[0]);
 
-  y = constrain(y, 0, numItems - 1);
+  y = constrain(y, 1, numItems - 2);
 
   lcd.setCursor(6, 0);
   lcd.print("Credits");
@@ -729,6 +731,7 @@ void wifi() {
     lcd.setCursor(5, 1);
     lcd.print("Connected!");
     page = redirect;
+    scanning = 0;
     input = "";
     strcpy(config.ssid, tssid);
     EEPROM.put(0, config);
@@ -744,7 +747,7 @@ void wifi() {
     delay(100);
     lcd.setCursor(7, 1);
     lcd.print("Error!");
-    scanning = 1;
+    scanning = 0;
     input = "";
     delay(2000);
     lcd.clear();
@@ -752,9 +755,9 @@ void wifi() {
   }
 
   if (scanning == 2) {
-    lcd.setCursor(3, 0);
+    lcd.setCursor(3, 1);
     lcd.print("Connecting to");
-    lcd.setCursor((20 - strlen(tssid)) / 2, 1);
+    lcd.setCursor((20 - strlen(tssid)) / 2, 2);
     lcd.print(tssid);
     return;
   }
@@ -781,6 +784,23 @@ void wifi() {
 
   int end = min(start + 3, numItems);
 
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
+  }
+
+
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
     lcd.setCursor(0, row);
@@ -795,16 +815,31 @@ void wifi() {
     lcd.print(buffer);
   }
 
+  if (end < 3)
+    for (int i = end; i < 3; i++) {
+      lcd.setCursor(0, i + 1);
+      lcd.print("                  ");
+    }
+
   if (click) {
     click = 0;
     prevent = 1;
     if (y == numItems - 1) {
-      page = redirect;
+      page = 0;
       scanning = 0;
       x = x0 = 0;
       y = y0 = 0;
-      if (redirect == 4)
-        y = y0 = 1;
+      if (redirect == 4) {
+        y = y0 = 2;
+        page = redirect;
+      }
+      if (redirect == 2)
+        x = x0 = 1;
+      if (redirect == 7) {
+        page = 1;
+        y = y0 = stockfish - 1;
+        stockfish = 0;
+      }
       input = "";
       lcd.clear();
     } else {
@@ -1211,6 +1246,7 @@ void online() {
 
   if (playing == -1) {
     Serial1.println("start");
+    Serial1.println("year");
     playing = -2;
   }
 
@@ -1237,18 +1273,20 @@ void online() {
     if (ddlay(1000))
       timer++;
 
-    if (ddlay(500)) {
-      if (status % 2 == 1) {
-        lcd.setCursor(6, 3);
-        lcd.print("         ");
-      } else {
-        lcd.setCursor(7, 3);
-        lcd.print("<Exit>");
-      }
-      status++;
+    String fullText = "www.chessmaster" + String(year) + ".lol   "; 
+    int totalLength = fullText.length();
 
-      if (status == 2)
-        status = 0;
+    while (l < totalLength && ddlay(300)) {
+      lcd.setCursor(0, 3);
+    
+      String window = "";
+      for (int j = 0; j < 20; j++) {
+        window += fullText[(l + j) % totalLength];
+      }
+    
+      lcd.print(window);
+      l++;
+      l = l % totalLength;
     }
 
     if (click && timer > 1) {
@@ -1259,6 +1297,7 @@ void online() {
       timer = 0;
       x = x0 = 1;
       y = y0 = 0;
+      l = 0;
       page = 0;
       input = "";
       lcd.clear();
@@ -1268,6 +1307,7 @@ void online() {
 
   if (playing == 0) {
     timer = 0;
+    l = 0;
     page = 7;
   }
 }
@@ -1320,6 +1360,7 @@ void mode() {
 
   if (click) {
     if (y == 5) {
+      stockfish = 0;
       page = 0;
     } else {
       stockfish = y + 1;
@@ -1393,13 +1434,21 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     if (input.length() != 0) {
       Serial.println(input);
 
-      if (input.startsWith("wifi ")) {
+      if (input.startsWith("wifi")) {
         size = splitString(input.substring(5), wifis);
+        if (scanning == 1 && ddlay(10000))
+            scanning = 0;
+
         input = "";
       }
 
       if (input.startsWith("ip ")) {
         ip = input.substring(3);
+        input = "";
+      }
+
+      if (input.startsWith("year ")) {
+        year = input.substring(5).toInt();
         input = "";
       }
 
@@ -1711,6 +1760,7 @@ void lcdbegin() {
 
   Serial1.println("wifi");
   Serial1.println("ip");
+  Serial1.println("year");
 
   if (config.ssid && strlen(config.ssid) > 0) {
     Serial1.println(String("wifi ") + config.ssid + ":chessmaster");

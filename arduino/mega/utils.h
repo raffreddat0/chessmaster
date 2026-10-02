@@ -47,6 +47,11 @@ String checkEdges(int M[cell][cell]) {
 }
 
 int splitString(String input, char output[][20], char sep = ',') {
+  if (input.length() == 0) {
+    memset(output, 0, 10 * 20);
+    return 0;
+  }
+
   int start = 0;
   int size = 0;
   int len = input.length();
@@ -79,6 +84,7 @@ int splitString(String input, char output[][20], char sep = ',') {
 
   return size;
 }
+
 int treatValue(int data) { return (data * 9 / 1024); }
 
 const int MAX_KEYS = 20;
