@@ -223,30 +223,37 @@
       if (!page || !track || !base) return;
 
       let baseHeight = 0;
-      let startOffsetPx = 10;
+      let startOffsetPx = 0;
       let offset = 0;
       let lastTs = null;
       const speedPxPerSec = 65;
 
       const measure = () => {
-        baseHeight = base.getBoundingClientRect().height - baseHeight;
-        startOffsetPx = page.getBoundingClientRect().height - startOffsetPx;
+        baseHeight = base.getBoundingClientRect().height;
+        startOffsetPx = page.getBoundingClientRect().height;
+      };
+
+      const setTransform = (y) => {
+        const transformValue = `translate3d(0, ${y}px, 0)`;
+        track.style.webkitTransform = transformValue;
+        track.style.transform = transformValue;
       };
 
       const step = (ts) => {
-        if (lastTs == null) lastTs = ts;
+        if (lastTs === null) lastTs = ts;
         const dt = (ts - lastTs) / 1000;
         lastTs = ts;
 
         if (baseHeight > 0) {
           offset += speedPxPerSec * dt;
           const y = startOffsetPx - offset;
+
           if (y <= -baseHeight) {
             offset = 0;
             lastTs = ts;
-            track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+            setTransform(startOffsetPx);
           } else {
-            track.style.transform = `translate3d(0, ${y}px, 0)`;
+            setTransform(y);
           }
         }
 
@@ -255,13 +262,15 @@
 
       measure();
       offset = 0;
-      track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+      setTransform(startOffsetPx);
+
       window.addEventListener('resize', () => {
         offset = 0;
         lastTs = null;
         measure();
-        track.style.transform = `translate3d(0, ${startOffsetPx}px, 0)`;
+        setTransform(startOffsetPx);
       });
+
       requestAnimationFrame(step);
     })();
 
