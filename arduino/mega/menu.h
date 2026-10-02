@@ -52,8 +52,8 @@ int size = 0;
 int editing = 0;
 int year = 0;
 
-char wifis[10][20];
-char tssid[20] = "";
+char wifis[10][32];
+char tssid[32] = "";
 int redirect = 0;
 int scanning = 0;
 bool connected = false;
@@ -730,6 +730,10 @@ void wifi() {
     delay(100);
     lcd.setCursor(5, 1);
     lcd.print("Connected!");
+    x = x0 = 0;
+    y = y0 = 0;
+    if (redirect == 4)
+      y = y0 = 2;
     page = redirect;
     scanning = 0;
     input = "";
@@ -742,7 +746,7 @@ void wifi() {
     return;
   }
 
-  if (input == "connection error") {
+  if (input == "connection error" && scanning == 2) {
     lcd.clear();
     delay(100);
     lcd.setCursor(7, 1);
@@ -757,6 +761,7 @@ void wifi() {
   if (scanning == 2) {
     lcd.setCursor(3, 1);
     lcd.print("Connecting to");
+    tssid[20] = '\0';
     lcd.setCursor((20 - strlen(tssid)) / 2, 2);
     lcd.print(tssid);
     return;
@@ -807,7 +812,10 @@ void wifi() {
 
     if (i == y)
       lcd.print("> ");
-    else
+    else if (strcmp(config.ssid, wifis[i]) == 0 && connected == true) {
+      lcd.write(2);
+      lcd.print(" ");
+    } else
       lcd.print("  ");
 
     char buffer[19];
@@ -843,11 +851,13 @@ void wifi() {
       input = "";
       lcd.clear();
     } else {
-      scanning = 2;
-      strcpy(tssid, wifis[y]);
-      Serial1.println(String("wifi ") + tssid + ":chessmaster");
-      lcd.clear();
-      delay(100);
+      if (strcmp(config.ssid, wifis[y]) != 0 || connected == false) {
+        scanning = 2;
+        strcpy(tssid, wifis[y]);
+        Serial1.println(String("wifi ") + tssid + ":chessmaster");
+        lcd.clear();
+        delay(100);
+      }
     }
   }
 }
@@ -1222,14 +1232,13 @@ void play(int &t, char position[4], int invalid[2]) {
         y = y0 = 0;
         page = redirect = 0;
         timer = 0;
+        Serial1.println("exit");
+        config.games += 1;
+        EEPROM.put(0, config);
         playing = -1;
         stockfish = 0;
         t = 0;
         input = "";
-        if (playing == 1)
-          Serial1.println("exit");
-        config.games += 1;
-        EEPROM.put(0, config);
       }
     }
   }
@@ -1273,17 +1282,17 @@ void online() {
     if (ddlay(1000))
       timer++;
 
-    String fullText = "www.chessmaster" + String(year) + ".lol   "; 
+    String fullText = "www.chessmaster" + String(year) + ".lol   ";
     int totalLength = fullText.length();
 
     while (l < totalLength && ddlay(300)) {
       lcd.setCursor(0, 3);
-    
+
       String window = "";
       for (int j = 0; j < 20; j++) {
         window += fullText[(l + j) % totalLength];
       }
-    
+
       lcd.print(window);
       l++;
       l = l % totalLength;
@@ -1436,8 +1445,8 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
 
       if (input.startsWith("wifi")) {
         size = splitString(input.substring(5), wifis);
-        if (scanning == 1 && ddlay(10000))
-            scanning = 0;
+        if (scanning == 1 && ddlay(5000))
+          scanning = 0;
 
         input = "";
       }
@@ -1528,6 +1537,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "valid") {
           t = 1;
           skip = 1;
+          strcpy(position, "");
           delay(100);
         }
 
@@ -1598,8 +1608,8 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
             }
           }
 
-          lcd.setCursor(6, 3);
-          lcd.print("        ");
+          strcpy(position, "");
+          delay(100);
 
           t = 0;
           invalid[0] = -1;
@@ -1736,6 +1746,7 @@ void lcdbegin() {
   randomSeed(analogRead(0));
   lcd.createChar(0, arrowDown);
   lcd.createChar(1, arrowUp);
+  lcd.createChar(2, checkMark);
 
   pinMode(switchPin, INPUT_PULLUP);
   pinMode(resetlcd, OUTPUT);

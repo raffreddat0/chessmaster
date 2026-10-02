@@ -22,6 +22,17 @@ byte arrowUp[8] = {
   0b00000
 };
 
+byte checkMark[8] = {
+  0b00000,
+  0b00000,
+  0b00001,
+  0b00010,
+  0b10100, 
+  0b01000,
+  0b00000,
+  0b00000
+};
+
 String checkEdges(int M[cell][cell]) {
   for (int r = 0; r < 2; r++) {
     for (int c = 0; c < cell; c++) {
@@ -46,9 +57,9 @@ String checkEdges(int M[cell][cell]) {
   return "";
 }
 
-int splitString(String input, char output[][20], char sep = ',') {
+int splitString(String input, char output[10][32], char sep = ',') {
   if (input.length() == 0) {
-    memset(output, 0, 10 * 20);
+    memset(output, 0, 10 * 32);
     return 0;
   }
 
@@ -75,7 +86,7 @@ int splitString(String input, char output[][20], char sep = ',') {
     }
 
     if (!isDuplicate && temp.length() > 0) {
-      temp.toCharArray(output[size], 20);
+      temp.toCharArray(output[size], 32);
       size++;
     }
 

@@ -40,7 +40,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
             Serial.println("connection error");
             break;
           }
-          
+
           if (last == 0) {
             mySerial.println("disconnected");
             Serial.println("disconnected");
@@ -59,7 +59,7 @@ void onEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 void syncTimeNTP() {
   RTC.begin();
-  
+
   unsigned long epochTime = 0;
   int retries = 0;
 
@@ -112,21 +112,30 @@ void loop() {
   animation();
 }
 
+String lastValidSsidList = "wifi ";
+int emptyScanCount = 0;
+
 String getWifiNetworks() {
   int numSsid = WiFi.scanNetworks();
-  String ssidList = "wifi ";
 
-  if (numSsid > 0)
+  if (numSsid > 0) {
+    emptyScanCount = 0;
+
+    String ssidList = "wifi ";
     for (int i = 0; i < numSsid; i++) {
-      String ssid = WiFi.SSID(i);
-      ssidList += ssid;
-
-      if (i < numSsid - 1) {
-        ssidList += ",";
-      }
+      ssidList += WiFi.SSID(i);
+      if (i < numSsid - 1) ssidList += ",";
+    }
+    lastValidSsidList = ssidList;
+    return ssidList;
+  } else {
+    emptyScanCount++;
+    if (emptyScanCount > 2) {
+      lastValidSsidList = "wifi ";
     }
 
-  return ssidList;
+    return lastValidSsidList;
+  }
 }
 
 void resolveDNS() {
@@ -182,7 +191,7 @@ void handleSerial(Stream &serial) {
         status = WiFi.begin(ssid.c_str(), password.c_str());
         if (status == WL_CONNECTED) {
           syncTimeNTP();
-          resolveDNS();
+          // resolveDNS();
           socket.begin(config.ip, 1707, auth);
           socket.onEvent(onEvent);
         } else {
