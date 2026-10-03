@@ -751,9 +751,11 @@ void wifi() {
     delay(100);
     lcd.setCursor(7, 1);
     lcd.print("Error!");
+    lcd.setCursor(1, 3);
+    lcd.print("! PSW: chessmaster");
     scanning = 0;
     input = "";
-    delay(2000);
+    delay(2500);
     lcd.clear();
     delay(100);
   }
