@@ -27,9 +27,31 @@ byte checkMark[8] = {
   0b00000,
   0b00001,
   0b00010,
-  0b10100, 
+  0b10100,
   0b01000,
   0b00000,
+  0b00000
+};
+
+byte crossMark[8] = {
+  0b00000,
+  0b10001,
+  0b01010,
+  0b00100,
+  0b01010,
+  0b10001,
+  0b00000,
+  0b00000
+};
+
+byte wifiIcon[8] = {
+  0b00000,
+  0b01110,
+  0b10001,
+  0b00100,
+  0b01010,
+  0b00000,
+  0b00100,
   0b00000
 };
 
@@ -69,7 +91,7 @@ int splitString(String input, char output[10][32], char sep = ',') {
 
   while (start < len && size < 10) {
     int idx = input.indexOf(sep, start);
-    
+
     if (idx == -1) {
       idx = len;
     }

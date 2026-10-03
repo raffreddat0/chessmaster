@@ -780,6 +780,11 @@ void wifi() {
   lcd.setCursor(8, 0);
   lcd.print("Wifi");
 
+  if (connected == true) {
+    lcd.setCursor(19, 0);
+    lcd.write(byte(4));
+  }
+
   static int start = 0;
   if (y < start) {
     start = y;
@@ -810,9 +815,21 @@ void wifi() {
     int row = i - start + 1;
     lcd.setCursor(0, row);
 
-    if (i == y)
-      lcd.print("> ");
-    else if (strcmp(config.ssid, wifis[i]) == 0 && connected == true) {
+    if (i == y) {
+      if (strcmp(config.ssid, wifis[i]) == 0 && connected == true) {
+        if (ddlay(1000)) {
+          status++;
+          status = status % 2;
+        }
+
+        if (status == 0) {
+          lcd.write(2);
+          lcd.print(" ");
+        } else
+          lcd.print("> ");
+      } else
+        lcd.print("> ");
+    } else if (strcmp(config.ssid, wifis[i]) == 0 && connected == true) {
       lcd.write(2);
       lcd.print(" ");
     } else
@@ -832,6 +849,7 @@ void wifi() {
   if (click) {
     click = 0;
     prevent = 1;
+    status = 0;
     if (y == numItems - 1) {
       page = 0;
       scanning = 0;
@@ -1747,6 +1765,8 @@ void lcdbegin() {
   lcd.createChar(0, arrowDown);
   lcd.createChar(1, arrowUp);
   lcd.createChar(2, checkMark);
+  lcd.createChar(3, crossMark);
+  lcd.createChar(4, wifiIcon);
 
   pinMode(switchPin, INPUT_PULLUP);
   pinMode(resetlcd, OUTPUT);
