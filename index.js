@@ -23,6 +23,10 @@ app.get("/credits", (req, res) => {
   res.sendFile(path.join(__dirname, "./credits.html"));
 });
 
+app.get("/about", (req, res) => {
+  res.sendFile(path.join(__dirname, "./about.html"));
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "./index.html"));
 });

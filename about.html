@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Scopri come nasce Chess Master, la scacchiera robotica open source.">
+  <title>About — Chess Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&family=VT323&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: ChessMasterDisplay;
+      src: url('/font.otf') format('opentype');
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #0c0c0c;
+      --panel: #151515;
+      --line: #2b2b2f;
+      --muted: #a1a1aa;
+      --blue: #526dff;
+      --cyan: #6f9dff;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    html, body { overflow-x: clip; }
+    body {
+      margin: 0;
+      color: #fff;
+      background: var(--bg);
+      font-family: 'IBM Plex Mono', monospace;
+      line-height: 1.6;
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      opacity: .28;
+      background-image: linear-gradient(#27272a 1px, transparent 1px), linear-gradient(90deg, #27272a 1px, transparent 1px);
+      background-size: 100px 100px;
+    }
+
+    .grid::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      opacity: .34;
+    }
+
+    header {
+      position: fixed;
+      z-index: 10;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .75rem clamp(1.25rem, 5vw, 5rem);
+      background: #0c0c0c;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      z-index: 0;
+      top: 70%;
+      left: 0;
+      right: 0;
+      width: auto;
+      height: 8rem;
+      background: #0c0c0c;
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .7) 20%, rgba(0, 0, 0, .25) 58%, transparent 100%);
+      mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .7) 20%, rgba(0, 0, 0, .25) 58%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .wordmark {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .wordmark img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, .5));
+      transition: transform .2s ease;
+    }
+
+    .wordmark:hover img {
+      transform: scale(1.06);
+    }
+
+    .scroll-brand {
+      position: fixed;
+      z-index: 11;
+      top: 36px;
+      left: 50%;
+      color: #fff;
+      font-family: ChessMasterDisplay, 'IBM Plex Serif', serif;
+      font-size: 1.45rem;
+      letter-spacing: .03em;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, calc(-50% - 1rem));
+      transition: opacity .35s ease, transform .35s ease;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+    }
+
+    .scroll-brand.is-visible {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+
+    nav { position: relative; z-index: 1; display: flex; gap: 1.4rem; }
+    nav a { color: #fff; font-size: .75rem; text-decoration: none; opacity: .7; }
+    nav a:hover { opacity: 1; }
+
+    .hero {
+      min-height: 100svh;
+      position: relative;
+      display: grid;
+      place-items: center;
+      overflow: visible;
+      padding: 6rem 1.5rem 3rem;
+      background: #0c0c0c;
+    }
+
+    .hero-image {
+      position: absolute;
+      top: auto;
+      bottom: 0;
+      left: 50%;
+      width: min(94vw, calc((100svh - 7rem) * 4 / 3));
+      aspect-ratio: 4 / 3;
+      height: auto;
+      max-height: calc(100svh - 7rem);
+      transform: translateX(-50%);
+      opacity: .46;
+      filter: saturate(.78) contrast(1.06) brightness(.84);
+      object-fit: contain;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      background: linear-gradient(180deg, rgba(12,12,12,.25), var(--bg) 92%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      width: min(100%, 980px);
+      transform: translateY(-2.5rem);
+    }
+    .eyebrow, .section-label {
+      color: var(--cyan);
+      font-size: .7rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 1rem auto 1.6rem;
+      font-family: ChessMasterDisplay, 'IBM Plex Serif', serif;
+      font-size: clamp(4rem, 9.5vw, 10rem);
+      font-weight: 400;
+      line-height: .86;
+      letter-spacing: .02em;
+      text-shadow: 0 8px 40px #000;
+      white-space: nowrap;
+    }
+
+    .hero-content p { max-width: 34rem; margin: auto; color: #d4d4d8; }
+    .scroll-cue {
+      position: absolute;
+      bottom: 2rem;
+      z-index: 2;
+      color: var(--muted);
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      animation: cue-pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes cue-pulse {
+      0%, 100% { opacity: .5; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(4px); }
+    }
+
+    section { width: min(1100px, calc(100% - 3rem)); margin: auto; padding: 8rem 0; }
+    .section-heading { max-width: 38rem; margin-bottom: 3rem; }
+    h2 { margin: .5rem 0 1rem; font-family: 'IBM Plex Serif', serif; font-size: clamp(2.2rem, 5vw, 4.5rem); line-height: 1; }
+    .section-heading p { color: var(--muted); }
+
+    .project-intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
+      gap: clamp(2rem, 8vw, 8rem);
+      align-items: center;
+    }
+
+    .project-intro .section-heading { margin-bottom: 0; }
+
+    .project-pawn {
+      display: block;
+      width: 100%;
+      max-height: 390px;
+      object-fit: contain;
+      object-position: center bottom;
+    }
+
+    .logo-strip {
+      width: 100%;
+      margin-left: 0;
+      overflow: hidden;
+      border-block: 1px solid var(--line);
+    }
+
+    .logo-track {
+      display: flex;
+      width: max-content;
+      animation: logo-marquee 28s linear infinite;
+      animation-iteration-count: infinite;
+      will-change: transform;
+    }
+
+    @keyframes logo-marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .logo-slot {
+      flex: 0 0 clamp(176px, 16.666vw, 246px);
+      min-height: 132px;
+      display: grid;
+      place-items: center;
+      color: #71717a;
+      background: #0C0C0C;
+      font-size: .7rem;
+      letter-spacing: .12em;
+    }
+
+    .logo-strip:hover .logo-track { animation-play-state: paused; }
+
+    .logo-slot img {
+      display: block;
+      width: 88%;
+      height: 92px;
+      object-fit: contain;
+      filter: brightness(1.08) saturate(.95);
+    }
+
+
+    .machine {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: clamp(2rem, 7vw, 7rem);
+      align-items: center;
+    }
+    .machine-photo {
+      width: 100%;
+      max-height: 680px;
+      object-fit: contain;
+      object-position: center;
+    }
+    .machine-copy p { color: var(--muted); }
+    .specs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 2rem; }
+    .spec { padding-top: .7rem; border-top: 1px solid var(--line); }
+    .spec strong { display: block; font-size: 1.25rem; color: #fff; }
+    .spec span { color: var(--muted); font-size: .7rem; }
+
+    .demo-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 370px);
+      gap: 3rem;
+      align-items: center;
+    }
+    .lcd-shell {
+      padding: 1.25rem;
+      border: 1px solid #3d3d42;
+      border-radius: 1rem;
+      background: linear-gradient(145deg, #262626, #101010);
+    }
+    .lcd {
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      min-height: 160px;
+      padding: .85rem;
+      border: 8px solid #111827;
+      border-radius: .3rem;
+      background: #0747d3;
+      color: #b8dbff;
+      box-shadow: inset 0 0 20px #001e75, 0 0 25px rgba(45, 108, 255, .35);
+      font-family: 'VT323', monospace;
+      font-weight: 700;
+      font-size: clamp(.7rem, 2.2vw, 1rem);
+      line-height: 1;
+      text-shadow: 0 0 5px #b8dbff;
+    }
+    .lcd-line {
+      display: grid;
+      grid-template-columns: repeat(20, minmax(0, 1fr));
+      min-width: 0;
+      overflow: hidden;
+    }
+    .lcd-cell {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 1px;
+      min-width: 0;
+      padding: 2px;
+      background: rgba(134, 190, 255, .1);
+    }
+    .lcd-pixel {
+      min-width: 0;
+      min-height: 0;
+      background: rgba(0, 38, 145, .2);
+    }
+    .lcd-pixel.is-on {
+      background: #fff;
+      box-shadow: 0 0 3px rgba(255, 255, 255, .9);
+    }
+    .lcd-hint {
+      margin: .8rem 0 0;
+      color: #71717a;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .68rem;
+      font-weight: 400;
+      letter-spacing: normal;
+      line-height: 1.4;
+      text-align: center;
+    }
+    .demo-copy p { color: var(--muted); }
+    .demo-copy code { color: var(--cyan); }
+
+    .site-footer {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(230px, 1.35fr) repeat(3, minmax(130px, 1fr));
+      gap: 0;
+      width: 100%;
+      margin-top: 3rem;
+      overflow: hidden;
+      color: #dbe7ff;
+      background: #1d4ed8;
+      border-top: 1px solid rgba(255, 255, 255, .15);
+      font-size: .72rem;
+    }
+
+    .site-footer::after {
+      content: attr(data-wordmark);
+      position: absolute;
+      left: 0;
+      bottom: -1.8rem;
+      width: 100%;
+      color: transparent;
+      font-family: ChessMasterDisplay, 'IBM Plex Serif', serif;
+      font-size: clamp(4rem, 12vw, 9rem);
+      line-height: 1;
+      letter-spacing: .02em;
+      text-align: center;
+      white-space: nowrap;
+      -webkit-text-stroke: 1px rgba(191, 219, 254, .16);
+      background:
+        repeating-linear-gradient(0deg, rgba(191, 219, 254, .12) 0 1px, transparent 1px 5px),
+        repeating-linear-gradient(90deg, rgba(191, 219, 254, .06) 0 1px, transparent 1px 24px);
+      -webkit-background-clip: text;
+      background-clip: text;
+      pointer-events: none;
+    }
+
+    .site-footer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      opacity: .28;
+      background:
+        linear-gradient(rgba(191, 219, 254, .18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(191, 219, 254, .14) 1px, transparent 1px);
+      background-size: 100% 18px, 72px 100%;
+      pointer-events: none;
+    }
+
+    .footer-column {
+      position: relative;
+      z-index: 1;
+      min-height: 220px;
+      padding: 1.4rem clamp(1rem, 3vw, 2rem);
+      border-right: 1px solid rgba(255, 255, 255, .13);
+    }
+
+    .footer-column:first-child { border-left: 1px solid rgba(255, 255, 255, .13); }
+    .footer-column h3 {
+      margin: 0 0 1.25rem;
+      color: #fff;
+      font-family: 'IBM Plex Serif', serif;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    .footer-column p {
+      max-width: 15rem;
+      margin: 0 0 .7rem;
+      color: rgba(219, 231, 255, .8);
+      line-height: 1.7;
+    }
+
+    .footer-column a {
+      display: block;
+      width: fit-content;
+      margin: 0 0 .55rem;
+      color: #dbe7ff;
+      text-decoration: none;
+      transition: color .2s ease, transform .2s ease;
+    }
+
+    .footer-column a:hover {
+      color: #fff;
+      transform: translateX(3px);
+    }
+
+    .footer-bottom {
+      position: relative;
+      z-index: 1;
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem clamp(1rem, 3vw, 2rem);
+      border-top: 1px solid rgba(255, 255, 255, .13);
+      color: rgba(219, 231, 255, .75);
+      font-size: .68rem;
+    }
+
+    @media (max-width: 700px) {
+      header { padding: 1rem 1.25rem; }
+      nav { gap: .8rem; }
+      section { width: min(100% - 2rem, 1100px); padding: 5rem 0; }
+      .logo-slot { flex-basis: 33.333%; min-height: 124px; }
+      .machine, .demo-layout { grid-template-columns: 1fr; }
+      .project-intro { grid-template-columns: 1fr; gap: 2rem; }
+      .project-pawn { max-height: 260px; }
+      .machine { gap: 1rem; }
+      .machine-photo { max-height: 330px; }
+      .hero-content { transform: translateY(-1.5rem); }
+      h1 { font-size: clamp(3.4rem, 17vw, 6rem); white-space: normal; }
+      .hero-image {
+        width: min(94vw, calc((100svh - 6rem) * 4 / 3));
+        max-height: calc(100svh - 6rem);
+      }
+      .site-footer { grid-template-columns: repeat(2, 1fr); }
+      .footer-column { min-height: 180px; }
+      .footer-column:nth-child(2n) { border-right: 0; }
+      .footer-bottom { flex-direction: column; }
+    }
+
+    @media (min-width: 701px) and (max-width: 1000px) {
+      .logo-slot { flex-basis: 16.666%; min-height: 128px; }
+    }
+
+    @media (min-width: 701px) and (max-width: 1050px) {
+      .logo-slot { flex-basis: calc(100vw / 3); }
+    }
+
+    @media (min-width: 701px) {
+      .hero {
+        min-height: 100svh;
+      }
+
+      .hero-image {
+        width: auto;
+        height: max(900px, calc(100svh - 7rem));
+        max-width: none;
+        max-height: none;
+        aspect-ratio: 4 / 3;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+  <header>
+    <a class="wordmark" href="/" aria-label="Torna alla home">
+      <img id="logo" alt="Chess Master">
+    </a>
+    <nav><a href="#project">IL PROGETTO</a><a href="#demo">DEMO LCD</a><a href="/credits">CREDITS</a></nav>
+  </header>
+  <div class="scroll-brand" id="scrollBrand" aria-hidden="true">CHESS MASTER</div>
+
+  <main>
+    <section class="hero">
+      <img class="hero-image" src="/chessmaster-board.png" alt="Chess Master, scacchiera robotica">
+      <div class="hero-content">
+        <span class="eyebrow">robotica · scacchi · open hardware</span>
+        <h1><span id="titleTop">CHESS</span><br><span id="titleBottom">MASTER</span></h1>
+        <p>Una scacchiera che non si limita a riconoscere la partita: la vive, la analizza e muove i suoi pezzi.</p>
+      </div>
+      <span class="scroll-cue">scorri per esplorare ↓</span>
+    </section>
+
+    <div class="logo-strip" aria-label="Loghi dei partner e dei sostenitori">
+      <div class="logo-track">
+        <div class="logo-slot"><img src="/logo-magl.ie.png" alt="MAGLIE"></div>
+        <div class="logo-slot"><img src="/logo-amplio.png" alt="Amplio"></div>
+        <div class="logo-slot"><img src="/logo-liceo-scientifico.png" alt="Liceo Scientifico Statale Leonardo da Vinci"></div>
+        <div class="logo-slot"><img src="/logo-magl.ie.png" alt="MAGLIE"></div>
+        <div class="logo-slot"><img src="/logo-amplio.png" alt="Amplio"></div>
+        <div class="logo-slot"><img src="/logo-liceo-scientifico.png" alt="Liceo Scientifico Statale Leonardo da Vinci"></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-magl.ie.png" alt=""></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-amplio.png" alt=""></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-liceo-scientifico.png" alt=""></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-magl.ie.png" alt=""></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-amplio.png" alt=""></div>
+        <div class="logo-slot" aria-hidden="true"><img src="/logo-liceo-scientifico.png" alt=""></div>
+      </div>
+    </div>
+
+    <section id="project">
+      <div class="project-intro">
+        <div class="section-heading">
+          <span class="section-label">01 / una squadra dietro ogni mossa</span>
+          <h2>Costruito per portare gli scacchi fuori dallo schermo.</h2>
+          <p>Chess Master unisce elettronica, programmazione e meccanica in un'unica esperienza da tavolo. Sensori sotto la scacchiera rilevano la posizione dei pezzi, mentre il braccio robotico esegue le mosse in modo autonomo.</p>
+        </div>
+        <img class="project-pawn" src="/frankie-pawn.png" alt="Pedone nero del progetto Chess Master">
+      </div>
+    </section>
+
+    <section>
+      <div class="machine">
+        <img class="machine-photo" src="/chessmaster-arm.png" alt="Braccio robotico di Chess Master">
+        <div class="machine-copy">
+          <span class="section-label">02 / il movimento</span>
+          <h2>Legno, motori e un po' di magia.</h2>
+          <p>Il braccio è il cuore meccanico del progetto. Una struttura leggera, servomotori e un elettromagnete lavorano insieme per sollevare un pezzo, spostarlo sulla griglia e restituire alla partita un gesto naturale.</p>
+          <div class="specs">
+            <div class="spec"><strong>8×8</strong><span>griglia di gioco</span></div>
+            <div class="spec"><strong>20×4</strong><span>display LCD</span></div>
+            <div class="spec"><strong>100%</strong><span>prototipo originale</span></div>
+            <div class="spec"><strong>∞</strong><span>partite possibili</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo">
+      <div class="section-heading">
+        <span class="section-label">03 / interfaccia</span>
+        <h2>Prova il display della scacchiera.</h2>
+        <p>Il piccolo LCD blu è la voce di Chess Master: mostra lo stato della partita, suggerisce la prossima mossa e accompagna il giocatore. Le schermate cambiano automaticamente, proprio come durante una partita.</p>
+      </div>
+      <div class="demo-layout">
+        <div class="lcd-shell">
+          <div class="lcd" id="lcd" aria-label="Display LCD 20 per 4" aria-live="polite"></div>
+          <p class="lcd-hint">LCD 20×4 · sequenza automatica</p>
+        </div>
+        <div class="demo-copy">
+          <span class="section-label">come funziona</span>
+          <p>Ogni schermata è una fotografia dello stato interno della partita. Il microcontrollore aggiorna le quattro righe tramite il bus parallelo del display, mentre i sensori comunicano alla logica quale mossa è stata giocata.</p>
+          <p><code>lcd.setCursor(0, 0)</code><br><code>lcd.print("TOCCA A TE");</code></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-column">
+      <h3>Chess Master © 2026</h3>
+      <p>Una scacchiera robotica costruita per portare gli scacchi fuori dallo schermo.</p>
+      <a href="/">Torna alla partita</a>
+    </div>
+    <div class="footer-column">
+      <h3>Progetto</h3>
+      <a href="#project">Il progetto</a>
+      <a href="#demo">Demo LCD</a>
+      <a href="/credits">Credits</a>
+    </div>
+    <div class="footer-column">
+      <h3>Risorse</h3>
+      <a href="#project">Come funziona</a>
+      <a href="#demo">Interfaccia</a>
+      <a href="/">Gioca online</a>
+    </div>
+    <div class="footer-column">
+      <h3>Social</h3>
+      <a href="https://github.com/raffreddat0/chessmaster" target="_blank" rel="noreferrer">GitHub ↗</a>
+      <a href="mailto:chessmaster@example.com">Contatti ↗</a>
+    </div>
+    <div class="footer-bottom">
+      <span>Campionati di Robotica 2026 · HoPE 2024/2025</span>
+      <span>Robotica · Scacchi · Open hardware</span>
+    </div>
+  </footer>
+
+  <script>
+    const screens = [
+      ['CHESS MASTER        ', 'Benvenuto!          ', 'Inserisci una mossa ', '                >   '],
+      ['PARTITA: ONLINE     ', 'Bianco: TU          ', 'Nero: CHESS MASTER  ', 'Tocca a te...       '],
+      ['ULTIMA MOSSA        ', 'e2  -  e4           ', 'Mossa valida!       ', 'Analizzo...         '],
+      ['CHESS MASTER        ', 'Suggerimento:       ', 'e7  -  e5           ', 'Muovo il pezzo...   '],
+      ['PARTITA IN CORSO    ', 'Tempo: 04:28        ', 'Turno: BIANCO       ', 'Pronto.             ']
+    ];
+    const lcd = document.getElementById('lcd');
+    let current = 0;
+    let interval;
+    const glyphs = {
+      ' ': ['00000','00000','00000','00000','00000','00000','00000','00000'],
+      '!': ['00100','00100','00100','00100','00100','00000','00100','00000'],
+      ':': ['00000','00100','00100','00000','00100','00100','00000','00000'],
+      '-': ['00000','00000','00000','11111','00000','00000','00000','00000'],
+      '.': ['00000','00000','00000','00000','00000','00110','00110','00000'],
+      '>': ['10000','01000','00100','00010','00001','00010','00100','01000'],
+      '0': ['01110','10001','10011','10101','11001','10001','01110','00000'],
+      '1': ['00100','01100','00100','00100','00100','00100','01110','00000'],
+      '2': ['01110','10001','00001','00010','00100','01000','11111','00000'],
+      '4': ['00010','00110','01010','10010','11111','00010','00010','00000'],
+      '8': ['01110','10001','10001','01110','10001','10001','01110','00000'],
+      '9': ['01110','10001','10001','01111','00001','00010','11100','00000']
+    };
+    const alphabet = {
+      A: ['01110','10001','10001','11111','10001','10001','10001','00000'],
+      B: ['11110','10001','10001','11110','10001','10001','11110','00000'],
+      C: ['01111','10000','10000','10000','10000','10000','01111','00000'],
+      D: ['11110','10001','10001','10001','10001','10001','11110','00000'],
+      E: ['11111','10000','10000','11110','10000','10000','11111','00000'],
+      H: ['10001','10001','10001','11111','10001','10001','10001','00000'],
+      I: ['11111','00100','00100','00100','00100','00100','11111','00000'],
+      L: ['10000','10000','10000','10000','10000','10000','11111','00000'],
+      M: ['10001','11011','10101','10101','10001','10001','10001','00000'],
+      N: ['10001','11001','10101','10011','10001','10001','10001','00000'],
+      O: ['01110','10001','10001','10001','10001','10001','01110','00000'],
+      P: ['11110','10001','10001','11110','10000','10000','10000','00000'],
+      R: ['11110','10001','10001','11110','10100','10010','10001','00000'],
+      S: ['01111','10000','10000','01110','00001','00001','11110','00000'],
+      T: ['11111','00100','00100','00100','00100','00100','00100','00000'],
+      U: ['10001','10001','10001','10001','10001','10001','01110','00000'],
+      V: ['10001','10001','10001','10001','10001','01010','00100','00000']
+    };
+    Object.assign(glyphs, alphabet);
+    Object.assign(glyphs, {
+      a: ['00000','00000','01110','00001','01111','10001','01111','00000'],
+      c: ['00000','00000','01111','10000','10000','10000','01111','00000'],
+      e: ['00000','00000','01110','10001','11111','10000','01111','00000'],
+      g: ['00000','00000','01111','10001','01111','00001','01110','00000'],
+      i: ['00100','00000','01100','00100','00100','00100','01110','00000'],
+      l: ['01100','00100','00100','00100','00100','00100','01110','00000'],
+      m: ['00000','00000','11010','10101','10101','10101','10101','00000'],
+      n: ['00000','00000','11110','10001','10001','10001','10001','00000'],
+      o: ['00000','00000','01110','10001','10001','10001','01110','00000'],
+      r: ['00000','00000','10111','11000','10000','10000','10000','00000'],
+      s: ['00000','00000','01111','10000','01110','00001','11110','00000'],
+      t: ['00100','00100','11111','00100','00100','00100','00011','00000'],
+      u: ['00000','00000','10001','10001','10001','10011','01101','00000'],
+      v: ['00000','00000','10001','10001','10001','01010','00100','00000'],
+      z: ['00000','00000','11111','00010','00100','01000','11111','00000']
+    });
+
+    function randomCase(text) {
+      return [...text].map((character) => {
+        if (character === ' ') return character;
+        return Math.random() > 0.5 ? character.toUpperCase() : character.toLowerCase();
+      }).join('');
+    }
+
+    const randomTitleTop = randomCase('CHESS');
+    const randomTitleBottom = randomCase('MASTER');
+    const randomWordmark = `${randomTitleTop}${randomTitleBottom}`;
+    document.getElementById('titleTop').textContent = randomTitleTop;
+    document.getElementById('titleBottom').textContent = randomTitleBottom;
+    document.getElementById('scrollBrand').textContent = `${randomTitleTop} ${randomTitleBottom}`;
+    document.querySelector('.site-footer').dataset.wordmark = randomWordmark;
+
+    const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
+    const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+    const faviconUrl = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${randomPiece}.png`;
+    document.getElementById('logo').src = faviconUrl;
+    const favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.href = faviconUrl;
+    document.head.appendChild(favicon);
+
+    const scrollBrand = document.getElementById('scrollBrand');
+    const updateScrollBrand = () => {
+      scrollBrand.classList.toggle('is-visible', window.scrollY > 80);
+    };
+    window.addEventListener('scroll', updateScrollBrand, { passive: true });
+    updateScrollBrand();
+
+    function render() {
+      lcd.replaceChildren();
+      screens[current].forEach((text) => {
+        const line = document.createElement('div');
+        line.className = 'lcd-line';
+        [...text.padEnd(20, ' ').slice(0, 20)].forEach((character) => {
+          const cell = document.createElement('span');
+          cell.className = 'lcd-cell';
+          const glyph = glyphs[character] || glyphs[character.toUpperCase()] || glyphs[' '];
+          glyph.forEach((row) => [...row].forEach((pixel) => {
+            const pixelElement = document.createElement('span');
+            pixelElement.className = `lcd-pixel${pixel === '1' ? ' is-on' : ''}`;
+            cell.appendChild(pixelElement);
+          }));
+          line.appendChild(cell);
+        });
+        lcd.appendChild(line);
+      });
+    }
+
+    function next() { current = (current + 1) % screens.length; render(); }
+    render();
+    interval = setInterval(next, 1800);
+  </script>
+</body>
+
+</html>

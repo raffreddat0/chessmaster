@@ -199,9 +199,10 @@
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 0.35rem;
+      justify-content: center;
+      gap: 0.55rem;
       width: min(92vw, 520px);
       text-align: center;
       z-index: 10;
@@ -217,7 +218,8 @@
       pointer-events: none;
     }
 
-    #footerCreditsLink {
+    #footerCreditsLink,
+    #footerAboutLink {
       font-size: clamp(0.68rem, 2.9vw, 0.75rem);
       color: rgba(255, 255, 255, 0.7);
       letter-spacing: 0.02em;
@@ -229,9 +231,18 @@
       pointer-events: auto;
     }
 
-    #footerCreditsLink:hover {
+    #footerCreditsLink:hover,
+    #footerAboutLink:hover {
       color: rgba(255, 255, 255, 0.9);
       text-decoration-color: rgba(255, 255, 255, 1);
+    }
+
+    #footerCreditsLink::before {
+      content: '·';
+      display: inline-block;
+      margin-right: 0.55rem;
+      color: rgba(255, 255, 255, 0.35);
+      text-decoration: none;
     }
 
     #container {
@@ -831,6 +842,7 @@
       </button>
     </div>
     <div id="footerWrap">
+      <a id="footerAboutLink" href="/about">About</a>
       <a id="footerCreditsLink" href="/credits">Credits</a>
       <!--
       <div id="footer">Campionati di Robotica 2026</div>
