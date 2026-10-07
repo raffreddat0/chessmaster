@@ -151,6 +151,8 @@
     .scroll-brand.is-visible {
       opacity: 1;
       transform: translate(-50%, -50%);
+      pointer-events: auto !important;
+      cursor: pointer;
     }
 
     nav {
@@ -700,7 +702,7 @@
     </a>
     <nav><a href="#01">PROJECT</a><a href="#02">MECHANICAL ARM</a><a href="#03">DISPLAY</a></nav>
   </header>
-  <div class="scroll-brand" id="scrollBrand" aria-hidden="true">CHESS MASTER</div>
+  <div class="scroll-brand" id="scrollBrand" role="button" tabindex="0" aria-hidden="true">CHESS MASTER</div>
 
   <main>
     <section class="hero">
@@ -1020,6 +1022,21 @@
     };
     window.addEventListener('scroll', updateScrollBrand, { passive: true });
     updateScrollBrand();
+
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+    scrollBrand.addEventListener('click', scrollToTop);
+    scrollBrand.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        scrollToTop();
+      }
+    });
 
     function render() {
       lcd.replaceChildren();
