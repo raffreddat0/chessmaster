@@ -641,11 +641,8 @@
       }
 
       .hero-image {
-        width: auto;
-        height: max(900px, calc(100svh - 7rem));
-        max-width: none;
-        max-height: none;
-        aspect-ratio: 4 / 3;
+        width: calc(min(94vw, calc((100svh - 6rem) * 4 / 3)) * 2);
+        max-height: calc(100svh - 6rem);
       }
 
       .site-footer {
