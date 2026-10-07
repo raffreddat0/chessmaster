@@ -1057,8 +1057,9 @@
     const logoStrip = document.querySelector('.logo-strip');
     const logoTrack = document.querySelector('.logo-track');
 
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     const animation = logoTrack.getAnimations()[0];
-    if (animation) {
+    if (animation && canHover) {
       logoStrip.addEventListener('mouseenter', () => {
         animation.updatePlaybackRate(0.3);
       });
