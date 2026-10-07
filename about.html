@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Scopri come nasce Chess Master, la scacchiera robotica open source.">
-  <title>About — Chess Master</title>
+  <meta name="robots" content="noindex, nofollow">
+  <title>Chess Master</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&family=VT323&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&family=VT323&display=swap"
+    rel="stylesheet">
   <style>
     @font-face {
       font-family: ChessMasterDisplay;
@@ -25,9 +27,28 @@
       --cyan: #6f9dff;
     }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    html, body { overflow-x: clip; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    html,
+    body {
+      overflow-x: clip;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    img,
+    svg {
+      -webkit-user-drag: none;
+      user-drag: none;
+      -webkit-touch-callout: none;
+    }
+
     body {
       margin: 0;
       color: #fff;
@@ -124,9 +145,23 @@
       transform: translate(-50%, -50%);
     }
 
-    nav { position: relative; z-index: 1; display: flex; gap: 1.4rem; }
-    nav a { color: #fff; font-size: .75rem; text-decoration: none; opacity: .7; }
-    nav a:hover { opacity: 1; }
+    nav {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 1.4rem;
+    }
+
+    nav a {
+      color: #fff;
+      font-size: .75rem;
+      text-decoration: none;
+      opacity: .7;
+    }
+
+    nav a:hover {
+      opacity: 1;
+    }
 
     .hero {
       min-height: 100svh;
@@ -135,7 +170,6 @@
       place-items: center;
       overflow: visible;
       padding: 6rem 1.5rem 3rem;
-      background: #0c0c0c;
     }
 
     .hero-image {
@@ -161,7 +195,7 @@
       left: 50%;
       width: 100vw;
       transform: translateX(-50%);
-      background: linear-gradient(180deg, rgba(12,12,12,.25), var(--bg) 92%);
+      background: linear-gradient(0deg, var(--bg) 0%, transparent 50%);
       pointer-events: none;
     }
 
@@ -172,7 +206,9 @@
       width: min(100%, 980px);
       transform: translateY(-2.5rem);
     }
-    .eyebrow, .section-label {
+
+    .eyebrow,
+    .section-label {
       color: var(--cyan);
       font-size: .7rem;
       letter-spacing: .16em;
@@ -190,7 +226,12 @@
       white-space: nowrap;
     }
 
-    .hero-content p { max-width: 34rem; margin: auto; color: #d4d4d8; }
+    .hero-content p {
+      max-width: 34rem;
+      margin: auto;
+      color: #d4d4d8;
+    }
+
     .scroll-cue {
       position: absolute;
       bottom: 2rem;
@@ -203,14 +244,40 @@
     }
 
     @keyframes cue-pulse {
-      0%, 100% { opacity: .5; transform: translateY(0); }
-      50% { opacity: 1; transform: translateY(4px); }
+
+      0%,
+      100% {
+        opacity: .5;
+        transform: translateY(0);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateY(4px);
+      }
     }
 
-    section { width: min(1100px, calc(100% - 3rem)); margin: auto; padding: 8rem 0; }
-    .section-heading { max-width: 38rem; margin-bottom: 3rem; }
-    h2 { margin: .5rem 0 1rem; font-family: 'IBM Plex Serif', serif; font-size: clamp(2.2rem, 5vw, 4.5rem); line-height: 1; }
-    .section-heading p { color: var(--muted); }
+    section {
+      width: min(1100px, calc(100% - 3rem));
+      margin: auto;
+      padding: 8rem 0;
+    }
+
+    .section-heading {
+      max-width: 38rem;
+      margin-bottom: 3rem;
+    }
+
+    h2 {
+      margin: .5rem 0 1rem;
+      font-family: 'IBM Plex Serif', serif;
+      font-size: clamp(2.2rem, 5vw, 4.5rem);
+      line-height: 1;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+    }
 
     .project-intro {
       display: grid;
@@ -219,7 +286,9 @@
       align-items: center;
     }
 
-    .project-intro .section-heading { margin-bottom: 0; }
+    .project-intro .section-heading {
+      margin-bottom: 0;
+    }
 
     .project-pawn {
       display: block;
@@ -231,7 +300,6 @@
 
     .logo-strip {
       width: 100%;
-      margin-left: 0;
       overflow: hidden;
       border-block: 1px solid var(--line);
     }
@@ -239,14 +307,24 @@
     .logo-track {
       display: flex;
       width: max-content;
-      animation: logo-marquee 28s linear infinite;
+      animation: logo-marquee 25s linear infinite;
       animation-iteration-count: infinite;
       will-change: transform;
     }
 
+    .logo-group {
+      display: flex;
+      flex-shrink: 0;
+    }
+
     @keyframes logo-marquee {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
     }
 
     .logo-slot {
@@ -260,14 +338,13 @@
       letter-spacing: .12em;
     }
 
-    .logo-strip:hover .logo-track { animation-play-state: paused; }
-
     .logo-slot img {
       display: block;
       width: 88%;
       height: 92px;
       object-fit: contain;
       filter: brightness(1.08) saturate(.95);
+      cursor: pointer;
     }
 
 
@@ -277,17 +354,40 @@
       gap: clamp(2rem, 7vw, 7rem);
       align-items: center;
     }
+
     .machine-photo {
       width: 100%;
       max-height: 680px;
       object-fit: contain;
       object-position: center;
     }
-    .machine-copy p { color: var(--muted); }
-    .specs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 2rem; }
-    .spec { padding-top: .7rem; border-top: 1px solid var(--line); }
-    .spec strong { display: block; font-size: 1.25rem; color: #fff; }
-    .spec span { color: var(--muted); font-size: .7rem; }
+
+    .machine-copy p {
+      color: var(--muted);
+    }
+
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .spec {
+      padding-top: .7rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .spec strong {
+      display: block;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+
+    .spec span {
+      color: var(--muted);
+      font-size: .7rem;
+    }
 
     .demo-layout {
       display: grid;
@@ -295,12 +395,14 @@
       gap: 3rem;
       align-items: center;
     }
+
     .lcd-shell {
       padding: 1.25rem;
       border: 1px solid #3d3d42;
       border-radius: 1rem;
       background: linear-gradient(145deg, #262626, #101010);
     }
+
     .lcd {
       display: grid;
       grid-template-rows: repeat(4, 1fr);
@@ -317,12 +419,14 @@
       line-height: 1;
       text-shadow: 0 0 5px #b8dbff;
     }
+
     .lcd-line {
       display: grid;
       grid-template-columns: repeat(20, minmax(0, 1fr));
       min-width: 0;
       overflow: hidden;
     }
+
     .lcd-cell {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -332,15 +436,18 @@
       padding: 2px;
       background: rgba(134, 190, 255, .1);
     }
+
     .lcd-pixel {
       min-width: 0;
       min-height: 0;
       background: rgba(0, 38, 145, .2);
     }
+
     .lcd-pixel.is-on {
       background: #fff;
       box-shadow: 0 0 3px rgba(255, 255, 255, .9);
     }
+
     .lcd-hint {
       margin: .8rem 0 0;
       color: #71717a;
@@ -351,8 +458,14 @@
       line-height: 1.4;
       text-align: center;
     }
-    .demo-copy p { color: var(--muted); }
-    .demo-copy code { color: var(--cyan); }
+
+    .demo-copy p {
+      color: var(--muted);
+    }
+
+    .demo-copy code {
+      color: var(--cyan);
+    }
 
     .site-footer {
       position: relative;
@@ -372,12 +485,12 @@
       content: attr(data-wordmark);
       position: absolute;
       left: 0;
-      bottom: -1.8rem;
+      bottom: 0;
       width: 100%;
       color: transparent;
       font-family: ChessMasterDisplay, 'IBM Plex Serif', serif;
-      font-size: clamp(4rem, 12vw, 9rem);
-      line-height: 1;
+      font-size: clamp(2.2rem, 11vw, 9rem);
+      line-height: 0.57;
       letter-spacing: .02em;
       text-align: center;
       white-space: nowrap;
@@ -411,7 +524,10 @@
       border-right: 1px solid rgba(255, 255, 255, .13);
     }
 
-    .footer-column:first-child { border-left: 1px solid rgba(255, 255, 255, .13); }
+    .footer-column:first-child {
+      border-left: 1px solid rgba(255, 255, 255, .13);
+    }
+
     .footer-column h3 {
       margin: 0 0 1.25rem;
       color: #fff;
@@ -434,6 +550,14 @@
       color: #dbe7ff;
       text-decoration: none;
       transition: color .2s ease, transform .2s ease;
+      font-size: clamp(0.68rem, 2.9vw, 0.75rem);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      text-decoration-line: underline;
+      text-decoration-color: rgba(255, 255, 255, 0.2);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 2px;
+      pointer-events: auto;
     }
 
     .footer-column a:hover {
@@ -454,34 +578,94 @@
       font-size: .68rem;
     }
 
+    .footer-bottom a {
+      color: rgba(219, 231, 255, .75);
+      text-decoration: none;
+    }
+
     @media (max-width: 700px) {
-      header { padding: 1rem 1.25rem; }
-      nav { gap: .8rem; }
-      section { width: min(100% - 2rem, 1100px); padding: 5rem 0; }
-      .logo-slot { flex-basis: 33.333%; min-height: 124px; }
-      .machine, .demo-layout { grid-template-columns: 1fr; }
-      .project-intro { grid-template-columns: 1fr; gap: 2rem; }
-      .project-pawn { max-height: 260px; }
-      .machine { gap: 1rem; }
-      .machine-photo { max-height: 330px; }
-      .hero-content { transform: translateY(-1.5rem); }
-      h1 { font-size: clamp(3.4rem, 17vw, 6rem); white-space: normal; }
+      header {
+        padding: 1rem 1.25rem;
+      }
+
+      nav {
+        gap: .8rem;
+      }
+
+      section {
+        width: min(100% - 2rem, 1100px);
+        padding: 5rem 0;
+      }
+
+      .logo-slot {
+        flex-basis: 33.333%;
+        min-height: 124px;
+      }
+
+      .machine,
+      .demo-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .project-intro {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+
+      .project-pawn {
+        max-height: 260px;
+      }
+
+      .machine {
+        gap: 1rem;
+      }
+
+      .machine-photo {
+        max-height: 330px;
+      }
+
+      .hero-content {
+        transform: translateY(-1.5rem);
+      }
+
+      h1 {
+        font-size: clamp(3.4rem, 17vw, 6rem);
+        white-space: normal;
+      }
+
       .hero-image {
         width: min(94vw, calc((100svh - 6rem) * 4 / 3));
         max-height: calc(100svh - 6rem);
       }
-      .site-footer { grid-template-columns: repeat(2, 1fr); }
-      .footer-column { min-height: 180px; }
-      .footer-column:nth-child(2n) { border-right: 0; }
-      .footer-bottom { flex-direction: column; }
+
+      .site-footer {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .footer-column {
+        min-height: 180px;
+      }
+
+      .footer-column:nth-child(2n) {
+        border-right: 0;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+      }
     }
 
     @media (min-width: 701px) and (max-width: 1000px) {
-      .logo-slot { flex-basis: 16.666%; min-height: 128px; }
+      .logo-slot {
+        flex-basis: 16.666%;
+        min-height: 128px;
+      }
     }
 
     @media (min-width: 701px) and (max-width: 1050px) {
-      .logo-slot { flex-basis: calc(100vw / 3); }
+      .logo-slot {
+        flex-basis: calc(100vw / 3);
+      }
     }
 
     @media (min-width: 701px) {
@@ -497,7 +681,6 @@
         aspect-ratio: 4 / 3;
       }
     }
-
   </style>
 </head>
 
@@ -507,7 +690,7 @@
     <a class="wordmark" href="/" aria-label="Torna alla home">
       <img id="logo" alt="Chess Master">
     </a>
-    <nav><a href="#project">IL PROGETTO</a><a href="#demo">DEMO LCD</a><a href="/credits">CREDITS</a></nav>
+    <nav><a href="#01">PROJECT</a><a href="#02">MECHANICAL ARM</a><a href="#03">DISPLAY</a></nav>
   </header>
   <div class="scroll-brand" id="scrollBrand" aria-hidden="true">CHESS MASTER</div>
 
@@ -515,73 +698,184 @@
     <section class="hero">
       <img class="hero-image" src="/chessmaster-board.png" alt="Chess Master, scacchiera robotica">
       <div class="hero-content">
-        <span class="eyebrow">robotica · scacchi · open hardware</span>
+        <span class="eyebrow">"Challenge the Future, One Move at a Time."</span>
         <h1><span id="titleTop">CHESS</span><br><span id="titleBottom">MASTER</span></h1>
-        <p>Una scacchiera che non si limita a riconoscere la partita: la vive, la analizza e muove i suoi pezzi.</p>
+        <p>
+          An AI-powered robotic chessboard bridging the gap between physical reality and digital play.</p>
       </div>
-      <span class="scroll-cue">scorri per esplorare ↓</span>
+      <span class="scroll-cue">scroll to explore ↓</span>
     </section>
 
     <div class="logo-strip" aria-label="Loghi dei partner e dei sostenitori">
       <div class="logo-track">
-        <div class="logo-slot"><img src="/logo-magl.ie.png" alt="MAGLIE"></div>
-        <div class="logo-slot"><img src="/logo-amplio.png" alt="Amplio"></div>
-        <div class="logo-slot"><img src="/logo-liceo-scientifico.png" alt="Liceo Scientifico Statale Leonardo da Vinci"></div>
-        <div class="logo-slot"><img src="/logo-magl.ie.png" alt="MAGLIE"></div>
-        <div class="logo-slot"><img src="/logo-amplio.png" alt="Amplio"></div>
-        <div class="logo-slot"><img src="/logo-liceo-scientifico.png" alt="Liceo Scientifico Statale Leonardo da Vinci"></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-magl.ie.png" alt=""></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-amplio.png" alt=""></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-liceo-scientifico.png" alt=""></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-magl.ie.png" alt=""></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-amplio.png" alt=""></div>
-        <div class="logo-slot" aria-hidden="true"><img src="/logo-liceo-scientifico.png" alt=""></div>
+        <div class="logo-group">
+          <div class="logo-slot">
+            <img src="/hope.png" alt="HoPE">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer">
+              <img src="/campionatidirobotica.png" alt="Campionati di Robotica">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer">
+              <img src="/davinci.png" alt="Liceo da Vinci Maglie">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="HoPE">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer">
+              <img src="/campionatidirobotica.png" alt="Campionati di Robotica">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer">
+              <img src="/davinci.png" alt="Liceo da Vinci Maglie">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="HoPE">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer">
+              <img src="/campionatidirobotica.png" alt="Campionati di Robotica">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer">
+              <img src="/davinci.png" alt="Liceo da Vinci Maglie">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="HoPE">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer">
+              <img src="/campionatidirobotica.png" alt="Campionati di Robotica">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer">
+              <img src="/davinci.png" alt="Liceo da Vinci Maglie">
+            </a>
+          </div>
+        </div>
+
+        <div class="logo-group" aria-hidden="true">
+          <div class="logo-slot">
+            <img src="/hope.png" alt="">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/campionatidirobotica.png" alt="">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/davinci.png" alt="">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/campionatidirobotica.png" alt="">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/davinci.png" alt="">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/campionatidirobotica.png" alt="">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/davinci.png" alt="">
+            </a>
+          </div>
+
+          <div class="logo-slot">
+            <img src="/hope.png" alt="">
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.campionatidirobotica.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/campionatidirobotica.png" alt="">
+            </a>
+          </div>
+          <div class="logo-slot">
+            <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer" tabindex="-1">
+              <img src="/davinci.png" alt="">
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
-    <section id="project">
+    <section id="01">
       <div class="project-intro">
         <div class="section-heading">
-          <span class="section-label">01 / una squadra dietro ogni mossa</span>
-          <h2>Costruito per portare gli scacchi fuori dallo schermo.</h2>
-          <p>Chess Master unisce elettronica, programmazione e meccanica in un'unica esperienza da tavolo. Sensori sotto la scacchiera rilevano la posizione dei pezzi, mentre il braccio robotico esegue le mosse in modo autonomo.</p>
+          <span class="section-label">01 / PROJECT</span>
+          <h2>GOAL</h2>
+          <p>The idea comes from the desire to feel again that unique sensation of physically touching and moving the
+            pieces on the chessboard, an aspect that traditional digital play often fails to convey.
+          </p>
         </div>
         <img class="project-pawn" src="/frankie-pawn.png" alt="Pedone nero del progetto Chess Master">
       </div>
     </section>
 
-    <section>
+    <section id="02">
       <div class="machine">
         <img class="machine-photo" src="/chessmaster-arm.png" alt="Braccio robotico di Chess Master">
         <div class="machine-copy">
-          <span class="section-label">02 / il movimento</span>
-          <h2>Legno, motori e un po' di magia.</h2>
-          <p>Il braccio è il cuore meccanico del progetto. Una struttura leggera, servomotori e un elettromagnete lavorano insieme per sollevare un pezzo, spostarlo sulla griglia e restituire alla partita un gesto naturale.</p>
+          <span class="section-label">02 / MECHANICAL ARM</span>
+          <h2>Four-bar Linkage</h2>
+          <p>The mechanical arm relies on a wooden four-bar linkage powered by servomotors for fluid front-to-back
+            motion. A dedicated vertical mechanism uses a motorized nylon thread to lower and align the electromagnet,
+            allowing precise piece picking across the chessboard.</p>
           <div class="specs">
-            <div class="spec"><strong>8×8</strong><span>griglia di gioco</span></div>
-            <div class="spec"><strong>20×4</strong><span>display LCD</span></div>
-            <div class="spec"><strong>100%</strong><span>prototipo originale</span></div>
-            <div class="spec"><strong>∞</strong><span>partite possibili</span></div>
+            <div class="spec"><strong>3</strong><span>AXES OF MOTION</span></div>
+            <div class="spec"><strong>4</strong><span>SERVOMOTORS</span></div>
+            <div class="spec"><strong>100%</strong><span>ORIGINAL PROTOTYPE</span></div>
+            <div class="spec"><strong>∞</strong><span>POSSIBLE GAMES</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="demo">
+    <section id="03">
       <div class="section-heading">
-        <span class="section-label">03 / interfaccia</span>
-        <h2>Prova il display della scacchiera.</h2>
-        <p>Il piccolo LCD blu è la voce di Chess Master: mostra lo stato della partita, suggerisce la prossima mossa e accompagna il giocatore. Le schermate cambiano automaticamente, proprio come durante una partita.</p>
+        <span class="section-label">03 / DISPLAY</span>
+        <h2>ChessOS.</h2>
+        <p>The 20x4 LCD display and analog joystick form the user interface of ChessOS. They allow players to easily
+          navigate menus, select game modes, configure system settings, and receive real-time feedback during matches.
+        </p>
       </div>
       <div class="demo-layout">
         <div class="lcd-shell">
           <div class="lcd" id="lcd" aria-label="Display LCD 20 per 4" aria-live="polite"></div>
-          <p class="lcd-hint">LCD 20×4 · sequenza automatica</p>
+          <p class="lcd-hint">Display LCD 20×4</p>
         </div>
         <div class="demo-copy">
-          <span class="section-label">come funziona</span>
-          <p>Ogni schermata è una fotografia dello stato interno della partita. Il microcontrollore aggiorna le quattro righe tramite il bus parallelo del display, mentre i sensori comunicano alla logica quale mossa è stata giocata.</p>
-          <p><code>lcd.setCursor(0, 0)</code><br><code>lcd.print("TOCCA A TE");</code></p>
+          <span class="section-label">HOW IT WORKS</span>
+          <p>Navigating ChessOS is intuitive: move the joystick to browse through menu options, press it to confirm a
+            selection, and just have fun!</p>
+          <p><code>lcd.setCursor(0, 0);</code><br><code>lcd.print("PLAY");</code></p>
         </div>
       </div>
     </section>
@@ -589,94 +883,103 @@
 
   <footer class="site-footer">
     <div class="footer-column">
-      <h3>Chess Master © 2026</h3>
-      <p>Una scacchiera robotica costruita per portare gli scacchi fuori dallo schermo.</p>
-      <a href="/">Torna alla partita</a>
+      <h3>Chess Master</h3>
+      <p>Challenge the Future,<br>One Move at a Time.</p>
     </div>
     <div class="footer-column">
-      <h3>Progetto</h3>
-      <a href="#project">Il progetto</a>
-      <a href="#demo">Demo LCD</a>
+      <h3>About</h3>
+      <a href="#01">Project</a>
+      <a href="#02">Mechanical Arm</a>
+      <a href="#03">Display</a>
+    </div>
+    <div class="footer-column">
+      <h3>Resources</h3>
+      <a href="/">Home</a>
       <a href="/credits">Credits</a>
-    </div>
-    <div class="footer-column">
-      <h3>Risorse</h3>
-      <a href="#project">Come funziona</a>
-      <a href="#demo">Interfaccia</a>
-      <a href="/">Gioca online</a>
+      <a href="/docs" target="_blank" rel="noreferrer">Docs ↗</a>
     </div>
     <div class="footer-column">
       <h3>Social</h3>
       <a href="https://github.com/raffreddat0/chessmaster" target="_blank" rel="noreferrer">GitHub ↗</a>
-      <a href="mailto:chessmaster@example.com">Contatti ↗</a>
     </div>
     <div class="footer-bottom">
       <span>Campionati di Robotica 2026 · HoPE 2024/2025</span>
-      <span>Robotica · Scacchi · Open hardware</span>
+      <a href="https://www.liceodavincimaglie.edu.it/" target="_blank" rel="noreferrer">Liceo da Vinci Maglie</a>
     </div>
   </footer>
 
   <script>
     const screens = [
-      ['CHESS MASTER        ', 'Benvenuto!          ', 'Inserisci una mossa ', '                >   '],
-      ['PARTITA: ONLINE     ', 'Bianco: TU          ', 'Nero: CHESS MASTER  ', 'Tocca a te...       '],
-      ['ULTIMA MOSSA        ', 'e2  -  e4           ', 'Mossa valida!       ', 'Analizzo...         '],
-      ['CHESS MASTER        ', 'Suggerimento:       ', 'e7  -  e5           ', 'Muovo il pezzo...   '],
-      ['PARTITA IN CORSO    ', 'Tempo: 04:28        ', 'Turno: BIANCO       ', 'Pronto.             ']
+      ['', '    CHESS MASTER    ', '', '      <Enter>       '],
+      ['', '       <Play>       ', '', '      \\[0_0]\\       '],
+      ['', '      <Online>      ', '', '      /(0-0)/       '],
+      ['', '      <Stats>      ', '', '       12345       '],
+      ['', '     <Settings>      ', '', '        +-+       '],
     ];
     const lcd = document.getElementById('lcd');
     let current = 0;
     let interval;
     const glyphs = {
-      ' ': ['00000','00000','00000','00000','00000','00000','00000','00000'],
-      '!': ['00100','00100','00100','00100','00100','00000','00100','00000'],
-      ':': ['00000','00100','00100','00000','00100','00100','00000','00000'],
-      '-': ['00000','00000','00000','11111','00000','00000','00000','00000'],
-      '.': ['00000','00000','00000','00000','00000','00110','00110','00000'],
-      '>': ['10000','01000','00100','00010','00001','00010','00100','01000'],
-      '0': ['01110','10001','10011','10101','11001','10001','01110','00000'],
-      '1': ['00100','01100','00100','00100','00100','00100','01110','00000'],
-      '2': ['01110','10001','00001','00010','00100','01000','11111','00000'],
-      '4': ['00010','00110','01010','10010','11111','00010','00010','00000'],
-      '8': ['01110','10001','10001','01110','10001','10001','01110','00000'],
-      '9': ['01110','10001','10001','01111','00001','00010','11100','00000']
+      ' ': ['00000', '00000', '00000', '00000', '00000', '00000', '00000', '00000'],
+      '\\': ['00000', '10000', '01000', '00100', '00010', '00001', '00000', '00000'],
+      '/': ['00000', '00001', '00010', '00100', '01000', '10000', '00000', '00000'],
+      '(': ['00010', '00100', '01000', '01000', '01000', '01000', '00100', '00010'],
+      ')': ['01000', '00100', '00010', '00010', '00010', '00010', '00100', '01000'],
+      '[': ['01110', '01000', '01000', '01000', '01000', '01000', '01000', '01110'],
+      ']': ['01110', '00010', '00010', '00010', '00010', '00010', '00010', '01110'],
+      '+': ['00000', '00000', '00100', '00100', '11111', '00100', '00100', '00000'],
+      '!': ['00100', '00100', '00100', '00100', '00100', '00000', '00100', '00000'],
+      ':': ['00000', '00100', '00100', '00000', '00100', '00100', '00000', '00000'],
+      '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000', '00000'],
+      '_': ['00000', '00000', '00000', '00000', '00000', '00000', '00000', '11111'],
+      '.': ['00000', '00000', '00000', '00000', '00000', '00110', '00110', '00000'],
+      '<': ['00001', '00010', '00100', '01000', '10000', '01000', '00100', '00010'],
+      '>': ['10000', '01000', '00100', '00010', '00001', '00010', '00100', '01000'],
+      '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110', '00000'],
+      '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110', '00000'],
+      '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111', '00000'],
+      '3': ['00000', '11110', '00001', '00110', '00001', '00001', '11110', '00000'],
+      '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010', '00000'],
+      '5': ['00000', '11111', '10000', '11110', '00001', '00001', '11110', '00000']
     };
     const alphabet = {
-      A: ['01110','10001','10001','11111','10001','10001','10001','00000'],
-      B: ['11110','10001','10001','11110','10001','10001','11110','00000'],
-      C: ['01111','10000','10000','10000','10000','10000','01111','00000'],
-      D: ['11110','10001','10001','10001','10001','10001','11110','00000'],
-      E: ['11111','10000','10000','11110','10000','10000','11111','00000'],
-      H: ['10001','10001','10001','11111','10001','10001','10001','00000'],
-      I: ['11111','00100','00100','00100','00100','00100','11111','00000'],
-      L: ['10000','10000','10000','10000','10000','10000','11111','00000'],
-      M: ['10001','11011','10101','10101','10001','10001','10001','00000'],
-      N: ['10001','11001','10101','10011','10001','10001','10001','00000'],
-      O: ['01110','10001','10001','10001','10001','10001','01110','00000'],
-      P: ['11110','10001','10001','11110','10000','10000','10000','00000'],
-      R: ['11110','10001','10001','11110','10100','10010','10001','00000'],
-      S: ['01111','10000','10000','01110','00001','00001','11110','00000'],
-      T: ['11111','00100','00100','00100','00100','00100','00100','00000'],
-      U: ['10001','10001','10001','10001','10001','10001','01110','00000'],
-      V: ['10001','10001','10001','10001','10001','01010','00100','00000']
+      A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001', '00000'],
+      B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110', '00000'],
+      C: ['01111', '10000', '10000', '10000', '10000', '10000', '01111', '00000'],
+      D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110', '00000'],
+      E: ['11111', '10000', '10000', '11110', '10000', '10000', '11111', '00000'],
+      H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001', '00000'],
+      I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111', '00000'],
+      L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111', '00000'],
+      M: ['10001', '11011', '10101', '10101', '10001', '10001', '10001', '00000'],
+      N: ['10001', '11001', '10101', '10011', '10001', '10001', '10001', '00000'],
+      O: ['01110', '10001', '10001', '10001', '10001', '10001', '01110', '00000'],
+      P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000', '00000'],
+      R: ['11110', '10001', '10001', '11110', '10100', '10010', '10001', '00000'],
+      S: ['01111', '10000', '10000', '01110', '00001', '00001', '11110', '00000'],
+      T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100', '00000'],
+      U: ['10001', '10001', '10001', '10001', '10001', '10001', '01110', '00000'],
+      V: ['10001', '10001', '10001', '10001', '10001', '01010', '00100', '00000']
     };
     Object.assign(glyphs, alphabet);
     Object.assign(glyphs, {
-      a: ['00000','00000','01110','00001','01111','10001','01111','00000'],
-      c: ['00000','00000','01111','10000','10000','10000','01111','00000'],
-      e: ['00000','00000','01110','10001','11111','10000','01111','00000'],
-      g: ['00000','00000','01111','10001','01111','00001','01110','00000'],
-      i: ['00100','00000','01100','00100','00100','00100','01110','00000'],
-      l: ['01100','00100','00100','00100','00100','00100','01110','00000'],
-      m: ['00000','00000','11010','10101','10101','10101','10101','00000'],
-      n: ['00000','00000','11110','10001','10001','10001','10001','00000'],
-      o: ['00000','00000','01110','10001','10001','10001','01110','00000'],
-      r: ['00000','00000','10111','11000','10000','10000','10000','00000'],
-      s: ['00000','00000','01111','10000','01110','00001','11110','00000'],
-      t: ['00100','00100','11111','00100','00100','00100','00011','00000'],
-      u: ['00000','00000','10001','10001','10001','10011','01101','00000'],
-      v: ['00000','00000','10001','10001','10001','01010','00100','00000'],
-      z: ['00000','00000','11111','00010','00100','01000','11111','00000']
+      a: ['00000', '00000', '01110', '00001', '01111', '10001', '01111', '00000'],
+      c: ['00000', '00000', '01111', '10000', '10000', '10000', '01111', '00000'],
+      e: ['00000', '00000', '01110', '10001', '11111', '10000', '01111', '00000'],
+      g: ['00000', '00000', '01111', '10001', '01111', '00001', '01110', '00000'],
+      i: ['00100', '00000', '01100', '00100', '00100', '00100', '01110', '00000'],
+      l: ['01100', '00100', '00100', '00100', '00100', '00100', '01110', '00000'],
+      m: ['00000', '00000', '11010', '10101', '10101', '10101', '10101', '00000'],
+      n: ['00000', '00000', '11110', '10001', '10001', '10001', '10001', '00000'],
+      o: ['00000', '00000', '01110', '10001', '10001', '10001', '01110', '00000'],
+      r: ['00000', '00000', '10111', '11000', '10000', '10000', '10000', '00000'],
+      s: ['00000', '00000', '01111', '10000', '01110', '00001', '11110', '00000'],
+      t: ['00100', '00100', '11111', '00100', '00100', '00100', '00011', '00000'],
+      u: ['00000', '00000', '10001', '10001', '10001', '10011', '01101', '00000'],
+      v: ['00000', '00000', '10001', '10001', '10001', '01010', '00100', '00000'],
+      x: ['00000', '00000', '10001', '01010', '00100', '01010', '10001', '00000'],
+      y: ['00000', '00000', '10001', '10001', '01111', '00001', '01110', '00000'],
+      z: ['00000', '00000', '11111', '00010', '00100', '01000', '11111', '00000']
     });
 
     function randomCase(text) {
@@ -733,6 +1036,21 @@
     function next() { current = (current + 1) % screens.length; render(); }
     render();
     interval = setInterval(next, 1800);
+  </script>
+  <script>
+    const logoStrip = document.querySelector('.logo-strip');
+    const logoTrack = document.querySelector('.logo-track');
+
+    const animation = logoTrack.getAnimations()[0];
+    if (animation) {
+      logoStrip.addEventListener('mouseenter', () => {
+        animation.updatePlaybackRate(0.3);
+      });
+
+      logoStrip.addEventListener('mouseleave', () => {
+        animation.updatePlaybackRate(1);
+      });
+    }
   </script>
 </body>
 

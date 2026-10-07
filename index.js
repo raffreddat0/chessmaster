@@ -27,6 +27,14 @@ app.get("/about", (req, res) => {
   res.sendFile(path.join(__dirname, "./about.html"));
 });
 
+app.get("/docs", (req, res) => {
+  const queryParam = (req.query.lang || Object.keys(req.query)[0] || "").toLowerCase();
+  const isItalian = queryParam === "it" || queryParam === "ita";
+  const fileName = isItalian ? "DocsITA.pdf" : "DocsENG.pdf";
+
+  res.sendFile(path.join(__dirname, "docs", fileName));
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "./index.html"));
 });
