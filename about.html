@@ -588,6 +588,13 @@
       transform: translateY(0);
     }
 
+    @media (hover: none), (pointer: coarse) {
+      .video-actions {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .video-open {
       width: 100%;
       padding: .45rem .8rem;
@@ -1251,12 +1258,9 @@
     const isMobile = window.matchMedia('(max-width: 700px)').matches;
     let videoScrollPosition = 0;
 
-    fetch('/video.mp4')
-      .then(response => response.blob())
-      .then(blob => {
-        projectVideo.src = URL.createObjectURL(blob);
-      })
-      .catch(err => console.error("error on video loading:", err));
+    projectVideo.addEventListener('error', () => {
+      console.error('Error loading project video:', projectVideo.error);
+    });
 
     function setVideoExpanded(expanded) {
       if (expanded) {
@@ -1291,8 +1295,12 @@
       }
       if (isMobile && projectVideo.webkitEnterFullscreen) {
         projectVideo.controls = true;
-        projectVideo.webkitEnterFullscreen();
-        return;
+        try {
+          projectVideo.webkitEnterFullscreen();
+          return;
+        } catch (error) {
+          console.debug('iOS video fullscreen unavailable:', error);
+        }
       }
       setVideoExpanded(true);
     }
@@ -1327,6 +1335,8 @@
     videoPlayer.addEventListener('click', (event) => {
       if (videoPlayer.classList.contains('is-expanded') && event.target === videoPlayer) {
         setVideoExpanded(false);
+      } else if (!supportsHover && event.target === projectVideo) {
+        expandVideo();
       }
     });
     document.addEventListener('keydown', (event) => {
