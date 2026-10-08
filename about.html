@@ -477,6 +477,151 @@
       color: var(--cyan);
     }
 
+    .video-section {
+      padding-top: 8rem;
+    }
+
+    .video-layout {
+      display: grid;
+      grid-template-columns: minmax(220px, .7fr) minmax(0, 1.4fr);
+      gap: clamp(2rem, 7vw, 7rem);
+      align-items: center;
+    }
+
+    .video-copy {
+      margin-bottom: 0;
+    }
+
+    .video-player:hover {
+      border-color: #526dff;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .35), 0 0 28px rgba(82, 109, 255, .3);
+    }
+
+    .video-copy p {
+      color: var(--muted);
+    }
+
+    .video-player {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      min-width: 0;
+      aspect-ratio: 16 / 9;
+      margin: auto;
+      border: 1px solid #3d3d42;
+      border-radius: .15rem;
+      background: #08090d;
+      box-shadow: 0 18px 55px rgba(0, 0, 0, .35), 0 0 20px rgba(82, 109, 255, .08);
+      overflow: hidden;
+    }
+
+    .video-player video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      aspect-ratio: 16 / 9;
+      background: #050505;
+      object-fit: contain;
+      cursor: pointer;
+    }
+
+    .video-player.is-expanded {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      padding: clamp(1rem, 5vw, 4rem);
+      border: 0;
+      border-radius: 0;
+      background: rgba(5, 5, 5, .94);
+      overflow: visible;
+    }
+
+    .video-player.is-expanded::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(29, 78, 216, .18), transparent 58%);
+      pointer-events: none;
+    }
+
+    .video-player.is-expanded video {
+      position: relative;
+      z-index: 1;
+      width: min(92vw, 1100px);
+      height: auto;
+      max-height: 82vh;
+      aspect-ratio: 16 / 9;
+      border: 1px solid rgba(111, 157, 255, .45);
+      border-radius: .75rem;
+      object-fit: contain;
+      box-shadow: 0 25px 90px rgba(0, 0, 0, .7), 0 0 35px rgba(82, 109, 255, .18);
+    }
+
+    .video-player.is-expanded .video-actions {
+      display: none;
+    }
+
+    .video-actions {
+      position: absolute;
+      z-index: 2;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 2.7rem;
+      border-top: 1px solid rgba(111, 157, 255, .45);
+      background: #0c0d12;
+      opacity: 0;
+      transform: translateY(100%);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .video-player:hover .video-actions,
+    .video-player:focus-within .video-actions {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .video-open {
+      width: 100%;
+      padding: .45rem .8rem;
+      border: 0;
+      color: var(--cyan);
+      background: transparent;
+      cursor: pointer;
+      font: inherit;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .video-open::after {
+      content: ' ⤢';
+      font-size: .9em;
+    }
+
+    .video-open:hover {
+      color: #fff;
+      background: #1c3275;
+    }
+
+    body.video-is-expanded {
+      overflow: hidden;
+      height: 100%;
+    }
+
+    html.video-is-expanded {
+      overflow: hidden;
+      height: 100%;
+      touch-action: none;
+    }
+
     .site-footer {
       position: relative;
       display: grid;
@@ -610,8 +755,14 @@
       }
 
       .machine,
-      .demo-layout {
+      .demo-layout,
+      .video-layout {
         grid-template-columns: 1fr;
+      }
+
+      .video-player {
+        width: 100%;
+        max-width: none;
       }
 
       .project-intro {
@@ -693,7 +844,7 @@
     <a class="wordmark" href="/" aria-label="Torna alla home">
       <img id="logo">
     </a>
-    <nav><a href="#01">PROJECT</a><a href="#02">MECHANICAL ARM</a><a href="#03">DISPLAY</a></nav>
+    <nav><a href="#01">PROJECT</a><a href="#02">ARM</a><a href="#03">DISPLAY</a><a href="#04">VIDEO</a></nav>
   </header>
   <div class="scroll-brand" id="scrollBrand" role="button" tabindex="0" aria-hidden="true">CHESS MASTER</div>
 
@@ -846,7 +997,7 @@
       <div class="machine">
         <img class="machine-photo" src="/chessmaster-arm.png">
         <div class="machine-copy">
-          <span class="section-label">02 / MECHANICAL ARM</span>
+          <span class="section-label">02 / ARM</span>
           <h2>Four-bar Linkage</h2>
           <p>The mechanical arm relies on a wooden four-bar linkage powered by servomotors for fluid front-to-back
             motion. A dedicated vertical mechanism uses a motorized nylon thread to lower and align the electromagnet,
@@ -882,6 +1033,26 @@
         </div>
       </div>
     </section>
+
+    <section id="04" class="video-section" aria-label="Chess Master video">
+      <div class="video-layout">
+        <div class="section-heading video-copy">
+          <span class="section-label">04 / VIDEO</span>
+          <h2>Behind the moves.</h2>
+          <p>Take a closer look at Chess Master in action: a physical chessboard where mechanics, electronics, and
+            software work together to bring every move to life.</p>
+        </div>
+        <div class="video-player" id="videoPlayer">
+          <video id="projectVideo" preload="metadata" playsinline>
+            <source src="/video.mp4" type="video/mp4">
+            Il tuo browser non supporta la riproduzione video.
+          </video>
+          <div class="video-actions">
+            <button class="video-open" id="videoOpen" type="button" aria-expanded="false">Expand Video</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -892,8 +1063,9 @@
     <div class="footer-column">
       <h3>About</h3>
       <a href="#01">Project</a>
-      <a href="#02">Mechanical Arm</a>
+      <a href="#02">Arm</a>
       <a href="#03">Display</a>
+      <a href="#04">Video</a>
     </div>
     <div class="footer-column">
       <h3>Resources</h3>
@@ -1070,6 +1242,91 @@
         animation.updatePlaybackRate(1);
       });
     }
+
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoSection = document.querySelector('.video-section');
+    const projectVideo = document.getElementById('projectVideo');
+    const videoOpen = document.getElementById('videoOpen');
+    const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const isMobile = window.matchMedia('(max-width: 700px)').matches;
+    let videoScrollPosition = 0;
+
+    function setVideoExpanded(expanded) {
+      if (expanded) {
+        videoScrollPosition = window.scrollY;
+        const sectionStyle = getComputedStyle(videoSection);
+        const sectionPadding = parseFloat(sectionStyle.paddingTop) + parseFloat(sectionStyle.paddingBottom);
+        videoSection.style.minHeight = `${videoPlayer.offsetHeight + sectionPadding}px`;
+      }
+      videoPlayer.classList.toggle('is-expanded', expanded);
+      document.body.classList.toggle('video-is-expanded', expanded);
+      document.documentElement.classList.toggle('video-is-expanded', expanded);
+      videoOpen.setAttribute('aria-expanded', String(expanded));
+      projectVideo.controls = expanded;
+
+      if (!expanded) {
+        window.scrollTo(0, videoScrollPosition);
+        videoOpen.focus({ preventScroll: true });
+        videoSection.style.minHeight = '';
+        window.scrollTo({ top: videoScrollPosition, left: 0, behavior: 'instant' });
+      }
+    }
+
+    async function expandVideo() {
+      if (isMobile && projectVideo.requestFullscreen) {
+        projectVideo.controls = true;
+        try {
+          await projectVideo.requestFullscreen();
+          return;
+        } catch (error) {
+          console.debug('Native video fullscreen unavailable:', error);
+        }
+      }
+      if (isMobile && projectVideo.webkitEnterFullscreen) {
+        projectVideo.controls = true;
+        projectVideo.webkitEnterFullscreen();
+        return;
+      }
+      setVideoExpanded(true);
+    }
+
+    videoOpen.addEventListener('click', expandVideo);
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement === projectVideo) {
+        document.body.classList.add('video-is-expanded');
+        document.documentElement.classList.add('video-is-expanded');
+        videoOpen.setAttribute('aria-expanded', 'true');
+      } else if (!videoPlayer.classList.contains('is-expanded')) {
+        document.body.classList.remove('video-is-expanded');
+        document.documentElement.classList.remove('video-is-expanded');
+        projectVideo.controls = false;
+        videoOpen.setAttribute('aria-expanded', 'false');
+      }
+    });
+    if (supportsHover) {
+      videoPlayer.addEventListener('mouseenter', () => {
+        if (!videoPlayer.classList.contains('is-expanded')) {
+          projectVideo.play().catch((error) => {
+            console.debug('Video preview autoplay unavailable:', error);
+          });
+        }
+      });
+      videoPlayer.addEventListener('mouseleave', () => {
+        if (!videoPlayer.classList.contains('is-expanded')) {
+          projectVideo.pause();
+        }
+      });
+    }
+    videoPlayer.addEventListener('click', (event) => {
+      if (videoPlayer.classList.contains('is-expanded') && event.target === videoPlayer) {
+        setVideoExpanded(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && videoPlayer.classList.contains('is-expanded')) {
+        setVideoExpanded(false);
+      }
+    });
   </script>
 </body>
 

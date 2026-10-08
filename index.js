@@ -35,7 +35,10 @@ app.get("/docs", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", fileName));
 });
 
-app.get("*", (req, res) => {
+app.use((req, res) => {
+  if (!req.accepts("html")) {
+    return res.sendStatus(404);
+  }
   res.sendFile(path.join(__dirname, "./index.html"));
 });
 
