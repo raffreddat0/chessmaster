@@ -1051,7 +1051,7 @@
         </div>
         <div class="video-player" id="videoPlayer">
           <video id="projectVideo" preload="metadata" playsinline>
-            <source src="/video.mp4" type="video/mp4">
+            <source id="projectVideoSource" type="video/mp4">
             Your browser does not support the video tag.
           </video>
           <div class="video-actions">
@@ -1253,11 +1253,16 @@
     const videoPlayer = document.getElementById('videoPlayer');
     const videoSection = document.querySelector('.video-section');
     const projectVideo = document.getElementById('projectVideo');
+    const projectVideoSource = document.getElementById('projectVideoSource');
     const videoOpen = document.getElementById('videoOpen');
     const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     const isMobile = window.matchMedia('(max-width: 700px)').matches;
     let videoScrollPosition = 0;
 
+    projectVideoSource.src = window.location.protocol === 'file:'
+      ? 'public/video.mp4'
+      : '/video.mp4';
+    projectVideo.load();
     projectVideo.addEventListener('error', () => {
       console.error('Error loading project video:', projectVideo.error);
     });
@@ -1284,8 +1289,13 @@
     }
 
     async function expandVideo() {
+      projectVideo.controls = true;
+      try {
+        await projectVideo.play();
+      } catch (error) {
+        console.debug('Video playback unavailable:', error);
+      }
       if (isMobile && projectVideo.requestFullscreen) {
-        projectVideo.controls = true;
         try {
           await projectVideo.requestFullscreen();
           return;
@@ -1294,7 +1304,6 @@
         }
       }
       if (isMobile && projectVideo.webkitEnterFullscreen) {
-        projectVideo.controls = true;
         try {
           projectVideo.webkitEnterFullscreen();
           return;
