@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Master</title>
+  <meta name="description" content="Challenge the Future, One Move at a Time.">
+  <meta name="keywords" content="chess, scacchi, chess master, online chess, chess AI, chess strategy">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Chess Master">
+  <meta property="og:description" content="Challenge the Future, One Move at a Time.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Chess Master">
+  <meta name="twitter:description" content="Challenge the Future, One Move at a Time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.2/chess.js" integrity="sha384-s3XgLpvmHyscVpijnseAmye819Ee3yaGa8NxstkJVyA6nuDFjt59u1QvuEl/mecz" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <a href="/"><img id="logo" alt="Chess Master"></a>
+  <div id="hero" style="display:none">
+    <div id="container">
+      <div class="input-group">
+        <input id="codeInput" type="text" autocomplete="off" maxlength="6">
+        <p id="error"></p>
+      </div>
+    </div>
+  </div>
+  <div id="board"></div>
+
+  <div id="historyPanel">
+    <div>
+      <div class="history-header">Game Time</div>
+      <div id="gameTimerDisplay">00:00</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="history-header">Move History</div>
+      <div id="moveListContent"></div>
+
+      <div id="historyControls">
+        <button class="nav-btn" id="btnFirstMove" onclick="showPastMove(0)" title="First Move">
+          <svg viewBox="0 0 24 24">
+            <path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z" />
+          </svg>
+        </button>
+        <button class="nav-btn" id="btnPrevMove" onclick="prevMove()" title="Previous Move">
+          <svg viewBox="0 0 24 24">
+            <path d="M15.41 16.59L10.82 12l4.59-4.59L14 6l-6 6 6 6z" />
+          </svg>
+        </button>
+        <button class="nav-btn" id="btnAutoPlay" onclick="toggleAutoPlay()" title="Auto Play">
+          <svg viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+        <button class="nav-btn" id="btnNextMove" onclick="nextMove()" title="Next Move">
+          <svg viewBox="0 0 24 24">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+          </svg>
+        </button>
+        <button class="nav-btn" id="btnLastMove" onclick="backToPresent()" title="Current Position">
+          <svg viewBox="0 0 24 24">
+            <path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="island">
+    <div id="islandHandle"></div>
+    <div id="islandCollapsed">
+      <span id="islandStatus"></span>
+    </div>
+    <div id="islandExpanded">
+      <div id="mobileTimer">00:00</div>
+      <div class="history-header" style="margin-top: 1rem;">Move History</div>
+      <div id="mobileMoveList" class="move-list-base"></div>
+      <div id="mobileHistoryControls"></div>
+    </div>
+  </div>
+<script>
+function main(code) {
+      var board = null;
+      var game = new Chess();
+      var state = 0;
+      var level = 0;
+      var timer = null;
+      var timerInterval = null;
+      var viewingIndex = -1;
+      var autoPlayInterval = null;
+
+      function updateHistory() {
+        const history = game.history({ verbose: true });
+        const moveList = document.getElementById('moveListContent');
+        const mobileMoveList = document.getElementById('mobileMoveList');
+        moveList.innerHTML = '';
+        mobileMoveList.innerHTML = '';
+
+        const createMoveItem = (i, isBlack = false) => {
+          const moveItem = document.createElement('span');
+          moveItem.className = 'move-item';
+          moveItem.textContent = history[i].from + history[i].to;
+          moveItem.onclick = (e) => {
+            e.stopPropagation();
+            showPastMove(i + 1);
+            closeIsland();
+          };
+          if (viewingIndex === i + 1 || (viewingIndex === -1 && i + 1 === history.length)) {
+            moveItem.classList.add('active');
+          }
+          return moveItem;
+        };
+
+        for (let i = 0; i < history.length; i += 2) {
+          const moveNum = Math.floor(i / 2) + 1;
+
+          const numSpan = document.createElement('span');
+          numSpan.className = 'move-num';
+          numSpan.textContent = `${moveNum}.`;
+          moveList.appendChild(numSpan);
+          mobileMoveList.appendChild(numSpan.cloneNode(true));
+
+          const whiteMove = createMoveItem(i);
+          moveList.appendChild(whiteMove);
+          mobileMoveList.appendChild(whiteMove.cloneNode(true));
+          mobileMoveList.lastChild.onclick = (e) => {
+            e.stopPropagation();
+            showPastMove(i + 1);
+            closeIsland();
+          };
+
+          if (history[i + 1]) {
+            const blackMove = createMoveItem(i + 1, true);
+            moveList.appendChild(blackMove);
+            mobileMoveList.appendChild(blackMove.cloneNode(true));
+            mobileMoveList.lastChild.onclick = (e) => {
+              e.stopPropagation();
+              showPastMove(i + 2);
+              closeIsland();
+            };
+          }
+        }
+
+        const updateBtn = (id, disabled) => {
+          const btn = document.getElementById(id);
+          if (btn) btn.disabled = disabled;
+        };
+
+        const isAtStart = (history.length === 0 || viewingIndex === 0);
+        const isAtEnd = (viewingIndex === -1 || viewingIndex === history.length);
+
+        updateBtn('btnFirstMove', isAtStart);
+        updateBtn('btnPrevMove', isAtStart);
+        updateBtn('btnNextMove', isAtEnd);
+        updateBtn('btnLastMove', viewingIndex === -1);
+
+        const mobileControls = document.getElementById('mobileHistoryControls');
+        if (mobileControls && mobileControls.innerHTML === '') {
+          const desktopControls = document.getElementById('historyControls');
+          mobileControls.innerHTML = desktopControls.innerHTML;
+          Array.from(mobileControls.children).forEach(btn => {
+            const originalId = btn.id;
+            if (originalId) {
+              btn.id = 'mobile_' + originalId;
+              const originalBtn = document.getElementById(originalId);
+              btn.onclick = (e) => {
+                e.stopPropagation();
+                originalBtn.click();
+                closeIsland();
+              };
+            }
+          });
+        }
+
+        const updateMobileBtn = (id, disabled) => {
+          const btn = document.getElementById('mobile_' + id);
+          if (btn) btn.disabled = disabled;
+        };
+
+        updateMobileBtn('btnFirstMove', isAtStart);
+        updateMobileBtn('btnPrevMove', isAtStart);
+        updateMobileBtn('btnNextMove', isAtEnd);
+        updateMobileBtn('btnLastMove', viewingIndex === -1);
+
+        if (viewingIndex === -1) {
+          moveList.scrollTop = moveList.scrollHeight;
+          mobileMoveList.scrollTop = mobileMoveList.scrollHeight;
+
+          if (history.length > 0) {
+            const lastMove = history[history.length - 1];
+            removeMoves();
+            removeHighlights();
+            $board.find('.square-' + lastMove.from).addClass('highlight');
+            $board.find('.square-' + lastMove.to).addClass('highlight');
+          }
+        }
+      }
+
+      window.prevMove = function () {
+        const history = game.history();
+        let targetIndex = viewingIndex === -1 ? history.length - 1 : viewingIndex - 1;
+        if (targetIndex >= 0) {
+          showPastMove(targetIndex);
+        }
+      }
+
+      window.nextMove = function () {
+        const history = game.history();
+        if (viewingIndex !== -1 && viewingIndex < history.length) {
+          showPastMove(viewingIndex + 1);
+        }
+      }
+
+      window.toggleAutoPlay = function () {
+        const btns = [document.getElementById('btnAutoPlay'), document.getElementById('mobile_btnAutoPlay')].filter(Boolean);
+
+        if (autoPlayInterval) {
+          clearInterval(autoPlayInterval);
+          autoPlayInterval = null;
+          btns.forEach(btn => {
+            btn.classList.remove('active');
+            const icon = btn.querySelector('svg');
+            if (icon) icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+          });
+        } else {
+          const history = game.history();
+          if (history.length === 0) return;
+
+          if (viewingIndex === -1 || viewingIndex === history.length) {
+            showPastMove(0);
+          }
+
+          btns.forEach(btn => {
+            btn.classList.add('active');
+            const icon = btn.querySelector('svg');
+            if (icon) icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+          });
+
+          autoPlayInterval = setInterval(() => {
+            const currentHistory = game.history();
+            if (viewingIndex < currentHistory.length) {
+              nextMove();
+            } else {
+              toggleAutoPlay();
+            }
+          }, 1000);
+        }
+      }
+
+      window.showPastMove = function (index) {
+        const history = game.history({ verbose: true });
+
+        if (index === history.length || index === -1) {
+          backToPresent();
+          return;
+        }
+
+        viewingIndex = index;
+        const tempGame = new Chess();
+        for (let i = 0; i < index; i++) {
+          tempGame.move(history[i]);
+        }
+        board.position(tempGame.fen());
+
+        removeMoves();
+        removeHighlights();
+        if (index > 0) {
+          const lastMove = history[index - 1];
+          $board.find('.square-' + lastMove.from).addClass('highlight');
+          $board.find('.square-' + lastMove.to).addClass('highlight');
+        }
+
+        updateHistory();
+        draggable = false;
+      }
+
+      window.backToPresent = function () {
+        if (autoPlayInterval) toggleAutoPlay();
+        viewingIndex = -1;
+        board.position(game.fen());
+
+        removeHighlights();
+        const history = game.history({ verbose: true });
+        if (history.length > 0) {
+          const lastMove = history[history.length - 1];
+          $board.find('.square-' + lastMove.from).addClass('highlight');
+          $board.find('.square-' + lastMove.to).addClass('highlight');
+        }
+
+        updateHistory();
+        draggable = true;
+      }
+
+      let islandMode = 'hidden';
+      let currentShareCode = '';
+      let copiedTimeoutId = null;
+      let lastIslandTimeStr = '00:00';
+
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          try {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.setAttribute('readonly', '');
+            el.style.position = 'fixed';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            return true;
+          } catch {
+            return false;
+          }
+        }
+      }
+
+      function showIslandCopiedFeedback() {
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (!island || !islandStatus) return;
+
+        if (copiedTimeoutId) clearTimeout(copiedTimeoutId);
+        island.classList.add('copied');
+        islandStatus.textContent = 'Copied!';
+        copiedTimeoutId = setTimeout(() => {
+          island.classList.remove('copied');
+          if (islandMode === 'code' && currentShareCode) islandStatus.textContent = `Code: ${currentShareCode}`;
+        }, 900);
+      }
+
+      function isHistoryPanelVisible() {
+        const historyPanel = document.getElementById('historyPanel');
+        if (!historyPanel) return false;
+        return getComputedStyle(historyPanel).display !== 'none';
+      }
+
+      function updateHistoryPanelVisibility() {
+        const historyPanel = document.getElementById('historyPanel');
+        const boardEl = document.getElementById('board');
+        if (!historyPanel || !boardEl) return;
+
+        const boardVisible = getComputedStyle(boardEl).display !== 'none';
+        if (!boardVisible) {
+          historyPanel.style.display = 'none';
+          return;
+        }
+
+        const historyStyle = getComputedStyle(historyPanel);
+        const historyWidth = parseFloat(historyStyle.width) || 320;
+        const historyRight = parseFloat(historyStyle.right) || 0;
+        const historyLeft = window.innerWidth - historyRight - historyWidth;
+
+        const boardRect = boardEl.getBoundingClientRect();
+        const gap = 24;
+        const canShow = (boardRect.right + gap) <= historyLeft;
+        historyPanel.style.display = canShow ? 'flex' : 'none';
+      }
+
+      function updateIslandVisibility() {
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (!island || !islandStatus) return;
+
+        if (canUseIslandInteractions())
+          island.style.cursor = 'pointer';
+
+        if (islandMode !== 'result') island.style.removeProperty('--result-bg');
+        island.dataset.mode = islandMode || 'hidden';
+
+        if (islandMode === 'hidden') {
+          island.classList.remove('visible');
+          island.classList.remove('expanded');
+          return;
+        }
+
+        if (islandMode === 'timer' && isHistoryPanelVisible()) {
+          island.classList.remove('visible');
+          island.classList.remove('expanded');
+          return;
+        }
+
+        island.classList.add('visible');
+        if (islandMode === 'timer' && !island.classList.contains('expanded')) {
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+        }
+      }
+
+      function startTimer(start = Date.now()) {
+        if (timerInterval) clearInterval(timerInterval);
+        timer = start;
+        ws.send("timer " + timer);
+        timerInterval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - timer) / 1000);
+          const hours = Math.floor(elapsed / 3600);
+          const mins = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+          const secs = (elapsed % 60).toString().padStart(2, '0');
+
+          let timeStr = "";
+          if (hours > 0) {
+            timeStr = `${hours}:${mins}:${secs}`;
+          } else {
+            timeStr = `${mins}:${secs}`;
+          }
+          document.getElementById('gameTimerDisplay').textContent = timeStr;
+          document.getElementById('mobileTimer').textContent = timeStr;
+          lastIslandTimeStr = timeStr;
+          const island = document.getElementById('island');
+          const islandStatus = document.getElementById('islandStatus');
+          if (island && islandStatus && island.classList.contains('visible') && islandMode === 'timer' && !island.classList.contains('expanded')) {
+            islandStatus.textContent = timeStr;
+          }
+        }, 200);
+      }
+
+      const error = document.getElementById('error');
+      error.style.display = 'none';
+      error.textContent = '';
+
+      const wsUrl = `ws${window.location.protocol === "https:" ? "s" : ""}://${window.location.host}?code=${code}`;
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log(`Connected to WebSocket with code: ${code}`);
+      };
+
+      window.addEventListener('resize', () => {
+        requestAnimationFrame(() => {
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
+        });
+      });
+
+      ws.onmessage = async (message) => {
+        const content = message.data.toString();
+        console.log(content);
+
+        if (content.startsWith("error")) {
+          const error = document.getElementById('error');
+          const codeInput = document.getElementById('codeInput');
+          error.textContent = content.replace("error ", "");
+          error.className = 'error';
+          error.style.display = 'block';
+          if (codeInput) codeInput.classList.add('error');
+          return;
+        }
+
+        if (["valid", "invalid"].includes(content))
+          return;
+
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (content.startsWith("code")) {
+          const gameCode = content.split(" ")[1];
+          currentShareCode = gameCode;
+          islandMode = 'code';
+          island.classList.remove('expanded');
+          islandStatus.textContent = `Code: ${gameCode}`;
+          updateIslandVisibility();
+
+          board.orientation('white');
+        }
+
+        if (content === "joined") {
+          islandMode = 'timer';
+          island.classList.remove('expanded');
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+          updateIslandVisibility();
+          return;
+        }
+
+        if (content === "stockfish") {
+          level = Math.max(1, Math.min(Number(localStorage.getItem("level") || "1"), 15));
+          ws.send("level " + level);
+          if (island && islandStatus) {
+            islandMode = 'timer';
+            island.classList.remove('expanded');
+            islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+            updateIslandVisibility();
+          }
+          return;
+        }
+
+        if (content === "start" || content.startsWith("code")) {
+          console.log("Game started.");
+          document.getElementById('hero').style.display = 'none';
+          document.getElementById('board').style.display = 'block';
+          updateHistoryPanelVisibility();
+          if (content === "start") {
+            islandMode = 'timer';
+            island.classList.remove('expanded');
+            islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+            updateIslandVisibility();
+          }
+          updateHistory();
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
+          return;
+        }
+
+        if (content.startsWith("position")) {
+          game.load(content.replace("position ", ""));
+          board.position(game.fen());
+          updateHistory();
+          updateHistoryPanelVisibility();
+          updateIslandVisibility();
+          return;
+        }
+
+        if (content.startsWith("history")) {
+          try {
+            const raw = content.replace("history ", "");
+            const moves = JSON.parse(raw);
+            if (Array.isArray(moves)) {
+              game = new Chess();
+              for (const m of moves) {
+                if (typeof m !== 'string') continue;
+                const from = m.slice(0, 2);
+                const to = m.slice(2, 4);
+                game.move({ from, to, promotion: 'q' });
+              }
+              viewingIndex = -1;
+              draggable = true;
+              board.position(game.fen());
+              updateHistory();
+              updateHistoryPanelVisibility();
+              updateIslandVisibility();
+            }
+          } catch { }
+          return;
+        }
+
+        if (content.startsWith("timer")) {
+          startTimer(Number(content.replace("timer ", "")));
+          return;
+        }
+
+        if (content === "win" || content === "lose" || content === "draw") {
+          if (content === "win") {
+            if (level > 0)
+              localStorage.setItem("level", Math.min(15, level + 1));
+            state = 1;
+          }
+          if (content === "lose")
+            state = 2;
+          if (content === "draw")
+            state = 3
+
+          ws.close();
+          return;
+        }
+
+        if (level > 0) {
+          islandMode = 'timer';
+          islandStatus.textContent = lastIslandTimeStr || document.getElementById('mobileTimer')?.textContent || '00:00';
+          updateIslandVisibility();
+        }
+
+        const from = content.slice(0, 2);
+        const to = content.slice(2, 4);
+
+        const moveResult = game.move({
+          from: from,
+          to: to,
+          promotion: "q"
+        });
+
+        if (moveResult !== null) {
+          if (!timer) startTimer();
+          if (viewingIndex !== -1) {
+            viewingIndex = -1;
+            draggable = true;
+          }
+
+          await new Promise(r => setTimeout(r, 100));
+          board.position(game.fen());
+          updateHistory();
+          removeHighlights();
+          $board.find('.square-' + from).addClass('highlight');
+          $board.find('.square-' + to).addClass('highlight');
+          await new Promise(r => setTimeout(r, 150));
+          draggable = true;
+        } else {
+          console.log('Invalid:', content);
+        }
+
+      };
+
+      ws.onclose = () => {
+        const error = document.getElementById('error');
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (timerInterval) clearInterval(timerInterval);
+
+        if (!game.game_over()) {
+          document.getElementById('board').style.display = 'none';
+          document.getElementById('historyPanel').style.display = 'none';
+          document.getElementById('hero').style.display = 'flex';
+          document.getElementById('container').style.display = 'flex';
+
+          if (game.history().length === 0 && error.style.display !== 'block') {
+            error.textContent = 'Connection closed.';
+            error.className = 'error';
+            error.style.display = 'block';
+          }
+        }
+
+        if (game.history().length > 0) {
+          if (state === 0) {
+            const codeInput = document.getElementById('codeInput');
+            error.textContent = 'Game ended.';
+            error.className = 'success';
+            error.style.display = 'block';
+            if (codeInput) codeInput.classList.add('success');
+            island.classList.remove('visible');
+
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 5000);
+          }
+          if (state === 1) {
+            islandMode = 'result';
+            islandStatus.textContent = 'You won!';
+            island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
+          }
+          if (state === 2) {
+            islandMode = 'result';
+            islandStatus.textContent = 'You lost!';
+            island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
+          }
+          if (state === 3) {
+            islandMode = 'result';
+            islandStatus.textContent = 'Draw!';
+            island.style.setProperty('--result-bg', '#f59e0b');
+            island.classList.remove('expanded');
+            updateIslandVisibility();
+          }
+        } else {
+          const codeInput = document.getElementById('codeInput');
+          error.textContent = 'Game not found.';
+          error.className = 'error';
+          error.style.display = 'block';
+          if (codeInput) codeInput.classList.add('error');
+          island.classList.remove('visible');
+
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 5000);
+        }
+      };
+
+      const island = document.getElementById('island');
+      let dragStartY = 0;
+      let dragDeltaY = 0;
+      let isDragging = false;
+      let dragStartedExpanded = false;
+
+      function openIsland() {
+        if (islandMode === 'code') return;
+        island.classList.add('expanded');
+      }
+
+      function closeIsland() {
+        island.classList.remove('expanded');
+      }
+
+      function setIslandDragOffset(px) {
+        island.style.transform = `translateX(-50%) translateY(${px}px)`;
+      }
+
+      function clearIslandDragOffset() {
+        island.style.transform = '';
+      }
+
+      function canUseIslandInteractions() {
+        return !isHistoryPanelVisible() && island.classList.contains('visible');
+      }
+
+      island.addEventListener('touchstart', (e) => {
+        if (!canUseIslandInteractions()) return;
+        if (!island.classList.contains('expanded')) return;
+        isDragging = true;
+        dragStartedExpanded = island.classList.contains('expanded');
+        dragStartY = e.touches[0].clientY;
+        dragDeltaY = 0;
+        island.classList.add('dragging');
+      }, { passive: true });
+
+      island.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        if (!canUseIslandInteractions()) return;
+
+        const currentY = e.touches[0].clientY;
+        dragDeltaY = currentY - dragStartY;
+
+        const moveList = document.getElementById('mobileMoveList');
+        if (dragStartedExpanded && dragDeltaY > 0 && moveList && moveList.scrollTop > 0) return;
+
+        setIslandDragOffset(Math.max(0, dragDeltaY));
+      }, { passive: true });
+
+      island.addEventListener('touchend', () => {
+        if (!isDragging) return;
+        if (!canUseIslandInteractions()) return;
+        isDragging = false;
+        island.classList.remove('dragging');
+
+        const closeThreshold = 120;
+
+        if (dragStartedExpanded && dragDeltaY > closeThreshold) {
+          closeIsland();
+        }
+
+        clearIslandDragOffset();
+      }, { passive: true });
+
+      island.addEventListener('click', (e) => {
+        if (islandMode === 'code' && currentShareCode) {
+          if (island.classList.contains('expanded')) closeIsland();
+          copyToClipboard(currentShareCode).then((ok) => {
+            if (ok) showIslandCopiedFeedback();
+          });
+          return;
+        }
+
+        if (!canUseIslandInteractions()) return;
+
+        if (!island.classList.contains('expanded')) {
+          openIsland();
+        } else if (e.target.id === 'islandHandle' || e.target.closest('#islandHandle')) {
+          closeIsland();
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!canUseIslandInteractions()) return;
+        if (!island.classList.contains('expanded')) return;
+        if (!island.contains(e.target)) closeIsland();
+      });
+
+      let selected = null;
+      let draggable = true;
+      var $board = $('#board')
+      function onDrop(source, target) {
+        if (!source) return;
+        const piece = game.get(source).type;
+        const move = game.move({
+          from: source,
+          to: target,
+          promotion: 'q'
+        });
+
+        if (target !== source && selected !== source)
+          removeMoves();
+
+        if (source == target)
+          if (selected !== source) {
+            $board.find('.square-' + selected).removeClass('highlight');
+            $board.find('.square-' + source).addClass('highlight');
+            selected = source;
+          } else {
+            $board.find('.square-' + source).removeClass('highlight');
+            removeMoves();
+            selected = null;
+          }
+
+        if (move === null) return 'snapback';
+        selected = null;
+        updateHistory();
+        removeMoves();
+
+        if (!timer)
+          startTimer();
+
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(source + target);
+        }
+
+        if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8")) || (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1')))) {
+          setTimeout(() => board.position(game.fen()), 200);
+        }
+
+        removeHighlights();
+        $board.find('.square-' + source).addClass('highlight');
+        $board.find('.square-' + target).addClass('highlight');
+        draggable = false;
+      }
+
+      var config = {
+        draggable,
+        position: 'start',
+        orientation: "black",
+        onDragStart: (source, piece, position, orientation) => {
+          board.draggable = draggable;
+          if (game.game_over() || !draggable) return false
+          if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
+            (board.orientation() === 'black' && piece.search(/^w/) !== -1)) {
+            return false
+          }
+
+          document.querySelectorAll('#board .square-55d63').forEach(square => {
+            square.addEventListener('click', (e) => {
+              if (viewingIndex !== -1) return;
+              const target = e.currentTarget.getAttribute('data-square')
+              onDrop(selected, target);
+              board.position(game.fen());
+            });
+          });
+
+          highlightPossibleMoves(source);
+        },
+        onDrop,
+        pieceTheme: (piece) => {
+          const formatted = piece.toLowerCase()
+          return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${formatted}.png`
+        }
+      };
+
+      function removeHighlights() {
+        $board.find('.square-55d63')
+          .removeClass('highlight')
+      }
+
+
+      function highlightPossibleMoves(square) {
+        removeMoves();
+
+        const moves = game.moves({
+          square: square,
+          verbose: true
+        });
+
+        moves.forEach(move => {
+          addMoves(move.to);
+        });
+      }
+
+      function addMoves(square) {
+        const squareElement = document.querySelector(`.square-${square}`);
+        if (squareElement) {
+          const highlight = document.createElement('div');
+          highlight.className = 'highlight-square';
+          squareElement.appendChild(highlight);
+        }
+      }
+
+      function removeMoves() {
+        const highlights = document.querySelectorAll('.highlight-square');
+        highlights.forEach(highlight => {
+          highlight.parentNode.removeChild(highlight);
+        });
+      }
+
+      board = Chessboard('board', config);
+      $(window).resize(board.resize);
+    }
+
+const code = window.location.pathname.substring(1).toUpperCase();
+const logoUrl = 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png';
+document.getElementById('logo').src = logoUrl;
+const favicon = document.createElement('link');
+favicon.rel = 'icon';
+favicon.href = logoUrl;
+document.head.appendChild(favicon);
+main(code);
+</script>
+</body>
+</html>

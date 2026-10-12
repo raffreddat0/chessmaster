@@ -35,11 +35,23 @@ app.get("/docs", (req, res) => {
   res.sendFile(path.join(__dirname, "docs", fileName));
 });
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "./home.html"));
+});
+
+app.get("/LAN", (req, res) => {
+  res.sendFile(path.join(__dirname, "./lan.html"));
+});
+
+app.get("/ONLINE", (req, res) => {
+  res.sendFile(path.join(__dirname, "./game.html"));
+});
+
 app.use((req, res) => {
   if (!req.accepts("html")) {
     return res.sendStatus(404);
   }
-  res.sendFile(path.join(__dirname, "./index.html"));
+  res.sendFile(path.join(__dirname, "./game.html"));
 });
 
 const server = http.createServer(app);
@@ -104,7 +116,7 @@ wss.on("connection", (ws, req) => {
     return;
   }
 
-  if (code && !games.includes(code) && code !== "ONLINE" && (!sessions[code] || sessions[code]?.length === 1)) {
+  if (code && !["ONLINE", ...games].includes(code) && (!sessions[code] || sessions[code]?.length === 1)) {
     ws.send("error");
     ws.close();
     return;

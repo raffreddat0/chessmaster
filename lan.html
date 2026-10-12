@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chess Master</title>
+  <meta name="description" content="Challenge the Future, One Move at a Time.">
+  <meta name="keywords" content="chess, scacchi, chess master, online chess, chess AI, chess strategy">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="Chess Master">
+  <meta property="og:description" content="Challenge the Future, One Move at a Time.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Chess Master">
+  <meta name="twitter:description" content="Challenge the Future, One Move at a Time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <a href="/"><img id="logo" alt="Chess Master"
+    src="https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png"></a>
+  <div class="hero-container" id="hero">
+    <h1><span class="title-top">CHESS</span><span class="title-bottom">MASTER</span></h1>
+    <p class="subtitle">?Challenge the Future, One Move at a Time?</p>
+    <div id="container"><div id="lanPanel" style="display:flex"><button id="lanConnectBtn" type="button" onclick="connectToChessMasterBle()">Connect device</button><p id="lanStatus">Select a connected Chess Master device to continue.</p></div></div>
+    <div id="footerWrap"><a id="footerAboutLink" href="/about">About</a><a id="footerCreditsLink" href="/credits">Credits</a></div>
+  </div>
+<script>
+const chessMasterBleServiceUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
+    const chessMasterBleCharacteristicUuid = '19b10001-e8f2-537e-4f6c-d104768a1214';
+    let chessMasterBleDevice = null;
+
+    function setLanStatus(message, isError = false) {
+      const status = document.getElementById('lanStatus');
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = isError ? 'var(--error)' : 'var(--text-muted)';
+    }
+
+    async function connectToChessMasterBle() {
+      const button = document.getElementById('lanConnectBtn');
+
+      if (!navigator.bluetooth) {
+        setLanStatus('Web Bluetooth is not supported by this browser.', true);
+        return;
+      }
+
+      if (!window.isSecureContext) {
+        setLanStatus('Bluetooth requires HTTPS or localhost.', true);
+        return;
+      }
+
+      try {
+        button.disabled = true;
+        setLanStatus('Choose a Chess Master device from the Bluetooth menu...');
+
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [chessMasterBleServiceUuid] }]
+        });
+
+        chessMasterBleDevice = device;
+        device.addEventListener('gattserverdisconnected', () => {
+          setLanStatus('Chess Master disconnected.', true);
+          button.disabled = false;
+        }, { once: true });
+
+        if (!device.gatt) {
+          throw new Error('GATT is not available for this device.');
+        }
+
+        setLanStatus(`Connecting to ${device.name || 'ChessMaster'}...`);
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(chessMasterBleServiceUuid);
+        const characteristic = await service.getCharacteristic(chessMasterBleCharacteristicUuid);
+        characteristic.addEventListener('characteristicvaluechanged', (event) => {
+          const message = new TextDecoder().decode(event.target.value);
+          console.log('BLE message:', message);
+        });
+        await characteristic.startNotifications();
+
+        let serviceCount = 0;
+        try {
+          const services = await server.getPrimaryServices();
+          serviceCount = services.length;
+        } catch {
+          // The device can be connected even when its services are not exposed
+          // without their UUIDs being declared as optional services.
+        }
+
+        const serviceMessage = serviceCount
+          ? ` (${serviceCount} service${serviceCount === 1 ? '' : 's'} found)`
+          : '';
+        setLanStatus(`Connected to ${device.name || 'ChessMaster'} via Bluetooth Low Energy${serviceMessage}.`);
+        button.textContent = 'Disconnect';
+        button.disabled = false;
+        button.onclick = disconnectFromChessMasterBle;
+      } catch (error) {
+        button.disabled = false;
+        if (error.name === 'NotFoundError') {
+          setLanStatus('No ChessMaster device selected.', true);
+          return;
+        }
+        setLanStatus(error.message || 'Unable to connect to ChessMaster.', true);
+      }
+    }
+
+    function disconnectFromChessMasterBle() {
+      if (chessMasterBleDevice?.gatt?.connected)
+        chessMasterBleDevice.gatt.disconnect();
+
+      chessMasterBleDevice = null;
+      const button = document.getElementById('lanConnectBtn');
+      button.textContent = 'Connect device';
+      button.onclick = connectToChessMasterBle;
+      setLanStatus('Disconnected from ChessMaster.');
+    }
+
+</script>
+</body>
+</html>
