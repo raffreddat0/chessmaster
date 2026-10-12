@@ -58,6 +58,7 @@ int redirect = 0;
 int scanning = 0;
 bool connected = false;
 int stockfish = 0;
+bool ble = false;
 
 unsigned long gap = 0;
 unsigned long timer = 0;
