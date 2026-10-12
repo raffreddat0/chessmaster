@@ -1755,6 +1755,9 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
   case 7:
     play(t, position, invalid);
     break;
+  case 8:
+    lan();
+    break;
   }
 
   delay(5);

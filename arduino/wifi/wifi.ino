@@ -6,12 +6,8 @@
 #include "led.h"
 #include "config.h"
 
-// UUID per il servizio e la caratteristica BLE
 BLEService customService("19B10000-E8F2-537E-4F6C-D104768a1214");
-BLEStringCharacteristic textCharacteristic("19B10001-E8F2-537E-4F6C-D104768a1214", BLERead | BLENotify, 20);
-
-unsigned long previousMillis = 0;
-const long interval = 1000;
+BLEStringCharacteristic textCharacteristic("19B10001-E8F2-537E-4F6C-D104768a1214", BLERead | BLEWrite | BLENotify, 20);
 
 String ssid;
 String password;
@@ -22,6 +18,7 @@ IPAddress ip;
 char auth[] = "/?auth=" AUTH;
 SoftwareSerial mySerial(2, 3);
 unsigned long last = 0;
+bool ble = false;
 
 struct Config {
   int index;
@@ -111,10 +108,6 @@ void setup() {
   customService.addCharacteristic(textCharacteristic);
   BLE.addService(customService);
 
-  textCharacteristic.writeValue("ready");
-  BLE.advertise();
-  Serial.println("BLE started...");
-
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     while (true);
@@ -131,20 +124,16 @@ void loop() {
 
   if (central) {
     Serial.println(central.address());
-
+    ble = true;
     while (central.connected()) {
+      handleBleMessages();
       handleSerial(mySerial);
       handleSerial(Serial);
       socket.loop();
       animation();
-
-      unsigned long currentMillis = millis();
-      if (currentMillis - previousMillis >= interval) {
-        previousMillis = currentMillis;
-        textCharacteristic.writeValue("ciao");
-      }
     }
 
+    ble = false;
     Serial.println("BLE device disconnected.");
   }
 
@@ -205,6 +194,17 @@ void resolveDNS() {
   }
 }
 
+void handleBleMessages() {
+  if (!textCharacteristic.written()) return;
+
+  String message = textCharacteristic.value();
+  message.trim();
+  if (message.length() == 0) return;
+
+  mySerial.println(message);
+  Serial.println(message);
+}
+
 void handleSerial(Stream &serial) {
   if (serial.available()) {
     if (WiFi.status() == WL_IDLE_STATUS && status == WL_CONNECTED) {
@@ -217,6 +217,17 @@ void handleSerial(Stream &serial) {
 
     String input = serial.readStringUntil('\n');
     input.trim();
+
+    if (input == "ble") {
+      ble = !ble;
+      if (ble) {
+        BLE.advertise();
+        Serial.println("BLE started...");
+      } else {
+        BLE.stopAdvertise();
+        Serial.println("BLE stopped...");
+      }
+    }
 
     if (input == "wifi") {
       String wifi = getWifiNetworks();
@@ -271,7 +282,8 @@ void handleSerial(Stream &serial) {
 
     if (input.startsWith("move ")) {
       String move = input.substring(5);
-      socket.sendTXT(move);
+      if (ble) textCharacteristic.writeValue(move);
+      else socket.sendTXT(move);
     }
 
     if (input.startsWith("level ")) {
@@ -284,7 +296,8 @@ void handleSerial(Stream &serial) {
     }
 
     if (input == "exit") {
-      socket.sendTXT("exit");
+      if (ble) textCharacteristic.writeValue("exit");
+      else socket.sendTXT("exit");
     }
 
   }
