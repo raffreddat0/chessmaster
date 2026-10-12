@@ -333,9 +333,9 @@
           if (island) island.style.setProperty('--result-bg', '#f59e0b');
         } else if (lowerMessage === 'exit') {
           state = 0;
-          setLanStatus('Partita terminata.');
-          islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'Game Ended';
+          sessionStorage.setItem('gameEnded', 'true');
+          window.location.href = '/';
+          return;
         }
 
         if (island) island.classList.remove('expanded');
@@ -364,6 +364,13 @@
         response,
         timestamp: now
       };
+
+      if (isValid && !timerStartedAt) {
+        startTimer();
+        sendBleMessage('timer ' + Math.floor(Date.now() / 1000)).catch((error) => {
+          console.error('BLE timer send failed:', error);
+        });
+      }
 
       sendBleMessage(response).catch((error) => {
         console.error('BLE validation response failed:', error);
@@ -395,9 +402,42 @@
       return queuedWrite;
     }
 
-    async function sendBlackMove(moveText) {
-      await sendBleMessage(moveText);
-      console.log('LAN sent move:', moveText);
+    function startTimer(start = Date.now()) {
+      if (timerInterval) clearInterval(timerInterval);
+      timerStartedAt = start;
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
+        const hours = Math.floor(elapsed / 3600);
+        const mins = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+        const secs = (elapsed % 60).toString().padStart(2, '0');
+
+        let timeStr = "";
+        if (hours > 0) {
+          timeStr = `${hours}:${mins}:${secs}`;
+        } else {
+          timeStr = `${mins}:${secs}`;
+        }
+        document.getElementById('gameTimerDisplay').textContent = timeStr;
+        lastIslandTimeStr = timeStr;
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+        if (island && islandStatus && island.classList.contains('visible') && islandMode === 'timer' && !island.classList.contains('expanded')) {
+          islandStatus.textContent = timeStr;
+        }
+      }, 200);
+    }
+
+    async function sendBlackMove(moveText, piece) {
+      const from = moveText.substring(0, 2);
+      const to = moveText.substring(2, 4);
+
+      let messageToSend = moveText;
+      if (piece) {
+        messageToSend = piece.type.toLowerCase() + moveText;
+      }
+
+      await sendBleMessage(messageToSend);
+      console.log('LAN sent move:', messageToSend);
     }
 
     function onDrop(source, target) {
@@ -419,6 +459,7 @@
       }
 
       const moveText = source + target;
+      const piece = game.get(source);
       if (!applyMove(moveText)) return 'snapback';
 
       selectedSquare = null;
@@ -431,7 +472,7 @@
         timerInterval = setInterval(updateTimer, 200);
       }
 
-      sendBlackMove(moveText).catch((error) => {
+      sendBlackMove(moveText, piece).catch((error) => {
         console.error('BLE message send failed:', error);
         game.undo();
         board.position(game.fen());
@@ -540,6 +581,7 @@
       document.getElementById('lanGame').style.display = 'flex';
       document.getElementById('board').style.display = 'block';
       islandMode = 'timer';
+
       board = Chessboard('board', {
         draggable,
         position: 'start',

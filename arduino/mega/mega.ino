@@ -41,7 +41,7 @@ void loop() {
 
         digitalWrite(cols[col], HIGH);
         M[row][col] = digitalRead(rows[row]);
-        if (M[row][col] != M0[row][col] && M0[row][col] == 1) {
+        if (M[row][col] != M0[row][col] && M0[row][col] == 1 && t == 0) {
           position[0] = char('a' + col);
           position[1] = char('1' + 7 - row);
           position[2] = '\0';
@@ -51,7 +51,7 @@ void loop() {
           moved[1] = 0;
         }
 
-        if (M[row][col] != M0[row][col] && M0[row][col] == 0 && moved[0] == 1) {
+        if (M[row][col] != M0[row][col] && M0[row][col] == 0 && moved[0] == 1 && t == 0) {
           position[2] = char('a' + col);
           position[3] = char('1' + 7 - row);
           position[4] = '\0';
@@ -71,8 +71,7 @@ void loop() {
   }
 
   if (moved[0] == 1 && moved[1] == 1) {
-    if (playing == 1 && t == 0 && (position[0] != position[2] ||
-    position[1] != position[3])) {
+    if (playing == 1 && (position[0] != position[2] || position[1] != position[3]) && t == 0) {
       // Serial.println(String(position));
       Serial1.println(String("move ") + String(position));
     } else {

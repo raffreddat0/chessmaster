@@ -61,10 +61,9 @@ int stockfish = 0;
 bool ble = false;
 
 unsigned long gap = 0;
-unsigned long timer = 0;
-unsigned long time = 0;
 char code[7] = "";
 int playing = -1;
+unsigned long timer = 0;
 
 void ditch() {
   const char *settings[] = {
@@ -925,7 +924,7 @@ void about() {
     click = 0;
     prevent = 1;
     if (items[y].page) {
-      redirect = 5;
+      redirect = 8;
       page = items[y].page;
       y = x = 0;
       y0 = x0 = 0;
@@ -951,7 +950,7 @@ void settings() {
   };
 
   const MenuItem settings[] = {
-    {"About", 5}, {"Level: ", 0}, {"Wifi", -3},
+    {"About", 8}, {"Level: ", 0}, {"Wifi", -3},
     {"Debug", -4}, {"Exit", 0}
   };
 
@@ -1109,9 +1108,20 @@ void stats() {
 }
 
 void play(int &t, char position[4], int invalid[2]) {
-  if (!connected) {
+  if (!connected && !ble) {
     page = -3;
     redirect = 7;
+    timer = 0;
+    playing = -1;
+    t = 0;
+    if (playing == 1) {
+      page = 0;
+      x = x0 = stockfish > 0 ? 0 : 1;
+      lcd.clear();
+      lcd.setCursor(3, 1);
+      lcd.print("Disconnected!");
+      delay(2500);
+    }
     lcd.clear();
     delay(100);
     return;
@@ -1167,10 +1177,7 @@ void play(int &t, char position[4], int invalid[2]) {
     playing = 1;
   }
 
-  if (ddlay(1000))
-    timer++;
-
-  unsigned long seconds = (time + (millis() - gap) - timer) / 1000;
+  unsigned long seconds = ((millis() - gap) / 1000);
   unsigned int sec = seconds % 60;
   unsigned int min = (seconds / 60) % 60;
   unsigned int hour = seconds / 3600;
@@ -1250,6 +1257,8 @@ void play(int &t, char position[4], int invalid[2]) {
       confirm = 0;
       if (x == 1) {
         x = x0 = stockfish > 0 ? 0 : 1;
+        if (ble)
+          x = x0 = 4;
         y = y0 = 0;
         page = redirect = 0;
         timer = 0;
@@ -1339,6 +1348,67 @@ void online() {
     timer = 0;
     l = 0;
     page = 7;
+    lcd.clear();
+    delay(100);
+  }
+}
+
+void lan() {
+  if (ble)
+    playing = 0;
+
+  if (playing == -1) {
+    Serial1.println("year");
+    Serial1.println("ble");
+    playing = -2;
+  }
+
+  if (playing == -2) {
+    lcd.setCursor(5, 0);
+    lcd.print("Connect to");
+    lcd.setCursor(5, 1);
+    lcd.print("Bluetooth");
+
+    if (ddlay(1000))
+      timer++;
+
+    String fullText = "www.chessmaster" + String(year) + ".lol   ";
+    int totalLength = fullText.length();
+
+    while (l < totalLength && ddlay(300)) {
+      lcd.setCursor(0, 3);
+
+      String window = "";
+      for (int j = 0; j < 20; j++) {
+        window += fullText[(l + j) % totalLength];
+      }
+
+      lcd.print(window);
+      l++;
+      l = l % totalLength;
+    }
+
+    if (click && timer > 1) {
+      playing = -1;
+      click = 0;
+      prevent = 1;
+      timer = 0;
+      x = x0 = 4;
+      y = y0 = 0;
+      l = 0;
+      page = 0;
+      input = "";
+      lcd.clear();
+      delay(100);
+    }
+  }
+
+  if (playing == 0) {
+    timer = 0;
+    l = 0;
+    page = 7;
+    lcd.clear();
+    delay(100);
   }
 }
 
@@ -1414,11 +1484,11 @@ void home() {
     delay(50);
     status = 0;
 
-    if (x > 3)
+    if (x > 4)
       x = 0;
 
     if (x < 0)
-      x = 3;
+      x = 4;
   }
 
   switch (x) {
@@ -1437,6 +1507,10 @@ void home() {
   case 3:
     lcd.setCursor(4, 1);
     lcd.print("< Settings >");
+    break;
+  case 4:
+    lcd.setCursor(4, 1);
+    lcd.print("  < Lan >   ");
     break;
   }
 
@@ -1482,18 +1556,32 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         input = "";
       }
 
-      if (input.startsWith("time ")) {
-        time = input.substring(5).toInt();
-        gap = millis();
-        input = "";
-      }
-
 
       if (input == "connected")
         connected = true;
 
       if (input == "disconnected")
         connected = false;
+
+      if (input == "ble connected")
+        ble = true;
+
+      if (input == "ble disconnected") {
+        ble = false;
+        if (page == 7) {
+          x = x0 = 4;
+          timer = 0;
+          playing = -1;
+          t = 0;
+          page = 0;
+          lcd.clear();
+          lcd.setCursor(3, 1);
+          lcd.print("Disconnected!");
+          delay(2500);
+          lcd.clear();
+          delay(100);
+        }
+      }
 
       if (page == 7) {
         int skip = 0;
@@ -1506,6 +1594,8 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
 
         if (input.startsWith("timer ")) {
           timer = input.substring(6).toInt();
+          input = "";
+          gap = millis();
           skip = 1;
         }
 
@@ -1748,7 +1838,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     settings();
     break;
   case 5:
-    about();
+    lan();
     break;
   case 6:
     credits();
@@ -1757,7 +1847,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     play(t, position, invalid);
     break;
   case 8:
-    lan();
+    about();
     break;
   }
 
@@ -1888,6 +1978,31 @@ void animation(int type) {
     case 1:
       lcd.setCursor(col, row);
       lcd.print("  +-+  ");
+      break;
+    }
+    status++;
+    break;
+
+  case 6:
+    if (!ddlay(500))
+      break;
+
+    if (status > 2)
+      status = 1;
+
+    switch (status) {
+    case 0:
+      lcd.setCursor(col, row);
+      lcd.print(" (0_0)");
+      delay(200);
+      break;
+    case 1:
+      lcd.setCursor(col, row);
+      lcd.print("\\(^_^) ");
+      break;
+    case 2:
+      lcd.setCursor(col, row);
+      lcd.print(" (^_^)\\");
       break;
     }
     status++;

@@ -136,8 +136,7 @@ wss.on("connection", (ws, req) => {
     sessions[code].push(ws);
     sessions[code][0].send("joined");
     ws.send("start");
-  } else
-    ws.send("time " + Date.now());
+  }
 
   console.log("Client connesso");
 
@@ -340,10 +339,10 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      if (message.startsWith("timer ")) {
+      if (message === "timer") {
         if (timer) return;
-        timer = Number(message.replace("timer ", ""));
-        ws.send(message);
+        timer = Date.now();
+        ws.send("timer " + Math.floor(Date.now() / 1000));
         return;
       }
 

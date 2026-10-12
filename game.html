@@ -541,7 +541,8 @@ function main(code) {
         }
 
         if (content.startsWith("timer")) {
-          startTimer(Number(content.replace("timer ", "")));
+          const timerSeconds = Number(content.replace("timer ", ""));
+          startTimer(timerSeconds * 1000);
           return;
         }
 
@@ -617,18 +618,11 @@ function main(code) {
 
         if (game.history().length > 0) {
           if (state === 0) {
-            const codeInput = document.getElementById('codeInput');
-            error.textContent = 'Game ended.';
-            error.className = 'success';
-            error.style.display = 'block';
-            if (codeInput) codeInput.classList.add('success');
-            island.classList.remove('visible');
-
-            setTimeout(() => {
-              window.location.href = '/';
-            }, 5000);
+            sessionStorage.setItem('gameEnded', 'true');
+            window.location.href = '/';
           }
           if (state === 1) {
+            draggable = false;
             islandMode = 'result';
             islandStatus.textContent = 'You won!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
@@ -636,6 +630,7 @@ function main(code) {
             updateIslandVisibility();
           }
           if (state === 2) {
+            draggable = false;
             islandMode = 'result';
             islandStatus.textContent = 'You lost!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
@@ -643,6 +638,7 @@ function main(code) {
             updateIslandVisibility();
           }
           if (state === 3) {
+            draggable = false;
             islandMode = 'result';
             islandStatus.textContent = 'Draw!';
             island.style.setProperty('--result-bg', '#f59e0b');
@@ -650,16 +646,8 @@ function main(code) {
             updateIslandVisibility();
           }
         } else {
-          const codeInput = document.getElementById('codeInput');
-          error.textContent = 'Game not found.';
-          error.className = 'error';
-          error.style.display = 'block';
-          if (codeInput) codeInput.classList.add('error');
-          island.classList.remove('visible');
-
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 5000);
+          sessionStorage.setItem('gameNotFound', 'true');
+          window.location.href = '/';
         }
       };
 

@@ -125,6 +125,9 @@ void loop() {
   if (central) {
     Serial.println(central.address());
     ble = true;
+    mySerial.println("ble connected");
+    Serial.println("ble connected");
+
     while (central.connected()) {
       handleBleMessages();
       handleSerial(mySerial);
@@ -134,7 +137,10 @@ void loop() {
     }
 
     ble = false;
-    Serial.println("BLE device disconnected.");
+    mySerial.println("ble disconnected");
+    Serial.println("ble disconnected");
+    BLE.stopAdvertise();
+    Serial.println("BLE stopped...");
   }
 
   handleSerial(mySerial);
