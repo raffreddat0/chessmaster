@@ -1,10 +1,17 @@
 #include <SoftwareSerial.h>
-#include <WiFiS3.h>
 #include <RTC.h>
 #include <WebSocketsClient.h>
 #include <EEPROM.h>
+#include <ArduinoBLE.h>
 #include "led.h"
 #include "config.h"
+
+// UUID per il servizio e la caratteristica BLE
+BLEService customService("19B10000-E8F2-537E-4F6C-D104768a1214");
+BLEStringCharacteristic textCharacteristic("19B10001-E8F2-537E-4F6C-D104768a1214", BLERead | BLENotify, 20);
+
+unsigned long previousMillis = 0;
+const long interval = 1000;
 
 String ssid;
 String password;
@@ -74,9 +81,9 @@ void syncTimeNTP() {
   if (epochTime > 0) {
     RTCTime timeToSet(epochTime);
     RTC.setTime(timeToSet);
-    Serial.println("Orologio RTC sincronizzato via NTP!");
+    Serial.println("RTC synchronized via NTP!");
   } else {
-    Serial.println("Errore sincronizzazione NTP (Timeout)");
+    Serial.println("Error NTP (Timeout)");
   }
 }
 
@@ -93,6 +100,21 @@ void setup() {
   EEPROM.get(0, config);
   loadLed();
 
+  if (!BLE.begin()) {
+    Serial.println("Errore di avvio del modulo BLE!");
+    while (true);
+  }
+
+  BLE.setLocalName("ChessMaster");
+  BLE.setDeviceName("ChessMaster");
+  BLE.setAdvertisedService(customService);
+  customService.addCharacteristic(textCharacteristic);
+  BLE.addService(customService);
+
+  textCharacteristic.writeValue("ready");
+  BLE.advertise();
+  Serial.println("BLE started...");
+
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     while (true);
@@ -105,6 +127,27 @@ void setup() {
 }
 
 void loop() {
+  BLEDevice central = BLE.central();
+
+  if (central) {
+    Serial.println(central.address());
+
+    while (central.connected()) {
+      handleSerial(mySerial);
+      handleSerial(Serial);
+      socket.loop();
+      animation();
+
+      unsigned long currentMillis = millis();
+      if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
+        textCharacteristic.writeValue("ciao");
+      }
+    }
+
+    Serial.println("BLE device disconnected.");
+  }
+
   handleSerial(mySerial);
   handleSerial(Serial);
 

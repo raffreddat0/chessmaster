@@ -324,6 +324,54 @@
       box-shadow: none;
     }
 
+    #modeChoices {
+      display: none;
+      gap: 0.5rem;
+      width: 100%;
+    }
+
+    #modeChoices button {
+      flex: 1;
+      background-color: #16181c;
+      border-color: #25282D;
+      box-shadow: #25282D 0 -2px 0 0 inset, rgba(0, 0, 0, 0.4) 0 1px 3px 0;
+    }
+
+    #modeChoices button:hover {
+      background-color: #25282D;
+      box-shadow: none;
+    }
+
+    #lanPanel {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      text-align: center;
+    }
+
+    #lanStatus {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      min-height: 1.3em;
+    }
+
+    #lanDevice {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    #lanConnectBtn {
+      background-color: #16181c;
+      border-color: #25282D;
+      box-shadow: #25282D 0 -2px 0 0 inset, rgba(0, 0, 0, 0.4) 0 1px 3px 0;
+    }
+
+    #lanConnectBtn:hover {
+      background-color: #25282D;
+      box-shadow: none;
+    }
+
     #enterGameLabel {
       position: relative;
     }
@@ -840,6 +888,15 @@
         </svg>
         <span id="enterGameLabel">Enter Game</span>
       </button>
+      <div id="modeChoices">
+        <button type="button" onclick="window.location.href = '/ONLINE'">Online</button>
+        <button type="button" onclick="window.location.href = '/LAN'">Lan</button>
+      </div>
+      <div id="lanPanel">
+        <div id="lanDevice">Chess Master BLE</div>
+        <p id="lanStatus">Select a connected Chess Master device to continue.</p>
+        <button id="lanConnectBtn" type="button" onclick="connectToChessMasterBle()">Connect device</button>
+      </div>
     </div>
     <div id="footerWrap">
       <a id="footerAboutLink" href="/about">About</a>
@@ -1690,11 +1747,14 @@
     async function connectWithCode() {
       const codeInput = document.getElementById('codeInput');
       const error = document.getElementById('error');
+      const enterGameButton = document.getElementById('enterGameBtn');
+      const modeChoices = document.getElementById('modeChoices');
       if (!codeInput) return;
 
       let code = codeInput.value.trim();
       if (!code) {
-        window.location.href = "/ONLINE";
+        enterGameButton.style.display = 'none';
+        modeChoices.style.display = 'flex';
         return;
       }
       code = code.toUpperCase();
@@ -1734,6 +1794,94 @@
         }
         codeInput.classList.add('error');
       }
+    }
+
+    let chessMasterBleDevice = null;
+
+    function setLanStatus(message, isError = false) {
+      const status = document.getElementById('lanStatus');
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = isError ? 'var(--error)' : 'var(--text-muted)';
+    }
+
+    async function connectToChessMasterBle() {
+      const button = document.getElementById('lanConnectBtn');
+
+      if (!navigator.bluetooth) {
+        setLanStatus('Web Bluetooth is not supported by this browser.', true);
+        return;
+      }
+
+      if (!window.isSecureContext) {
+        setLanStatus('Bluetooth requires HTTPS or localhost.', true);
+        return;
+      }
+
+      try {
+        button.disabled = true;
+        setLanStatus('Choose a Chess Master device from the Bluetooth menu...');
+
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: ['19b10000-e8f2-537e-4f6c-d104768a1214'] }]
+        });
+
+        chessMasterBleDevice = device;
+        device.addEventListener('gattserverdisconnected', () => {
+          setLanStatus('Chess Master disconnected.', true);
+          button.disabled = false;
+        }, { once: true });
+
+        if (!device.gatt) {
+          throw new Error('GATT is not available for this device.');
+        }
+
+        setLanStatus(`Connecting to ${device.name || 'ChessMaster'}...`);
+        const server = await device.gatt.connect();
+        let serviceCount = 0;
+        try {
+          const services = await server.getPrimaryServices();
+          serviceCount = services.length;
+        } catch {
+          // The device can be connected even when its services are not exposed
+          // without their UUIDs being declared as optional services.
+        }
+
+        document.getElementById('lanDevice').textContent = device.name || 'ChessMaster';
+        const serviceMessage = serviceCount
+          ? ` (${serviceCount} service${serviceCount === 1 ? '' : 's'} found)`
+          : '';
+        setLanStatus(`Connected to ${device.name || 'ChessMaster'} via Bluetooth Low Energy${serviceMessage}.`);
+        button.textContent = 'Disconnect';
+        button.disabled = false;
+        button.onclick = disconnectFromChessMasterBle;
+      } catch (error) {
+        button.disabled = false;
+        if (error.name === 'NotFoundError') {
+          setLanStatus('No ChessMaster device selected.', true);
+          return;
+        }
+        setLanStatus(error.message || 'Unable to connect to ChessMaster.', true);
+      }
+    }
+
+    function disconnectFromChessMasterBle() {
+      if (chessMasterBleDevice?.gatt?.connected)
+        chessMasterBleDevice.gatt.disconnect();
+
+      chessMasterBleDevice = null;
+      const button = document.getElementById('lanConnectBtn');
+      button.textContent = 'Connect device';
+      button.onclick = connectToChessMasterBle;
+      setLanStatus('Disconnected from ChessMaster.');
+    }
+
+    function setupLanMode() {
+      document.getElementById('container').style.display = 'flex';
+      document.querySelector('#container .input-group').style.display = 'none';
+      document.getElementById('enterGameBtn').style.display = 'none';
+      document.getElementById('modeChoices').style.display = 'none';
+      document.getElementById('lanPanel').style.display = 'flex';
     }
 
     function setRandomFavicon() {
@@ -1780,6 +1928,8 @@
     function setupEnterGameTyping() {
       const input = document.getElementById('codeInput');
       const label = document.getElementById('enterGameLabel');
+      const enterGameButton = document.getElementById('enterGameBtn');
+      const modeChoices = document.getElementById('modeChoices');
       if (!input || !label) return;
 
       const phrases = [
@@ -1938,6 +2088,8 @@
       input.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
         if (hasInput()) {
+          enterGameButton.style.display = 'flex';
+          modeChoices.style.display = 'none';
           if (initialHold && label.textContent === defaultText) {
             if (startupTimeoutId) {
               clearTimeout(startupTimeoutId);
@@ -1972,6 +2124,8 @@
 
     if (param) {
       window.location.href = "/" + param.toUpperCase();
+    } else if (code === 'LAN') {
+      setupLanMode();
     } else if (code && code !== "") {
       main(code);
     } else {
