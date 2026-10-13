@@ -419,6 +419,7 @@
       width: min(70vh, 92vw);
       max-width: min(70vh, 92vw);
       display: none;
+      margin: auto;
       box-shadow:
         0 20px 50px -12px rgba(0, 0, 0, 0.8),
         0 10px 20px -5px rgba(0, 0, 0, 0.5);
@@ -427,8 +428,10 @@
     #lanGame {
       width: 100%;
       min-height: 100vh;
+      display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
     }
 
     #historyPanel {
