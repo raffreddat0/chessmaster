@@ -153,7 +153,7 @@ self.addEventListener('fetch', (event) => {
       return response;
     }).catch(() => {
       if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
-        return caches.match('/home.html').then((cachedResponse) => {
+        return caches.match(request).then((cachedResponse) => {
           if (cachedResponse) {
             return new Response(cachedResponse.body, {
               status: cachedResponse.status,
@@ -161,7 +161,16 @@ self.addEventListener('fetch', (event) => {
               headers: cachedResponse.headers,
             });
           }
-          return new Response('Page Not Found', { status: 404 });
+          return caches.match('/home.html').then((homeResponse) => {
+            if (homeResponse) {
+              return new Response(homeResponse.body, {
+                status: homeResponse.status,
+                statusText: homeResponse.statusText,
+                headers: homeResponse.headers,
+              });
+            }
+            return new Response('Page Not Found', { status: 404 });
+          });
         });
       }
       return caches.match(request).then((cachedAsset) => {
