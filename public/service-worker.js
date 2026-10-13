@@ -77,6 +77,22 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
+  if (url.pathname === '/service-worker.js' || url.pathname === '/manifest.json') {
+    return event.respondWith(
+      fetch(request).then((response) => {
+        if (response && response.status === 200) {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, clonedResponse);
+          });
+        }
+        return response;
+      }).catch(() => {
+        return caches.match(request) || new Response('Resource Not Available', { status: 503 });
+      })
+    );
+  }
+
   if (url.pathname.startsWith('/api') || url.pathname === '/') {
     return event.respondWith(fetch(request).catch(() => {
       return caches.match(request) || new Response('Offline', { status: 503 });
