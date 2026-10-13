@@ -113,7 +113,7 @@ self.addEventListener('fetch', (event) => {
   if (OFFLINE_PAGES.has(url.pathname) || url.pathname === '/') {
     return event.respondWith(
       fetch(request).then((response) => {
-        if (isSafari && response && response.redirected) {
+        if (response && response.redirected) {
           return fetch(response.url);
         }
 
@@ -125,9 +125,18 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() => {
-        return caches.match(request) || new Response('Offline - Page Not Available', {
-          status: 503,
-          headers: { 'Content-Type': 'text/plain' }
+        return caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return new Response(cachedResponse.body, {
+              status: cachedResponse.status,
+              statusText: cachedResponse.statusText,
+              headers: cachedResponse.headers,
+            });
+          }
+          return new Response('Offline - Page Not Available', {
+            status: 503,
+            headers: { 'Content-Type': 'text/plain' }
+          });
         });
       })
     );
@@ -144,16 +153,16 @@ self.addEventListener('fetch', (event) => {
       return response;
     }).catch(() => {
       if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
-        if (isSafari) {
-          return caches.match(request).then((cached) => {
-            if (cached) return cached;
-            return new Response('Offline - Page Not Available', {
-              status: 503,
-              headers: { 'Content-Type': 'text/plain' }
+        return caches.match('/home.html').then((cachedResponse) => {
+          if (cachedResponse) {
+            return new Response(cachedResponse.body, {
+              status: cachedResponse.status,
+              statusText: cachedResponse.statusText,
+              headers: cachedResponse.headers,
             });
-          });
-        }
-        return caches.match('/home.html') || new Response('Page Not Found', { status: 404 });
+          }
+          return new Response('Page Not Found', { status: 404 });
+        });
       }
       return caches.match(request).then((cachedAsset) => {
         return cachedAsset || new Response('Resource Not Available Offline', { status: 503 });
