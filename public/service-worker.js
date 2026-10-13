@@ -58,6 +58,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  const userAgent = request.headers.get('user-agent') || '';
+  const isSafari = /safari/i.test(userAgent) && !/chrome|chromium|edg/i.test(userAgent);
+
   if (request.method !== 'GET') {
     return;
   }
@@ -94,7 +97,14 @@ self.addEventListener('fetch', (event) => {
   if (OFFLINE_PAGES.has(url.pathname) || url.pathname === '/') {
     return event.respondWith(
       caches.match(request).then((cachedResponse) => {
-        return cachedResponse || fetch(request).then((response) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(request).then((response) => {
+          if (isSafari && response && response.redirected) {
+            return fetch(response.url);
+          }
+
           if (response && response.status === 200) {
             const clonedResponse = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
