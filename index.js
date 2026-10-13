@@ -39,6 +39,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "./home.html"));
 });
 
+app.get("/home.html", (req, res) => {
+  res.redirect("/");
+});
+
 app.get("/LOCAL", (req, res) => {
   res.sendFile(path.join(__dirname, "./local.html"));
 });
