@@ -639,6 +639,21 @@
       document.getElementById('island').classList.remove('expanded');
     }
 
+    // Island event listeners (setup once at page load, not in startLanGame)
+    document.getElementById('island').addEventListener('click', (event) => {
+      if (event.target.closest('#islandHandle') || event.target.closest('#islandCollapsed')) {
+        const island = document.getElementById('island');
+        island.classList.contains('expanded') ? closeIsland() : openIsland();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const island = document.getElementById('island');
+      if (island && !island.contains(e.target)) {
+        closeIsland();
+      }
+    });
+
     function startLanGame() {
       document.getElementById('connectPanel').style.display = 'none';
       document.getElementById('lanGame').style.display = 'flex';
@@ -670,19 +685,6 @@
       $(window).resize(() => board.resize());
       updateHistory();
       window.addEventListener('resize', updateResponsiveHistory);
-      document.getElementById('island').addEventListener('click', (event) => {
-        if (event.target.closest('#islandHandle') || event.target.closest('#islandCollapsed')) {
-          const island = document.getElementById('island');
-          island.classList.contains('expanded') ? closeIsland() : openIsland();
-        }
-      });
-
-      document.addEventListener('click', (e) => {
-        const island = document.getElementById('island');
-        if (island && !island.contains(e.target)) {
-          closeIsland();
-        }
-      });
 
       updateResponsiveHistory();
 
