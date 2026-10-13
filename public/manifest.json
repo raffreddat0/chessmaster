@@ -1,0 +1,29 @@
+{
+  "name": "Chess Master",
+  "short_name": "Chess Master",
+  "description": "Play chess online or with Bluetooth devices locally",
+  "start_url": "/home.html",
+  "display": "standalone",
+  "background_color": "#0c0c0c",
+  "theme_color": "#6b46d8",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
+      "sizes": "150x150",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "games"
+  ],
+  "screenshots": [
+    {
+      "src": "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
+      "sizes": "540x720",
+      "type": "image/png"
+    }
+  ]
+}

@@ -11,6 +11,17 @@
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
     rel="stylesheet">
 
+  <meta name="theme-color" content="#6b46d8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .catch(err => console.warn('Service Worker error:', err));
+    }
+  </script>
+
   <style>
     :root {
       --bg-color: #0c0c0c;
@@ -277,7 +288,7 @@
     function setRandomFavicon() {
       const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
       const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
-      const faviconUrl = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${randomPiece}.png`;
+      const faviconUrl = `/pieces/${randomPiece}.png`;
 
       const link = document.createElement('link');
       link.rel = 'icon';

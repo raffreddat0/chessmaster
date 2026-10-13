@@ -282,6 +282,14 @@
       box-shadow: none;
     }
 
+    button:disabled {
+      pointer-events: none;
+    }
+
+    button:disabled:active {
+      transform: none;
+    }
+
     #modeChoices {
       display: none;
       gap: 0.5rem;

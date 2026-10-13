@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chess Master</title>
   <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#6b46d8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .catch(err => console.warn('Service Worker error:', err));
+    }
+  </script>
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
     integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"
@@ -22,12 +32,12 @@
 <body>
   <div class="bg-pattern"></div>
   <a href="/"><img id="logo" alt="Chess Master"
-      src="https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png"></a>
+      src="/pieces/wk.png"></a>
 
   <div id="loadingScreen"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:500; flex-direction:column; align-items:center; justify-content:center;">
     <img id="loadingLogo" alt="Loading" style="width:100px; height:100px;"
-      src="https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png">
+      src="/pieces/wk.png">
   </div>
 
   <div class="hero-container" id="connectPanel">
@@ -92,7 +102,7 @@
   <script>
     const chessMasterBleServiceUuid = '19b10000-e8f2-537e-4f6c-d104768a1214';
     const chessMasterBleCharacteristicUuid = '19b10001-e8f2-537e-4f6c-d104768a1214';
-    const logoUrl = 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png';
+    const logoUrl = '/pieces/wk.png';
     const decoder = new TextDecoder();
     let chessMasterBleDevice = null;
     let chessMasterBleCharacteristic = null;
@@ -156,7 +166,7 @@
 
       if (loadingLogo) {
         loadingLogo.logoAnimationInterval = setInterval(() => {
-          loadingLogo.src = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${pieces[index]}.png`;
+          loadingLogo.src = `/pieces/${pieces[index]}.png`;
           index = (index + 1) % pieces.length;
         }, 300);
       }
@@ -652,7 +662,7 @@
         onDrop,
         onSnapEnd: () => board.position(game.fen()),
         pieceTheme: (piece) =>
-          `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${piece.toLowerCase()}.png`
+          `/pieces/${piece.toLowerCase()}.png`
       });
       $(window).resize(() => board.resize());
       updateHistory();

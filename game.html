@@ -814,7 +814,7 @@ function main(code) {
         onDrop,
         pieceTheme: (piece) => {
           const formatted = piece.toLowerCase()
-          return `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${formatted}.png`
+          return `/pieces/${formatted}.png`
         }
       };
 
@@ -858,7 +858,7 @@ function main(code) {
     }
 
 const code = window.location.pathname.substring(1).toUpperCase();
-const logoUrl = 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png';
+const logoUrl = '/pieces/wk.png';
 document.getElementById('logo').src = logoUrl;
 const favicon = document.createElement('link');
 favicon.rel = 'icon';

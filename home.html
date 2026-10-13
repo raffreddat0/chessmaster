@@ -20,6 +20,16 @@
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <meta name="theme-color" content="#6b46d8">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .catch(err => console.warn('Service Worker error:', err));
+    }
+  </script>
 </head>
 
 <body>
@@ -40,7 +50,7 @@
           stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
         </svg><span id="enterGameLabel">Enter Game</span></button>
-      <div id="modeChoices"><button type="button" onclick="window.location.href = '/ONLINE'">ONLINE</button><button
+      <div id="modeChoices"><button id="onlineBtn" type="button" onclick="window.location.href = '/ONLINE'">ONLINE</button><button
           type="button" onclick="window.location.href = '/LOCAL'">LOCAL</button></div>
     </div>
     <div id="footerWrap"><a id="footerAboutLink" href="/about">About</a><a id="footerCreditsLink"
@@ -68,6 +78,15 @@
 
       if (code.length !== 6) {
         error.textContent = 'Invalid code length.';
+        error.className = 'error';
+        error.style.display = 'block';
+        codeInput.classList.add('error');
+        return;
+      }
+
+      // Controlla se offline
+      if (!navigator.onLine) {
+        error.textContent = 'OFFLINE';
         error.className = 'error';
         error.style.display = 'block';
         codeInput.classList.add('error');
@@ -102,7 +121,7 @@
     function setRandomFavicon() {
       const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
       const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
-      const faviconUrl = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${randomPiece}.png`;
+      const faviconUrl = `/pieces/${randomPiece}.png`;
 
       const link = document.createElement('link');
       link.rel = 'icon';
@@ -333,6 +352,26 @@
     }
 
     setupEnterGameTyping();
+
+    // Gestisci stato offline/online
+    const updateOnlineStatus = () => {
+      const onlineBtn = document.getElementById('onlineBtn');
+      if (onlineBtn) {
+        if (!navigator.onLine) {
+          onlineBtn.disabled = true;
+          onlineBtn.style.opacity = '0.5';
+          onlineBtn.style.cursor = 'not-allowed';
+        } else {
+          onlineBtn.disabled = false;
+          onlineBtn.style.opacity = '1';
+          onlineBtn.style.cursor = 'pointer';
+        }
+      }
+    };
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
 
     if (sessionStorage.getItem('gameEnded')) {
       const error = document.getElementById('error');
