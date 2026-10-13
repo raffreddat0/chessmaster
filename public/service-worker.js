@@ -96,23 +96,18 @@ self.addEventListener('fetch', (event) => {
 
   if (OFFLINE_PAGES.has(url.pathname) || url.pathname === '/') {
     return event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
+      fetch(request).then((response) => {
+        if (isSafari && response && response.redirected) {
+          return fetch(response.url);
         }
-        return fetch(request).then((response) => {
-          if (isSafari && response && response.redirected) {
-            return fetch(response.url);
-          }
 
-          if (response && response.status === 200) {
-            const clonedResponse = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, clonedResponse);
-            });
-          }
-          return response;
-        });
+        if (response && response.status === 200) {
+          const clonedResponse = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, clonedResponse);
+          });
+        }
+        return response;
       }).catch(() => {
         return caches.match(request) || new Response('Offline - Page Not Available', {
           status: 503,
@@ -123,19 +118,25 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      return cachedResponse || fetch(request).then((response) => {
-        if (response && response.status === 200) {
-          const clonedResponse = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, clonedResponse);
+    fetch(request).then((response) => {
+      if (response && response.status === 200) {
+        const clonedResponse = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, clonedResponse);
+        });
+      }
+      return response;
+    }).catch(() => {
+      if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
+        if (isSafari) {
+          return caches.match('/home.html').then((homePage) => {
+            return homePage || new Response('Page Not Found', { status: 404 });
           });
         }
-        return response;
-      }).catch(() => {
-        if (url.pathname.endsWith('.html') || !url.pathname.includes('.'))
-          return caches.match('/home.html') || new Response('Page Not Found', { status: 404 });
-        return new Response('Resource Not Available Offline', { status: 503 });
+        return caches.match('/home.html') || new Response('Page Not Found', { status: 404 });
+      }
+      return caches.match(request).then((cachedAsset) => {
+        return cachedAsset || new Response('Resource Not Available Offline', { status: 503 });
       });
     })
   );
