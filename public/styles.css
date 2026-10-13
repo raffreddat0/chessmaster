@@ -48,6 +48,7 @@
       color: var(--text-main);
       min-height: 100vh;
       display: flex;
+      padding-top: env(safe-area-inset-top);
       flex-direction: column;
       align-items: center;
       justify-content: center;
