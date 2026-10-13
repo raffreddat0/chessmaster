@@ -224,14 +224,14 @@
           const item = document.createElement('span');
           item.className = 'move-item';
           item.textContent = move.from + move.to;
-          item.onclick = () => showPastMove(i + offset);
+          item.onclick = () => { showPastMove(i + offset); closeIsland(); };
           if (viewingIndex === i + offset + 1 ||
             (viewingIndex === -1 && i + offset + 1 === history.length)) {
             item.classList.add('active');
           }
           moveList.appendChild(item);
           const mobileItem = item.cloneNode(true);
-          mobileItem.onclick = () => showPastMove(i + offset);
+          mobileItem.onclick = () => { showPastMove(i + offset); closeIsland(); };
           mobileMoveList.appendChild(mobileItem);
         });
       }
@@ -281,16 +281,19 @@
       board.position(game.fen());
       updateHistory();
       draggable = true;
+      closeIsland();
     }
 
     function prevMove() {
       const historyLength = game.history().length;
       showPastMove(Math.max(0, (viewingIndex === -1 ? historyLength : viewingIndex) - 1));
+      closeIsland();
     }
 
     function nextMove() {
       const historyLength = game.history().length;
       if (viewingIndex !== -1 && viewingIndex < historyLength) showPastMove(viewingIndex + 1);
+      closeIsland();
     }
 
     function toggleAutoPlay() {
@@ -673,6 +676,14 @@
           island.classList.contains('expanded') ? closeIsland() : openIsland();
         }
       });
+
+      document.addEventListener('click', (e) => {
+        const island = document.getElementById('island');
+        if (island && !island.contains(e.target)) {
+          closeIsland();
+        }
+      });
+
       updateResponsiveHistory();
 
       // Hide loading screen once board is ready
