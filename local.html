@@ -676,7 +676,6 @@
           highlightPossibleMoves(source);
         },
         onDrop,
-        onSnapEnd: () => board.position(game.fen()),
         pieceTheme: (piece) =>
           `/pieces/${piece.toLowerCase()}.png`
       });

@@ -779,7 +779,7 @@ function main(code) {
         }
 
         if ((source === "e1" && (target === "g1" || target === "c1")) || (source === "e8" && (target === "g8" || target === "c8")) || (piece === 'p' && ((source[1] === '7' && target[1] === '8') || (source[1] === '2' && target[1] === '1')))) {
-          setTimeout(() => board.position(game.fen()), 200);
+          board.position(game.fen());
         }
 
         removeHighlights();
