@@ -109,6 +109,7 @@
     let game = new Chess();
     let state = 0;
     let draggable = true;
+    let isDragging = false;
     let selectedSquare = null;
     let viewingIndex = -1;
     let autoPlayInterval = null;
@@ -533,6 +534,11 @@
         timerInterval = setInterval(updateTimer, 200);
       }
 
+      if (!isDragging) {
+        board.position(game.fen());
+      }
+      isDragging = false;
+
       sendBlackMove(moveText, piece).catch((error) => {
         console.error('BLE message send failed:', error);
         game.undo();
@@ -663,11 +669,13 @@
         position: 'start',
         orientation: 'black',
         onDragStart: (source, piece) => {
+          isDragging = true;
           board.draggable = draggable;
           if (!draggable || game.game_over() || game.turn() !== 'b' || piece.search(/^w/) !== -1) return false;
           document.querySelectorAll('#board .square-55d63').forEach((square) => {
             square.addEventListener('click', (event) => {
               if (viewingIndex !== -1 || !selectedSquare) return;
+              isDragging = false;
               const target = event.currentTarget.getAttribute('data-square');
               onDrop(selectedSquare, target);
             }, { once: true });

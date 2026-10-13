@@ -744,6 +744,7 @@ function main(code) {
 
       let selected = null;
       let draggable = true;
+      let isDragging = false;
       var $board = $('#board')
       function onDrop(source, target) {
         if (!source) return;
@@ -780,12 +781,15 @@ function main(code) {
           ws.send(source + target);
         }
 
-        board.position(game.fen());
+        if (!isDragging) {
+          board.position(game.fen());
+        }
 
         removeHighlights();
         $board.find('.square-' + source).addClass('highlight');
         $board.find('.square-' + target).addClass('highlight');
         draggable = false;
+        isDragging = false;
       }
 
       var config = {
@@ -793,6 +797,7 @@ function main(code) {
         position: 'start',
         orientation: "black",
         onDragStart: (source, piece, position, orientation) => {
+          isDragging = true;
           board.draggable = draggable;
           if (game.game_over() || !draggable) return false
           if ((board.orientation() === 'white' && piece.search(/^b/) !== -1) ||
@@ -804,6 +809,7 @@ function main(code) {
             square.addEventListener('click', (e) => {
               if (viewingIndex !== -1) return;
               const target = e.currentTarget.getAttribute('data-square')
+              isDragging = false;
               onDrop(selected, target);
             });
           });
