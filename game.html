@@ -584,7 +584,9 @@ function main(code) {
           }
 
           await new Promise(r => setTimeout(r, 100));
-          board.position(game.fen());
+          if (board.fen() !== game.fen()) {
+            board.position(game.fen());
+          }
           updateHistory();
           removeHighlights();
           $board.find('.square-' + from).addClass('highlight');
@@ -805,7 +807,6 @@ function main(code) {
               if (viewingIndex !== -1) return;
               const target = e.currentTarget.getAttribute('data-square')
               onDrop(selected, target);
-              board.position(game.fen());
             });
           });
 

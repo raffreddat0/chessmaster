@@ -670,7 +670,6 @@
               if (viewingIndex !== -1 || !selectedSquare) return;
               const target = event.currentTarget.getAttribute('data-square');
               onDrop(selectedSquare, target);
-              board.position(game.fen());
             }, { once: true });
           });
           highlightPossibleMoves(source);
