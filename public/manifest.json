@@ -10,7 +10,7 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
+      "src": "/pieces/wk.png",
       "sizes": "150x150",
       "type": "image/png",
       "purpose": "any"
@@ -21,7 +21,7 @@
   ],
   "screenshots": [
     {
-      "src": "https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png",
+      "src": "/pieces/wk.png",
       "sizes": "540x720",
       "type": "image/png"
     }

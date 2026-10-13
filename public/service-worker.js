@@ -145,8 +145,12 @@ self.addEventListener('fetch', (event) => {
     }).catch(() => {
       if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
         if (isSafari) {
-          return caches.match('/home.html').then((homePage) => {
-            return homePage || new Response('Page Not Found', { status: 404 });
+          return caches.match(request).then((cached) => {
+            if (cached) return cached;
+            return new Response('Offline - Page Not Available', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain' }
+            });
           });
         }
         return caches.match('/home.html') || new Response('Page Not Found', { status: 404 });
