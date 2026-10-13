@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chess Master LAN</title>
+  <title>Chess Master</title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css"
     integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
@@ -24,9 +24,15 @@
   <a href="/"><img id="logo" alt="Chess Master"
       src="https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png"></a>
 
+  <div id="loadingScreen"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:500; flex-direction:column; align-items:center; justify-content:center;">
+    <img id="loadingLogo" alt="Loading" style="width:100px; height:100px;"
+      src="https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png">
+  </div>
+
   <div class="hero-container" id="connectPanel">
     <h1><span class="title-top">CHESS</span><span class="title-bottom">MASTER</span></h1>
-    <p class="subtitle">LAN chess</p>
+    <p class="subtitle">"Challenge the Future, One Move at a Time."/p>
     <div id="container">
       <div id="lanPanel" style="display:flex">
         <button id="lanConnectBtn" type="button" onclick="connectToChessMasterBle()">Connect device</button>
@@ -120,6 +126,50 @@
       }
     }
 
+    function showLoadingScreen() {
+      const connectPanel = document.getElementById('connectPanel');
+      const logo = document.getElementById('logo');
+      const loadingScreen = document.getElementById('loadingScreen');
+
+      if (connectPanel) connectPanel.style.display = 'none';
+      if (logo) logo.style.display = 'none';
+      if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+        startLogoAnimation();
+      }
+    }
+
+    function hideLoadingScreen() {
+      const logo = document.getElementById('logo');
+      const loadingScreen = document.getElementById('loadingScreen');
+      if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+        stopLogoAnimation();
+      }
+      if (logo) logo.style.display = '';
+    }
+
+    function startLogoAnimation() {
+      const pieces = ['wk', 'wq', 'wr', 'wb', 'wn', 'wp'];
+      let index = 0;
+      const loadingLogo = document.getElementById('loadingLogo');
+
+      if (loadingLogo) {
+        loadingLogo.logoAnimationInterval = setInterval(() => {
+          loadingLogo.src = `https://images.chesscomfiles.com/chess-themes/pieces/neo/150/${pieces[index]}.png`;
+          index = (index + 1) % pieces.length;
+        }, 300);
+      }
+    }
+
+    function stopLogoAnimation() {
+      const loadingLogo = document.getElementById('loadingLogo');
+      if (loadingLogo && loadingLogo.logoAnimationInterval) {
+        clearInterval(loadingLogo.logoAnimationInterval);
+        loadingLogo.logoAnimationInterval = null;
+      }
+    }
+
     function applyMove(moveText) {
       try {
         const moveResult = game.move({
@@ -129,7 +179,7 @@
         });
 
         if (!moveResult) throw new Error('invalid');
-        console.log('LAN valid:', moveText);
+        console.log('BLE valid:', moveText);
 
         board.position(game.fen());
         removeMoves();
@@ -140,7 +190,7 @@
         updateHistory();
         return true;
       } catch (error) {
-        console.log('LAN invalid:', moveText);
+        console.log('BLE invalid:', moveText);
         board.position(game.fen());
         return false;
       }
@@ -285,7 +335,7 @@
       if (consumePendingBleEcho(lowerMessage)) return;
 
       if (lowerMessage === 'valid' || lowerMessage === 'invalid') {
-        console.log('LAN BLE response:', lowerMessage);
+        console.log('BLE response:', lowerMessage);
         return;
       }
 
@@ -345,7 +395,7 @@
 
       const move = parseBleMove(lowerMessage);
       if (!move) return;
-      console.log('LAN BLE move:', move);
+      console.log('BLE move:', move);
 
       const now = Date.now();
       if (lastBleValidation &&
@@ -437,7 +487,7 @@
       }
 
       await sendBleMessage(messageToSend);
-      console.log('LAN sent move:', messageToSend);
+      console.log('BLE sent move:', messageToSend);
     }
 
     function onDrop(source, target) {
@@ -614,6 +664,9 @@
         }
       });
       updateResponsiveHistory();
+
+      // Hide loading screen once board is ready
+      hideLoadingScreen();
     }
 
     async function connectToChessMasterBle() {
@@ -633,8 +686,13 @@
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [chessMasterBleServiceUuid] }]
         });
+
+        // Show loading screen IMMEDIATELY after device selection
+        showLoadingScreen();
+
         chessMasterBleDevice = device;
         device.addEventListener('gattserverdisconnected', () => {
+          hideLoadingScreen();
           setLanStatus('Chess Master disconnected.', true);
           button.disabled = false;
         }, { once: true });
@@ -652,12 +710,13 @@
         };
         chessMasterBleCharacteristic.addEventListener('characteristicvaluechanged', bleNotificationHandler);
         await chessMasterBleCharacteristic.startNotifications();
-        setLanStatus(`Connected to ${device.name || 'ChessMaster'} via Bluetooth Low Energy.`);
+
         startLanGame();
       } catch (error) {
         button.disabled = false;
+        hideLoadingScreen();
         if (error.name === 'NotFoundError') {
-          setLanStatus('No ChessMaster device selected.', true);
+          setLanStatus('No ChessMaster device selected.');
           return;
         }
         setLanStatus(error.message || 'Unable to connect to ChessMaster.', true);

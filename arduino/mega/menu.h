@@ -1245,7 +1245,7 @@ void play(int &t, char position[4], int invalid[2]) {
     }
   }
 
-  if (click && timer > 1) {
+  if (click) {
     click = 0;
     prevent = 1;
     lcd.clear();
@@ -1353,7 +1353,7 @@ void online() {
   }
 }
 
-void lan() {
+void local() {
   if (ble)
     playing = 0;
 
@@ -1494,7 +1494,7 @@ void home() {
   switch (x) {
   case 0:
     lcd.setCursor(4, 1);
-    lcd.print("  < Play >  ");
+    lcd.print(" < Play >   ");
     break;
   case 1:
     lcd.setCursor(4, 1);
@@ -1510,7 +1510,7 @@ void home() {
     break;
   case 4:
     lcd.setCursor(4, 1);
-    lcd.print("  < Lan >   ");
+    lcd.print(" < Local >  ");
     break;
   }
 
@@ -1838,7 +1838,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     settings();
     break;
   case 5:
-    lan();
+    local();
     break;
   case 6:
     credits();

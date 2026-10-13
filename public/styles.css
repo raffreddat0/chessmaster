@@ -286,6 +286,11 @@
       display: none;
       gap: 0.5rem;
       width: 100%;
+      animation: splitIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #modeChoices.merging {
+      animation: mergeOut 0.4s cubic-bezier(0.66, 0.0, 0.36, 0.0);
     }
 
     #modeChoices button {
@@ -293,11 +298,60 @@
       background-color: #16181c;
       border-color: #25282D;
       box-shadow: #25282D 0 -2px 0 0 inset, rgba(0, 0, 0, 0.4) 0 1px 3px 0;
+      animation: slideButtonIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     #modeChoices button:hover {
       background-color: #25282D;
       box-shadow: none;
+    }
+
+    #enterGameBtn.splitting {
+      animation: splitOut 0.4s cubic-bezier(0.66, 0.0, 0.36, 0.0);
+    }
+
+    @keyframes splitOut {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+    }
+
+    @keyframes splitIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes slideButtonIn {
+      0% {
+        opacity: 0;
+        transform: scaleX(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes mergeOut {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
     }
 
     #lanPanel {

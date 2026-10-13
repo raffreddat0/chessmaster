@@ -39,8 +39,8 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "./home.html"));
 });
 
-app.get("/LAN", (req, res) => {
-  res.sendFile(path.join(__dirname, "./lan.html"));
+app.get("/LOCAL", (req, res) => {
+  res.sendFile(path.join(__dirname, "./local.html"));
 });
 
 app.get("/ONLINE", (req, res) => {
