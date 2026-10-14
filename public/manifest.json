@@ -2,7 +2,7 @@
   "name": "Chess Master",
   "short_name": "Chess Master",
   "description": "Play chess online or with Bluetooth devices locally",
-  "start_url": "/home.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0c0c0c",
   "theme_color": "#0c0c0c",
