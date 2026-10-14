@@ -1,10 +1,10 @@
 const CACHE_NAME = 'chessmaster';
 const OFFLINE_PAGES = new Set([
   '/',
-  '/home.html',
+  '/index.html',
   '/about.html',
   '/credits.html',
-  '/lan.html'
+  '/local.html'
 ]);
 
 const STATIC_ASSETS = [
@@ -32,7 +32,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Error during caching:', err);
+        console.warn('Errore durante il caching iniziale:', err);
       });
     })
   );
@@ -58,45 +58,20 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  const userAgent = request.headers.get('user-agent') || '';
-  const isSafari = /safari/i.test(userAgent) && !/chrome|chromium|edg/i.test(userAgent);
-
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  if (!url.protocol.startsWith('http')) {
+  if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
     return;
   }
 
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     return event.respondWith(
-      fetch(request).catch(() => {
-        return new Response('', { status: 200 });
-      })
+      fetch(request).catch(() => new Response('', { status: 200 }))
     );
   }
 
-  if (url.pathname === '/service-worker.js' || url.pathname === '/manifest.json') {
+  if (url.pathname.startsWith('/api')) {
     return event.respondWith(
-      fetch(request).then((response) => {
-        if (response && response.status === 200) {
-          const clonedResponse = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, clonedResponse);
-          });
-        }
-        return response;
-      }).catch(() => {
-        return caches.match(request) || new Response('Resource Not Available', { status: 503 });
-      })
+      fetch(request).catch(() => new Response('Offline API Error', { status: 503 }))
     );
-  }
-
-  if (url.pathname.startsWith('/api') || url.pathname === '/') {
-    return event.respondWith(fetch(request).catch(() => {
-      return caches.match(request) || new Response('Offline', { status: 503 });
-    }));
   }
 
   if (url.pathname === '/ONLINE') {
@@ -110,13 +85,40 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  if (OFFLINE_PAGES.has(url.pathname) || url.pathname === '/') {
+  if (OFFLINE_PAGES.has(url.pathname)) {
     return event.respondWith(
-      fetch(request).then((response) => {
-        if (response && response.redirected) {
-          return fetch(response.url);
-        }
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clonedResponse = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, clonedResponse);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then((cachedResponse) => {
+            return cachedResponse || caches.match('/index.html') || new Response('Offline - Page Not Available', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+          });
+        })
+    );
+  }
 
+  event.respondWith(
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, networkResponse);
+            });
+          }
+        }).catch(() => { });
+        return cachedResponse;
+      }
+
+      return fetch(request).then((response) => {
         if (response && response.status === 200) {
           const clonedResponse = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -125,56 +127,10 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       }).catch(() => {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return new Response(cachedResponse.body, {
-              status: cachedResponse.status,
-              statusText: cachedResponse.statusText,
-              headers: cachedResponse.headers,
-            });
-          }
-          return new Response('Offline - Page Not Available', {
-            status: 503,
-            headers: { 'Content-Type': 'text/plain' }
-          });
-        });
-      })
-    );
-  }
-
-  event.respondWith(
-    fetch(request).then((response) => {
-      if (response && response.status === 200) {
-        const clonedResponse = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, clonedResponse);
-        });
-      }
-      return response;
-    }).catch(() => {
-      if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return new Response(cachedResponse.body, {
-              status: cachedResponse.status,
-              statusText: cachedResponse.statusText,
-              headers: cachedResponse.headers,
-            });
-          }
-          return caches.match('/home.html').then((homeResponse) => {
-            if (homeResponse) {
-              return new Response(homeResponse.body, {
-                status: homeResponse.status,
-                statusText: homeResponse.statusText,
-                headers: homeResponse.headers,
-              });
-            }
-            return new Response('Page Not Found', { status: 404 });
-          });
-        });
-      }
-      return caches.match(request).then((cachedAsset) => {
-        return cachedAsset || new Response('Resource Not Available Offline', { status: 503 });
+        if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
+          return caches.match('/index.html');
+        }
+        return new Response('Resource Not Available Offline', { status: 503 });
       });
     })
   );

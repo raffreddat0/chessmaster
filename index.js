@@ -10,6 +10,10 @@ const port = 1707;
 
 app.use(express.static(path.join(__dirname, "public")));
 
+app.get("/api", (req, res) => {
+  return res.json({ message: "Checkmate!" });
+});
+
 app.get("/api/games/:code", (req, res) => {
   const code = (req.params.code || "").toString().trim().toUpperCase();
   if (!code) return res.json({ exists: false });
@@ -36,10 +40,10 @@ app.get("/docs", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "./home.html"));
+  res.sendFile(path.join(__dirname, "./index.html"));
 });
 
-app.get("/home.html", (req, res) => {
+app.get("/index.html", (req, res) => {
   res.redirect("/");
 });
 
