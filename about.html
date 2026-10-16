@@ -599,7 +599,8 @@
       transform: translateY(0);
     }
 
-    @media (hover: none), (pointer: coarse) {
+    @media (hover: none),
+    (pointer: coarse) {
       .video-actions {
         opacity: 1;
         transform: translateY(0);
@@ -660,16 +661,18 @@
       left: 0;
       bottom: 0;
       width: 100%;
+      height: 0.8em;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
       color: transparent;
       font-family: ChessMasterDisplay, 'IBM Plex Serif', serif;
       font-size: clamp(2.2rem, 11vw, 9rem);
       line-height: 0.57;
       letter-spacing: .02em;
-      text-align: center;
       white-space: nowrap;
       -webkit-text-stroke: 1px rgba(191, 219, 254, .16);
-      background:
-        repeating-linear-gradient(0deg, rgba(191, 219, 254, .12) 0 1px, transparent 1px 5px),
+      background: repeating-linear-gradient(0deg, rgba(191, 219, 254, .12) 0 1px, transparent 1px 5px),
         repeating-linear-gradient(90deg, rgba(191, 219, 254, .06) 0 1px, transparent 1px 24px);
       -webkit-background-clip: text;
       background-clip: text;
@@ -1047,7 +1050,7 @@
           <span class="section-label">HOW IT WORKS</span>
           <p>Navigating ChessOS is intuitive: move the joystick to browse through menu options, press it to confirm a
             selection, and just have fun!</p>
-          <p><code>lcd.setCursor(0, 0);</code><br><code>lcd.print("PLAY");</code></p>
+          <p><code>lcd.setCursor(8, 1);</code><br><code>lcd.print("PLAY");</code></p>
         </div>
       </div>
     </section>
