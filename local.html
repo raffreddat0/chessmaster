@@ -52,7 +52,7 @@
     <div id="container">
       <div id="lanPanel" style="display:flex">
         <button id="lanConnectBtn" type="button" onclick="connectToChessMasterBle()">Connect device</button>
-        <p id="lanStatus">Select a connected Chess Master device to continue.</p>
+        <p id="lanStatus">Select a connected ChessMaster device to continue.</p>
       </div>
     </div>
     <div id="footerWrap">
@@ -595,7 +595,7 @@
         game.undo();
         board.position(game.fen());
         updateHistory();
-        console.error(error.message || 'Unable to send move to Chess Master.');
+        console.error(error.message || 'Unable to send move to ChessMaster.');
       });
       return undefined;
     }
@@ -694,7 +694,6 @@
       document.getElementById('island').classList.remove('expanded');
     }
 
-    // Island event listeners (setup once at page load, not in startLanGame)
     document.getElementById('island').addEventListener('click', (event) => {
       if (event.target.closest('#islandHandle') || event.target.closest('#islandCollapsed')) {
         const island = document.getElementById('island');
@@ -743,7 +742,6 @@
 
       updateResponsiveHistory();
 
-      // Hide loading screen once board is ready
       hideLoadingScreen();
     }
 
@@ -760,18 +758,17 @@
 
       try {
         button.disabled = true;
-        setLanStatus('Choose a Chess Master device from the Bluetooth menu...');
+        setLanStatus('Choose a ChessMaster device from the Bluetooth menu...');
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [chessMasterBleServiceUuid] }]
         });
 
-        // Show loading screen IMMEDIATELY after device selection
         showLoadingScreen();
 
         chessMasterBleDevice = device;
         device.addEventListener('gattserverdisconnected', () => {
           hideLoadingScreen();
-          setLanStatus('Chess Master disconnected.', true);
+          setLanStatus('ChessMaster disconnected.', true);
           button.disabled = false;
         }, { once: true });
 
