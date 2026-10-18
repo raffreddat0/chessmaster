@@ -52,7 +52,7 @@
     <div id="container">
       <div id="lanPanel" style="display:flex">
         <button id="lanConnectBtn" type="button" onclick="connectToChessMasterBle()">Connect device</button>
-        <p id="lanStatus">Select a connected ChessMaster device to continue.</p>
+        <p id="lanStatus">Select a connected Chess Master device to continue.</p>
       </div>
     </div>
     <div id="footerWrap">
@@ -595,7 +595,7 @@
         game.undo();
         board.position(game.fen());
         updateHistory();
-        console.error(error.message || 'Unable to send move to ChessMaster.');
+        console.error(error.message || 'Unable to send move to Chess Master.');
       });
       return undefined;
     }
@@ -758,7 +758,7 @@
 
       try {
         button.disabled = true;
-        setLanStatus('Choose a ChessMaster device from the Bluetooth menu...');
+        setLanStatus('Choose a Chess Master device from the Bluetooth menu...');
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ services: [chessMasterBleServiceUuid] }]
         });
@@ -768,7 +768,7 @@
         chessMasterBleDevice = device;
         device.addEventListener('gattserverdisconnected', () => {
           hideLoadingScreen();
-          setLanStatus('ChessMaster disconnected.', true);
+          setLanStatus('Chess Master disconnected.', true);
           button.disabled = false;
         }, { once: true });
 
@@ -791,10 +791,10 @@
         button.disabled = false;
         hideLoadingScreen();
         if (error.name === 'NotFoundError') {
-          setLanStatus('No ChessMaster device selected.');
+          setLanStatus('No Chess Master device selected.');
           return;
         }
-        setLanStatus(error.message || 'Unable to connect to ChessMaster.', true);
+        setLanStatus(error.message || 'Unable to connect to Chess Master.', true);
       }
     }
   </script>
