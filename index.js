@@ -254,7 +254,7 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      console.log(`Mossa dell"utente: ${message}`);
+      console.log(`Mossa dell'utente: ${message}`);
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch (error) {
@@ -347,10 +347,15 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      if (message === "timer") {
+      if (message.startsWith("timer")) {
         if (timer) return;
-        timer = Date.now();
-        ws.send("timer " + Math.floor(Date.now() / 1000));
+        const payload = message.replace("timer ", "");
+        if (payload) {
+          timer = Date.now() + Number(payload) * 1000;
+        } else {
+          timer = Date.now();
+          ws.send("timer " + Math.floor(timer / 1000));
+        }
         return;
       }
 
@@ -371,7 +376,7 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      console.log(`Mossa dell"avversario: ${message}`);
+      console.log(`Mossa dell'avversario: ${message}`);
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch (error) {

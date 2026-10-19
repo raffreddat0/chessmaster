@@ -432,12 +432,12 @@
         if (lowerMessage === 'win') {
           state = 1;
           islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'You won!';
+          if (islandStatus) islandStatus.textContent = 'Win!';
           if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
         } else if (lowerMessage === 'lose') {
           state = 2;
           islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'You lost!';
+          if (islandStatus) islandStatus.textContent = 'Lose!';
           if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
         } else if (lowerMessage === 'draw') {
           state = 3;

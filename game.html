@@ -626,7 +626,7 @@ function main(code) {
           if (state === 1) {
             draggable = false;
             islandMode = 'result';
-            islandStatus.textContent = 'You won!';
+            islandStatus.textContent = 'Win!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
             island.classList.remove('expanded');
             updateIslandVisibility();
@@ -634,7 +634,7 @@ function main(code) {
           if (state === 2) {
             draggable = false;
             islandMode = 'result';
-            islandStatus.textContent = 'You lost!';
+            islandStatus.textContent = 'Lose!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
             island.classList.remove('expanded');
             updateIslandVisibility();

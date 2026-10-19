@@ -293,8 +293,8 @@ void handleSerial(Stream &serial) {
     }
 
     if (input.startsWith("level ")) {
-      String level = input.substring(6);
-      socket.sendTXT(level);
+      if (ble) textCharacteristic.writeValue(input);
+      else socket.sendTXT(input);
     }
 
     if (input == "start") {
