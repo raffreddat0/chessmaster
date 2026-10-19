@@ -116,6 +116,8 @@
     let board = null;
     const $board = $('#board');
     let game = new Chess();
+    let level = 1;
+    let ai = false;
     let state = 0;
     let draggable = true;
     let isDragging = false;
@@ -392,13 +394,69 @@
       return true;
     }
 
-    function handleBleMove(value) {
+    async function getStockfishMove(fen, level) {
+      const url = "https://stockfish.online/api/s/v2.php";
+      const params = new URLSearchParams({
+        fen: fen,
+        depth: Math.max(Math.min(level + 3, 15), 5)
+      });
+
+      try {
+        const response = await fetch(`${url}?${params}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const continuation = data.continuation.split(" ");
+          return continuation[0];
+        } else {
+          throw new Error("Error in Stockfish response");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        await new Promise(r => setTimeout(r, 2000));
+        return null;
+      }
+    };
+
+    async function stockfish() {
+      try {
+        const legalMoves = game.moves({ verbose: true });
+        const mistakeChance = Math.max(0.6 - level * 0.08, 0.05);
+
+        let chosen;
+        if (Math.random() < mistakeChance) {
+          chosen = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+          await new Promise(r => setTimeout(r, 500));
+        } else {
+          const bestMove = await getStockfishMove(game.fen(), level);
+          const from = bestMove.substring(0, 2);
+          const to = bestMove.substring(2, 4);
+
+          chosen = { from, to, promotion: "q" };
+        }
+
+        const result = game.move(chosen);
+        if (!result) throw new Error("invalid");
+
+        const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
+        const piece = result.piece;
+
+        return piece + uci;
+      } catch {
+        return await stockfish();
+      }
+    }
+
+    async function handleBleMove(value) {
       const message = value.trim();
       const lowerMessage = message.toLowerCase();
       if (consumePendingBleEcho(lowerMessage)) return;
+      console.log(lowerMessage);
 
-      if (lowerMessage === 'valid' || lowerMessage === 'invalid') {
-        console.log('BLE response:', lowerMessage);
+      if (lowerMessage.startsWith('level')) {
+        level = parseInt(lowerMessage.split(' ')[1]) || 1;
+        level = Math.max(level, 1);
+        level = Math.min(level, 15);
         return;
       }
 
@@ -458,7 +516,7 @@
 
       const move = parseBleMove(lowerMessage);
       if (!move) return;
-      console.log('BLE move:', move);
+      console.log(move);
 
       const now = Date.now();
       if (lastBleValidation &&
@@ -488,6 +546,15 @@
       sendBleMessage(response).catch((error) => {
         console.error('BLE validation response failed:', error);
       });
+
+      if (ai) {
+        const move = await stockfish();
+        const isValid = applyMove(move);
+        if (!isValid) return;
+        sendBleMessage(move).catch((error) => {
+          console.error('BLE move response failed:', error);
+        });
+      }
     }
 
     function sendBleMessage(message) {
@@ -550,7 +617,7 @@
       }
 
       await sendBleMessage(messageToSend);
-      console.log('BLE sent move:', messageToSend);
+      console.log(messageToSend);
     }
 
     function onDrop(source, target) {

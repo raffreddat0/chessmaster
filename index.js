@@ -103,10 +103,10 @@ const getStockfishMove = async (fen, level) => {
       const continuation = data.continuation.split(" ");
       return continuation[0];
     } else {
-      throw new Error("Errore nell\"analisi della posizione");
+      throw new Error("Error in Stockfish response");
     }
   } catch (error) {
-    console.error("Errore:", error);
+    console.error("Error:", error);
     await new Promise(r => setTimeout(r, 2000));
     return null;
   }
@@ -180,7 +180,7 @@ wss.on("connection", (ws, req) => {
     games.push(game);
     sessions[game] = [ws];
 
-    console.log("Partita create con codice", game);
+    console.log("New game created:", game);
     ws.send("code " + game);
   }
 
@@ -192,7 +192,7 @@ wss.on("connection", (ws, req) => {
         level = parseInt(message.split(" ")[1]) || 1;
         level = Math.max(level, 1);
         level = Math.min(level, 15);
-        console.log(`Livello impostato a ${level}`);
+        console.log(`Level set to ${level}`);
         return;
       }
 
@@ -223,13 +223,13 @@ wss.on("connection", (ws, req) => {
           sessions[game] = [ws];
         }
 
-        console.log("Partita create con codice", game);
+        console.log("New game created:", game);
         ws.send("code " + game);
         return;
       }
 
       if (message === "exit") {
-        console.log("Partita terminata");
+        console.log("Game terminated");
         wait = false;
         if (sessions[game]?.length === 2)
           sessions[game][1].close();
@@ -255,7 +255,7 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      console.log(`Mossa dell'utente: ${message}`);
+      console.log(`User: ${message}`);
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch (error) {
@@ -310,7 +310,7 @@ wss.on("connection", (ws, req) => {
           const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
           const piece = result.piece;
 
-          console.log(`Mossa di stockfish: ${uci}`);
+          console.log(`Stockfish: ${uci}`);
           ws.send(auth === "online" ? uci : (piece + uci));
         } catch {
           return await stockfish();
@@ -376,7 +376,7 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      console.log(`Mossa dell'avversario: ${message}`);
+      console.log(`Opponent: ${message}`);
       try {
         chess.move({ from: message.substring(0, 2), to: message.substring(2, 4), promotion: "q" });
       } catch (error) {
@@ -417,7 +417,7 @@ wss.on("connection", (ws, req) => {
 });
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Server in ascolto sulla porta http://localhost:${port}`);
+  console.log(`Server listening on port http://localhost:${port}`);
 });
 
 process.on("uncaughtException", (error) => {

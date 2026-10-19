@@ -1354,8 +1354,10 @@ void online() {
 }
 
 void local() {
-  if (ble)
+  if (ble) {
+    Serial1.println("level " + String(config.level));
     playing = 0;
+  }
 
   if (playing == -1) {
     Serial1.println("year");
