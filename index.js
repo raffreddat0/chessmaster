@@ -348,7 +348,6 @@ wss.on("connection", (ws, req) => {
       }
 
       if (message.startsWith("timer")) {
-        if (timer) return;
         const payload = message.replace("timer ", "");
         if (payload) {
           timer = (Date.now() + Number(payload) * 1000) / 1000;
