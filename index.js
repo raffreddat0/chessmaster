@@ -187,6 +187,7 @@ wss.on("connection", (ws, req) => {
   if (!code)
     ws.on("message", async (data) => {
       const message = data.toString();
+
       if (message.startsWith("level")) {
         level = parseInt(message.split(" ")[1]) || 1;
         level = Math.max(level, 1);
@@ -348,13 +349,13 @@ wss.on("connection", (ws, req) => {
       }
 
       if (message.startsWith("timer")) {
-        const payload = message.replace("timer ", "");
-        if (payload) {
-          timer = (Date.now() + Number(payload) * 1000) / 1000;
-        } else {
+        if (timer) return;
+        const payload = message.replace("timer", "").trim();
+        if (payload)
+          timer = Number(payload);
+        else
           timer = Date.now() / 1000;
-          ws.send("timer " + Math.floor(timer));
-        }
+        ws.send("timer " + timer);
         return;
       }
 
