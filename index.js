@@ -263,7 +263,7 @@ wss.on("connection", (ws, req) => {
       }
 
       if (!timer) {
-        timer = Date.now();
+        timer = Date.now() / 1000;
         ws.send("timer " + timer);
       }
 
@@ -351,10 +351,10 @@ wss.on("connection", (ws, req) => {
         if (timer) return;
         const payload = message.replace("timer ", "");
         if (payload) {
-          timer = Date.now() + Number(payload) * 1000;
+          timer = (Date.now() + Number(payload) * 1000) / 1000;
         } else {
-          timer = Date.now();
-          ws.send("timer " + Math.floor(timer / 1000));
+          timer = Date.now() / 1000;
+          ws.send("timer " + Math.floor(timer));
         }
         return;
       }
