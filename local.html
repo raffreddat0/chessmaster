@@ -441,7 +441,7 @@
         const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
         const piece = result.piece;
 
-        return piece + uci;
+        return { moveText: uci, piece };
       } catch {
         return await stockfish();
       }
@@ -548,11 +548,14 @@
       });
 
       if (ai) {
-        const move = await stockfish();
-        const isValid = applyMove(move);
-        if (!isValid) return;
-        sendBleMessage(move).catch((error) => {
-          console.error('BLE move response failed:', error);
+        const { moveText, piece } = await stockfish();
+        if (!applyMove(moveText)) return;
+        sendBlackMove(moveText, piece).catch((error) => {
+          console.error('BLE message send failed:', error);
+          game.undo();
+          board.position(game.fen());
+          updateHistory();
+          console.error(error.message || 'Unable to send move to Chess Master.');
         });
       }
     }
