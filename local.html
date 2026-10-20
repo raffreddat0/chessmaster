@@ -547,7 +547,7 @@
         console.error('BLE validation response failed:', error);
       });
 
-      if (ai) {
+      if (ai && isValid) {
         const { moveText, piece } = await stockfish();
         if (!applyMove(moveText)) return;
         sendBlackMove(moveText, piece).catch((error) => {
