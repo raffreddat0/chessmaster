@@ -146,19 +146,42 @@
     let bleNotificationHandler = null;
     const pendingBleEchoes = [];
 
+    async function isOnline() {
+      let online = navigator.onLine;
+      if (online) {
+        try {
+          const response = await fetch('/api', {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          online = response.ok;
+        } catch (err) {
+          online = false;
+        }
+      }
+
+      return online;
+    }
+
     function updateAiToggleUi() {
       [document.getElementById('aiToggleBtn'), document.getElementById('mobileAiToggleBtn')]
         .filter(Boolean)
-        .forEach((button) => {
-          const label = button.querySelector('span:last-child');
-          button.classList.toggle('active', ai);
-          button.setAttribute('aria-pressed', String(ai));
-          button.title = ai ? 'AI OFF' : 'AI ON';
-          if (label) label.textContent = ai ? 'AI ON' : 'AI OFF';
+        .forEach(async (button) => {
+          const online = await isOnline();
+          if (!online) button.disabled = true;
+          else {
+            const label = button.querySelector('span:last-child');
+            button.classList.toggle('active', ai);
+            button.setAttribute('aria-pressed', String(ai));
+            button.title = ai ? 'AI OFF' : 'AI ON';
+            if (label) label.textContent = ai ? 'AI ON' : 'AI OFF';
+          }
         });
     }
 
-    function toggleAi() {
+    async function toggleAi() {
+      const online = await isOnline();
+      if (!online) return;
       ai = !ai;
       updateAiToggleUi();
     }
@@ -843,9 +866,7 @@
       $(window).resize(() => board.resize());
       updateHistory();
       window.addEventListener('resize', updateResponsiveHistory);
-
       updateResponsiveHistory();
-
       hideLoadingScreen();
     }
 

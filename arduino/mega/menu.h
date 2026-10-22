@@ -1354,7 +1354,7 @@ void online() {
 }
 
 void local() {
-  if (ble) {
+  if (ble && timer > 3) {
     Serial1.println("level " + String(config.level));
     playing = 0;
   }
@@ -1565,8 +1565,10 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
       if (input == "disconnected")
         connected = false;
 
-      if (input == "ble connected")
+      if (input == "ble connected") {
+        timer = 0;
         ble = true;
+      }
 
       if (input == "ble disconnected") {
         ble = false;

@@ -102,8 +102,8 @@ void setup() {
     while (true);
   }
 
-  BLE.setLocalName("ChessMaster");
-  BLE.setDeviceName("ChessMaster");
+  BLE.setLocalName("Chess Master");
+  BLE.setDeviceName("Chess Master");
   BLE.setAdvertisedService(customService);
   customService.addCharacteristic(textCharacteristic);
   BLE.addService(customService);
