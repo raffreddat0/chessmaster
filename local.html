@@ -72,6 +72,13 @@
       <div style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;">
         <div class="history-header">Move History</div>
         <div id="moveListContent"></div>
+        <div class="ai-toggle-wrap">
+          <button class="ai-toggle active" id="aiToggleBtn" type="button" aria-pressed="true" title="Disattiva AI"
+            onclick="toggleAi()">
+            <span class="ai-toggle-led" aria-hidden="true"></span>
+            <span id="aiToggleLabel">AI ON</span>
+          </button>
+        </div>
         <div id="historyControls">
           <button class="nav-btn" id="btnFirstMove" onclick="showPastMove(0)" title="First Move"><svg
               viewBox="0 0 24 24">
@@ -101,6 +108,12 @@
         <div id="mobileTimer">00:00</div>
         <div class="history-header" style="margin-top: 1rem;">Move History</div>
         <div id="mobileMoveList" class="move-list-base"></div>
+        <div class="ai-toggle-wrap">
+          <button class="ai-toggle active" id="mobileAiToggleBtn" type="button" aria-pressed="true" title="AI ON"
+            onclick="toggleAi()">
+            <span id="mobileAiToggleLabel">AI OFF</span>
+          </button>
+        </div>
         <div id="mobileHistoryControls"></div>
       </div>
     </div>
@@ -117,7 +130,7 @@
     const $board = $('#board');
     let game = new Chess();
     let level = 1;
-    let ai = true;
+    let ai = false;
     let state = 0;
     let draggable = true;
     let isDragging = false;
@@ -132,6 +145,25 @@
     let lastBleValidation = null;
     let bleNotificationHandler = null;
     const pendingBleEchoes = [];
+
+    function updateAiToggleUi() {
+      [document.getElementById('aiToggleBtn'), document.getElementById('mobileAiToggleBtn')]
+        .filter(Boolean)
+        .forEach((button) => {
+          const label = button.querySelector('span:last-child');
+          button.classList.toggle('active', ai);
+          button.setAttribute('aria-pressed', String(ai));
+          button.title = ai ? 'AI OFF' : 'AI ON';
+          if (label) label.textContent = ai ? 'AI ON' : 'AI OFF';
+        });
+    }
+
+    function toggleAi() {
+      ai = !ai;
+      updateAiToggleUi();
+    }
+
+    updateAiToggleUi();
 
     document.head.insertAdjacentHTML(
       'beforeend',
@@ -254,6 +286,7 @@
         return true;
       } catch (error) {
         console.log('invalid');
+        console.log(error);
         board.position(game.fen());
         return false;
       }
@@ -436,14 +469,13 @@
           chosen = { from, to, promotion: "q" };
         }
 
-        const result = game.move(chosen);
-        if (!result) throw new Error("invalid");
-
         const uci = `${chosen.from}${chosen.to}${chosen.promotion && chosen.promotion !== "q" ? chosen.promotion : ""}`;
-        const piece = result.piece;
+        const piece = game.get(chosen.from);
+        if (!applyMove(uci)) throw new Error("invalid");
 
         return { moveText: uci, piece };
       } catch {
+        if (game.turn() === "w") return null;
         return await stockfish();
       }
     }
@@ -548,9 +580,11 @@
       });
 
       if (ai && isValid) {
-        const { moveText, piece } = await stockfish();
-        if (!applyMove(moveText)) return;
-        sendBlackMove(moveText, piece).catch((error) => {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (!ai) return;
+        const result = await stockfish();
+        if (!result) return;
+        sendBlackMove(result.moveText, result.piece).catch((error) => {
           console.error('BLE message send failed:', error);
           game.undo();
           board.position(game.fen());
