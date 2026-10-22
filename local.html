@@ -163,30 +163,36 @@
       return online;
     }
 
-    function updateAiToggleUi() {
+    function updateAiToggleUi(checkOnline = false) {
       [document.getElementById('aiToggleBtn'), document.getElementById('mobileAiToggleBtn')]
         .filter(Boolean)
         .forEach(async (button) => {
-          const online = await isOnline();
-          if (!online) button.disabled = true;
-          else {
-            const label = button.querySelector('span:last-child');
-            button.classList.toggle('active', ai);
-            button.setAttribute('aria-pressed', String(ai));
-            button.title = ai ? 'AI OFF' : 'AI ON';
-            if (label) label.textContent = ai ? 'AI ON' : 'AI OFF';
+          if (checkOnline) {
+            const online = await isOnline();
+            if (!online) {
+              button.disabled = true;
+              return;
+            }
           }
+          const label = button.querySelector('span:last-child');
+          button.classList.toggle('active', ai);
+          button.setAttribute('aria-pressed', String(ai));
+          button.title = ai ? 'AI OFF' : 'AI ON';
+          if (label) label.textContent = ai ? 'AI ON' : 'AI OFF';
         });
     }
 
     async function toggleAi() {
-      const online = await isOnline();
-      if (!online) return;
+      if (ai == true) {
+        const online = await isOnline();
+        if (!online) return;
+      }
+
       ai = !ai;
       updateAiToggleUi();
     }
 
-    updateAiToggleUi();
+    updateAiToggleUi(true);
 
     document.head.insertAdjacentHTML(
       'beforeend',
