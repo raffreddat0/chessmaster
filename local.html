@@ -183,7 +183,7 @@
     }
 
     async function toggleAi() {
-      if (ai == true) {
+      if (ai) {
         const online = await isOnline();
         if (!online) return;
       }
