@@ -412,20 +412,39 @@
     }
 
     function toggleAutoPlay() {
+      const btns = [document.getElementById('btnAutoPlay'), document.getElementById('mobile_btnAutoPlay')].filter(Boolean);
+
       if (autoPlayInterval) {
         clearInterval(autoPlayInterval);
         autoPlayInterval = null;
-        return;
-      }
-      if (!game.history().length) return;
-      showPastMove(0);
-      autoPlayInterval = setInterval(() => {
-        if (viewingIndex < game.history().length) nextMove();
-        else {
-          clearInterval(autoPlayInterval);
-          autoPlayInterval = null;
+        btns.forEach(btn => {
+          btn.classList.remove('active');
+          const icon = btn.querySelector('svg');
+          if (icon) icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+        });
+      } else {
+        const history = game.history();
+        if (history.length === 0) return;
+
+        if (viewingIndex === -1 || viewingIndex === history.length) {
+          showPastMove(0);
         }
-      }, 1000);
+
+        btns.forEach(btn => {
+          btn.classList.add('active');
+          const icon = btn.querySelector('svg');
+          if (icon) icon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+        });
+
+        autoPlayInterval = setInterval(() => {
+          const currentHistory = game.history();
+          if (viewingIndex < currentHistory.length) {
+            nextMove();
+          } else {
+            toggleAutoPlay();
+          }
+        }, 1000);
+      }
     }
 
     function parseBleMove(value) {
