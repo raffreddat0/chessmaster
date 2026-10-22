@@ -517,7 +517,6 @@
 
       const move = parseBleMove(lowerMessage);
       if (!move) return;
-      console.log(move);
 
       const now = Date.now();
       if (lastBleValidation &&
@@ -550,7 +549,6 @@
 
       if (ai && isValid) {
         const { moveText, piece } = await stockfish();
-        await new Promise(r => setTimeout(r, 1000));
         if (!applyMove(moveText)) return;
         sendBlackMove(moveText, piece).catch((error) => {
           console.error('BLE message send failed:', error);
