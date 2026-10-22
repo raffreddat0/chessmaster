@@ -109,7 +109,7 @@
         <div class="history-header" style="margin-top: 1rem;">Move History</div>
         <div id="mobileMoveList" class="move-list-base"></div>
         <div class="ai-toggle-wrap">
-          <button class="ai-toggle active" id="mobileAiToggleBtn" type="button" aria-pressed="true" title="AI ON"
+          <button class="ai-toggle" id="mobileAiToggleBtn" type="button" aria-pressed="true" title="AI ON"
             onclick="toggleAi()">
             <span id="mobileAiToggleLabel">AI OFF</span>
           </button>
@@ -163,17 +163,10 @@
       return online;
     }
 
-    function updateAiToggleUi(checkOnline = false) {
+    function updateAiToggleUi() {
       [document.getElementById('aiToggleBtn'), document.getElementById('mobileAiToggleBtn')]
         .filter(Boolean)
         .forEach(async (button) => {
-          if (checkOnline) {
-            const online = await isOnline();
-            if (!online) {
-              button.disabled = true;
-              return;
-            }
-          }
           const label = button.querySelector('span:last-child');
           button.classList.toggle('active', ai);
           button.setAttribute('aria-pressed', String(ai));
@@ -183,7 +176,7 @@
     }
 
     async function toggleAi() {
-      if (ai) {
+      if (!ai) {
         const online = await isOnline();
         if (!online) return;
       }
@@ -192,7 +185,7 @@
       updateAiToggleUi();
     }
 
-    updateAiToggleUi(true);
+    updateAiToggleUi();
 
     document.head.insertAdjacentHTML(
       'beforeend',
@@ -328,72 +321,149 @@
       moveList.innerHTML = '';
       mobileMoveList.innerHTML = '';
 
-      for (let i = 0; i < history.length; i += 2) {
-        const moveNumber = document.createElement('span');
-        moveNumber.className = 'move-num';
-        moveNumber.textContent = `${Math.floor(i / 2) + 1}.`;
-        moveList.appendChild(moveNumber);
-        mobileMoveList.appendChild(moveNumber.cloneNode(true));
+      const createMoveItem = (i, isBlack = false) => {
+        const moveItem = document.createElement('span');
+        moveItem.className = 'move-item';
+        moveItem.textContent = history[i].from + history[i].to;
+        moveItem.onclick = (e) => {
+          e.stopPropagation();
+          showPastMove(i + 1);
+          closeIsland();
+        };
+        if (viewingIndex === i + 1 || (viewingIndex === -1 && i + 1 === history.length)) {
+          moveItem.classList.add('active');
+        }
+        return moveItem;
+      };
 
-        [history[i], history[i + 1]].filter(Boolean).forEach((move, offset) => {
-          const item = document.createElement('span');
-          item.className = 'move-item';
-          item.textContent = move.from + move.to;
-          item.onclick = () => { showPastMove(i + offset); closeIsland(); };
-          if (viewingIndex === i + offset + 1 ||
-            (viewingIndex === -1 && i + offset + 1 === history.length)) {
-            item.classList.add('active');
-          }
-          moveList.appendChild(item);
-          const mobileItem = item.cloneNode(true);
-          mobileItem.onclick = () => { showPastMove(i + offset); closeIsland(); };
-          mobileMoveList.appendChild(mobileItem);
-        });
+      for (let i = 0; i < history.length; i += 2) {
+        const moveNum = Math.floor(i / 2) + 1;
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'move-num';
+        numSpan.textContent = `${moveNum}.`;
+        moveList.appendChild(numSpan);
+        mobileMoveList.appendChild(numSpan.cloneNode(true));
+
+        const whiteMove = createMoveItem(i);
+        moveList.appendChild(whiteMove);
+        mobileMoveList.appendChild(whiteMove.cloneNode(true));
+        mobileMoveList.lastChild.onclick = (e) => {
+          e.stopPropagation();
+          showPastMove(i + 1);
+          closeIsland();
+        };
+
+        if (history[i + 1]) {
+          const blackMove = createMoveItem(i + 1, true);
+          moveList.appendChild(blackMove);
+          mobileMoveList.appendChild(blackMove.cloneNode(true));
+          mobileMoveList.lastChild.onclick = (e) => {
+            e.stopPropagation();
+            showPastMove(i + 2);
+            closeIsland();
+          };
+        }
       }
 
-      const atStart = history.length === 0 || viewingIndex === 0;
-      const atEnd = viewingIndex === -1 || viewingIndex === history.length;
-      document.getElementById('btnFirstMove').disabled = atStart;
-      document.getElementById('btnPrevMove').disabled = atStart;
-      document.getElementById('btnNextMove').disabled = atEnd;
-      document.getElementById('btnLastMove').disabled = viewingIndex === -1;
+      const updateBtn = (id, disabled) => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = disabled;
+      };
+
+      const isAtStart = (history.length === 0 || viewingIndex === 0);
+      const isAtEnd = (viewingIndex === -1 || viewingIndex === history.length);
+
+      updateBtn('btnFirstMove', isAtStart);
+      updateBtn('btnPrevMove', isAtStart);
+      updateBtn('btnNextMove', isAtEnd);
+      updateBtn('btnLastMove', viewingIndex === -1);
+
       const mobileControls = document.getElementById('mobileHistoryControls');
       if (mobileControls && mobileControls.innerHTML === '') {
-        mobileControls.innerHTML = document.getElementById('historyControls').innerHTML;
-        Array.from(mobileControls.children).forEach((button) => {
-          const originalId = button.id;
-          button.id = `mobile_${originalId}`;
-          button.onclick = (event) => {
-            event.stopPropagation();
-            document.getElementById(originalId).click();
-          };
+        const desktopControls = document.getElementById('historyControls');
+        mobileControls.innerHTML = desktopControls.innerHTML;
+        Array.from(mobileControls.children).forEach(btn => {
+          const originalId = btn.id;
+          if (originalId) {
+            btn.id = 'mobile_' + originalId;
+            const originalBtn = document.getElementById(originalId);
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              originalBtn.click();
+              closeIsland();
+            };
+          }
         });
       }
-      [['btnFirstMove', atStart], ['btnPrevMove', atStart],
-      ['btnNextMove', atEnd], ['btnLastMove', viewingIndex === -1]]
-        .forEach(([id, disabled]) => {
-          const button = document.getElementById(`mobile_${id}`);
-          if (button) button.disabled = disabled;
-        });
-      moveList.scrollTop = moveList.scrollHeight;
-      mobileMoveList.scrollTop = mobileMoveList.scrollHeight;
+
+      const updateMobileBtn = (id, disabled) => {
+        const btn = document.getElementById('mobile_' + id);
+        if (btn) btn.disabled = disabled;
+      };
+
+      updateMobileBtn('btnFirstMove', isAtStart);
+      updateMobileBtn('btnPrevMove', isAtStart);
+      updateMobileBtn('btnNextMove', isAtEnd);
+      updateMobileBtn('btnLastMove', viewingIndex === -1);
+
+      if (viewingIndex === -1) {
+        moveList.scrollTop = moveList.scrollHeight;
+        mobileMoveList.scrollTop = mobileMoveList.scrollHeight;
+
+        if (history.length > 0) {
+          const lastMove = history[history.length - 1];
+          removeMoves();
+          removeHighlights();
+          $board.find('.square-' + lastMove.from).addClass('highlight');
+          $board.find('.square-' + lastMove.to).addClass('highlight');
+        }
+      }
+
       updateResponsiveHistory();
     }
 
+
     function showPastMove(index) {
       const history = game.history({ verbose: true });
-      if (index >= history.length) return backToPresent();
+
+      if (index === history.length || index === -1) {
+        backToPresent();
+        return;
+      }
+
       viewingIndex = index;
-      const preview = new Chess();
-      for (let i = 0; i < index; i++) preview.move(history[i]);
-      board.position(preview.fen());
+      const tempGame = new Chess();
+      for (let i = 0; i < index; i++) {
+        tempGame.move(history[i]);
+      }
+      board.position(tempGame.fen());
+
+      removeMoves();
+      removeHighlights();
+      if (index > 0) {
+        const lastMove = history[index - 1];
+        $board.find('.square-' + lastMove.from).addClass('highlight');
+        $board.find('.square-' + lastMove.to).addClass('highlight');
+      }
+
       updateHistory();
       draggable = false;
     }
 
     function backToPresent() {
+      if (autoPlayInterval) toggleAutoPlay();
       viewingIndex = -1;
       board.position(game.fen());
+
+      removeHighlights();
+      const history = game.history({ verbose: true });
+      if (history.length > 0) {
+        const lastMove = history[history.length - 1];
+        $board.find('.square-' + lastMove.from).addClass('highlight');
+        $board.find('.square-' + lastMove.to).addClass('highlight');
+      }
+
       updateHistory();
       draggable = true;
       closeIsland();
@@ -628,8 +698,9 @@
       });
 
       if (ai && isValid) {
+        const online = await isOnline();
+        if (!online) return toggleAi();
         await new Promise(resolve => setTimeout(resolve, 2000));
-        if (!ai) return;
         const result = await stockfish();
         if (!result) return;
         sendBlackMove(result.moveText, result.piece).catch((error) => {
