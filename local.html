@@ -610,7 +610,11 @@
 
     async function analyze() {
       const fen = game.fen();
-      if (!dataBefore) return "";
+      const online = await isOnline();
+      if (!dataBefore || !online) {
+        dataBefore = null;
+        return "";
+      }
 
       const dataAfter = await getStockfishMove(fen, 12);
       const history = game.history({ verbose: true });
@@ -865,6 +869,11 @@
       await sendBleMessage(messageToSend);
       console.log(messageToSend);
 
+      const online = await isOnline();
+      if (!online) {
+        dataBefore = null;
+        return;
+      };
       dataBefore = await getStockfishMove(game.fen(), 12);
     }
 
