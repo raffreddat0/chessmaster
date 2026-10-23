@@ -3,6 +3,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
+const { openingBook, findOpening } = require("@chess-openings/eco.json");
 require("dotenv").config();
 
 const app = express();
@@ -101,7 +102,7 @@ const getStockfishMove = async (fen, level) => {
 
     if (data.success) {
       const continuation = data.continuation.split(" ");
-      return continuation[0];
+      return { bestmove: continuation[0], evaluation: data.evaluation, mate: data.mate };
     } else {
       throw new Error("Error in Stockfish response");
     }
@@ -111,6 +112,55 @@ const getStockfishMove = async (fen, level) => {
     return null;
   }
 };
+
+const openings = await openingBook();
+async function analyze(game, dataBefore) {
+  const fen = game.fen();
+
+  if (!dataBefore) {
+    const opening = findOpening(openings, fen);
+    return opening?.name || "";
+  }
+
+  const dataAfter = await getStockfishMove(fen, 12);
+
+  const history = game.history({ verbose: true });
+  const move = history[history.length - 1];
+  const playedMoveUCI = move.from + move.to + (move.promotion || '');
+  const expectedBestMove = extractBestMove(dataBefore.bestmove);
+
+  let label = "";
+  if (dataBefore.mate !== null || dataAfter.mate !== null) {
+    if (playedMoveUCI === expectedBestMove) {
+      label = "Best Move (!!)";
+    } else if (dataAfter.mate !== null && dataAfter.mate < 0) {
+      label = "Blunder (??)";
+    } else {
+      label = "Excellent (!)";
+    }
+  }
+  else {
+    const evalBefore = dataBefore.evaluation;
+    const evalAfterUser = -dataAfter.evaluation;
+
+    const centipawnLoss = Math.round((evalBefore - evalAfterUser) * 100);
+    if (playedMoveUCI === expectedBestMove) {
+      label = "Best Move (!!)";
+    } else if (centipawnLoss <= 20) {
+      label = "Excellent (!)";
+    } else if (centipawnLoss <= 50) {
+      label = "Good";
+    } else if (centipawnLoss <= 100) {
+      label = "Imprecision (?)";
+    } else if (centipawnLoss <= 250) {
+      label = "Error (??)";
+    } else {
+      label = "Blunder (??)";
+    }
+  }
+
+  return label;
+}
 
 let games = [];
 let sessions = {};
@@ -172,6 +222,7 @@ wss.on("connection", (ws, req) => {
   let timer = null;
   let wait = code ? true : false;
   let game = code;
+  let analysis = null;
 
   if (auth === "online") {
     chess = new Chess();
@@ -217,6 +268,7 @@ wss.on("connection", (ws, req) => {
       if (message === "start") {
         chess = new Chess();
         wait = false;
+        analysis = null;
         if (!code) {
           game = generateCode();
           games.push(game);
@@ -230,6 +282,7 @@ wss.on("connection", (ws, req) => {
 
       if (message === "exit") {
         console.log("Game terminated");
+        analysis = null;
         wait = false;
         if (sessions[game]?.length === 2)
           sessions[game][1].close();
@@ -268,7 +321,8 @@ wss.on("connection", (ws, req) => {
         ws.send("timer " + timer);
       }
 
-      ws.send("valid");
+      const result = await analyze(chess, analysis);
+      ws.send(auth === "online" ? "valid" : ("valid " + result));
       if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "win");
       }
@@ -297,9 +351,9 @@ wss.on("connection", (ws, req) => {
             chosen = legalMoves[Math.floor(Math.random() * legalMoves.length)];
             await new Promise(r => setTimeout(r, 500));
           } else {
-            const bestMove = await getStockfishMove(chess.fen(), level);
-            const from = bestMove.substring(0, 2);
-            const to = bestMove.substring(2, 4);
+            const { bestmove } = await getStockfishMove(chess.fen(), level);
+            const from = bestmove.substring(0, 2);
+            const to = bestmove.substring(2, 4);
 
             chosen = { from, to, promotion: "q" };
           }
@@ -322,6 +376,8 @@ wss.on("connection", (ws, req) => {
         ws.send(chess.isDraw() ? "draw" : "lose");
         return;
       }
+
+      analysis = await getStockfishMove(chess.fen(), 12);
     });
   else {
     ws.on("message", async (data) => {

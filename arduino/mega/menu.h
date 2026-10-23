@@ -62,6 +62,7 @@ bool ble = false;
 
 unsigned long gap = 0;
 char code[7] = "";
+char comment[100] = "";
 int playing = -1;
 unsigned long timer = 0;
 
@@ -1184,37 +1185,83 @@ void play(int &t, char position[4], int invalid[2]) {
 
   char buffer[12] = "00:00";
 
-  if (timer > 1000 && hour < 1000) {
-    if (hour > 0) sprintf(buffer, "%02u:%02u:%02u", hour, min, sec);
+  if (hour < 1000) {
+    if (hour > 0) sprintf(buffer, "%u:%02u:%02u", hour, min, sec);
     else sprintf(buffer, "%02u:%02u", min, sec);
   }
 
-  lcd.setCursor(0, 0);
-  if (hour > 0 && timer > 1000 && hour < 1000 && playing == 1) {
-    lcd.print("      ");
-    lcd.print(buffer);
-    lcd.print("      ");
-  } else {
-    lcd.print("       ");
-    lcd.print(buffer);
-    lcd.print("        ");
-  }
-
   if (playing == 1) {
-    lcd.setCursor(6, 1);
-    lcd.print(confirm == 0 ? (t == 0 ? " WHITE  " : " BLACK  ") : "        ");
+    lcd.setCursor(0, 0);
+    lcd.print(buffer);
+
+    lcd.setCursor(8, 0);
+    lcd.print(t == 0 ? "WHITE" : "BLACK");
+
+    lcd.setCursor(14, 0);
+    if (stockfish > 0) {
+      lcd.print("LVL ");
+      if (config.level < 10) {
+        lcd.print("0");
+        lcd.print(config.level);
+      } else {
+        lcd.print(config.level);
+      }
+    } else if (!ble) {
+      lcd.print(code);
+    }
+
+    if (strlen(comment) > 0) {
+      if (ddlay(1000))
+        timer++;
+
+      if (timer > 2) {
+        timer = 0;
+        l = 0;
+        t = 1;
+        strcpy(position, "");
+        strcpy(comment, "");
+      }
+
+      if (strlen(comment) > 20) {
+        int totalLength = strlen(comment);
+        while (l < totalLength && ddlay(300)) {
+          lcd.setCursor(0, 2);
+
+          String window = "";
+          for (int j = 0; j < 20; j++) {
+            window += comment[(l + j) % totalLength];
+          }
+
+          lcd.print(window);
+          l++;
+          l = l % totalLength;
+        }
+      } else {
+        int col = (20 - strlen(comment)) / 2;
+        lcd.setCursor(col, 2);
+        lcd.print(comment);
+      }
+    } else {
+      lcd.setCursor(0, 2);
+      lcd.print("                    ");
+    }
   }
 
   if (playing > 1) {
+    lcd.setCursor(0, 0);
+    lcd.print("                    ");
+
     confirm = x = 1;
     lcd.setCursor(6, 1);
-
     if (playing == 2)
       lcd.print("  WIN!  ");
     if (playing == 3)
       lcd.print("  DRAW  ");
     if (playing == 4)
       lcd.print("  LOSE  ");
+
+    lcd.setCursor(0, 2);
+    lcd.print("                    ");
 
     lcd.setCursor(4, 3);
     lcd.print("         ");
@@ -1262,6 +1309,7 @@ void play(int &t, char position[4], int invalid[2]) {
         y = y0 = 0;
         page = redirect = 0;
         timer = 0;
+        strcpy(code, "");
         Serial1.println("exit");
         config.games += 1;
         EEPROM.put(0, config);
@@ -1276,6 +1324,7 @@ void play(int &t, char position[4], int invalid[2]) {
 
 void online() {
   if (!connected) {
+    strcpy(code, "");
     page = -3;
     redirect = 2;
     lcd.clear();
@@ -1297,7 +1346,6 @@ void online() {
 
   if (playing == -2 && input == "joined") {
     playing = 0;
-    strcpy(code, "");
     input = "";
     lcd.clear();
     delay(100);
@@ -1638,21 +1686,15 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           EEPROM.put(0, config);
         }
 
-        if (input == "lose") {
-          config.losses += 1;
-          config.streak = 0;
-          playing = 4;
+        if (input.startsWith("valid")) {
+          strcpy(comment, input.substring(6).c_str());
+          if (strlen(comment) == 0) {
+            t = 1;
+            strcpy(position, "");
+            strcpy(comment, "");
+          } else
+            timer = 0;
           skip = 1;
-          strcpy(position, "");
-          t = 0;
-
-          EEPROM.put(0, config);
-        }
-
-        if (input == "valid") {
-          t = 1;
-          skip = 1;
-          strcpy(position, "");
           delay(100);
         }
 
@@ -1683,9 +1725,14 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           input.remove(0, 1);
           strcpy(position, input.c_str());
 
+          t = 1;
+          strcpy(comment, "");
           if (confirm == 0) {
-            lcd.setCursor(6, 1);
-            lcd.print(t == 0 ? " WHITE  " : " BLACK  ");
+            lcd.setCursor(8, 0);
+            lcd.print("BLACK");
+
+            lcd.setCursor(0, 2);
+            lcd.print("                    ");
 
             lcd.setCursor(6, 3);
             lcd.print("  ");
