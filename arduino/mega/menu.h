@@ -1671,6 +1671,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.streak += 1;
           playing = 2;
           skip = 1;
+          gap = 0;
           strcpy(position, "");
           t = 0;
 
@@ -1684,6 +1685,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.draws += 1;
           playing = 3;
           skip = 1;
+          gap = 0;
           strcpy(position, "");
           t = 0;
 
@@ -1695,6 +1697,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.streak = 0;
           playing = 4;
           skip = 1;
+          gap = 0;
           strcpy(position, "");
           t = 0;
 

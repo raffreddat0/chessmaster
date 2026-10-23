@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const http = require("http");
+const fs = require("fs");
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
 const openings = require("./openings.json");
@@ -8,6 +9,74 @@ require("dotenv").config();
 
 const app = express();
 const port = 1707;
+const gameDatabasePath = path.join(__dirname, "games.json");
+const gameRetentionMs = 7 * 24 * 60 * 60 * 1000;
+
+function writeGameDatabase() {
+  const temporaryPath = `${gameDatabasePath}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(completedGames, null, 2));
+  fs.renameSync(temporaryPath, gameDatabasePath);
+}
+
+function pruneCompletedGames(now = Date.now()) {
+  const remainingGames = completedGames.filter((record) => {
+    if (!record || typeof record.code !== "string" || !Array.isArray(record.moves))
+      return false;
+    if (!["white", "black", "draw"].includes(record.result))
+      return false;
+    const completedAt = Date.parse(record.date);
+    return Number.isFinite(completedAt) && now - completedAt < gameRetentionMs;
+  });
+
+  if (remainingGames.length !== completedGames.length) {
+    completedGames = remainingGames;
+    writeGameDatabase();
+  }
+}
+
+function loadGameDatabase() {
+  fs.mkdirSync(path.dirname(gameDatabasePath), { recursive: true });
+
+  try {
+    const database = JSON.parse(fs.readFileSync(gameDatabasePath, "utf8"));
+    return Array.isArray(database) ? database : [];
+  } catch (error) {
+    if (error.code !== "ENOENT")
+      console.error("Could not read saved game database:", error);
+    return [];
+  }
+}
+
+let completedGames = loadGameDatabase();
+pruneCompletedGames();
+writeGameDatabase();
+
+function saveCompletedGame(code, chess) {
+  if (!code || !chess.isGameOver()) return;
+
+  const normalizedCode = code.toUpperCase();
+  pruneCompletedGames();
+  if (completedGames.some((record) => record.code === normalizedCode)) return;
+
+  const moves = chess.history({ verbose: true }).map((move) =>
+    `${move.from}${move.to}${move.promotion || ""}`
+  );
+  const result = chess.isDraw()
+    ? "draw"
+    : (chess.turn() === "w" ? "black" : "white");
+
+  completedGames.push({
+    code: normalizedCode,
+    moves,
+    fen: chess.fen(),
+    result,
+    date: new Date().toISOString()
+  });
+  writeGameDatabase();
+}
+
+const gameCleanupInterval = setInterval(pruneCompletedGames, 24 * 60 * 60 * 1000);
+gameCleanupInterval.unref();
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -17,11 +86,32 @@ app.get("/api", (req, res) => {
 
 app.get("/api/games/:code", (req, res) => {
   const code = (req.params.code || "").toString().trim().toUpperCase();
-  if (!code) return res.json({ exists: false });
-  if (code === "ONLINE") return res.json({ exists: true });
+  if (!code) return res.json({ exist: false });
+  if (code === "ONLINE") return res.json({ exist: true });
 
-  const exists = games.includes(code) || (sessions[code] && sessions[code].length === 2);
-  return res.json({ exists });
+  const exist = games.includes(code) || (sessions[code] && sessions[code].length === 2);
+  return res.json({ exist });
+});
+
+app.get("/api/replays", (req, res) => {
+  pruneCompletedGames();
+  const games = [...completedGames]
+    .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+    .map(({ code, result, date, moves }) => ({
+      code,
+      result,
+      date,
+      moves: moves.length
+    }));
+  return res.json(games);
+});
+
+app.get("/api/replays/:code", (req, res) => {
+  pruneCompletedGames();
+  const code = (req.params.code || "").trim().toUpperCase();
+  const game = completedGames.find((record) => record.code === code);
+  if (!game) return res.json({ exist: false });
+  return res.json({ ...game, exist: true });
 });
 
 app.get("/credits", (req, res) => {
@@ -60,6 +150,7 @@ app.use((req, res) => {
   if (!req.accepts("html")) {
     return res.sendStatus(404);
   }
+
   res.sendFile(path.join(__dirname, "./game.html"));
 });
 
@@ -131,6 +222,7 @@ async function analyze(game, dataBefore) {
   else if (!dataBefore) return "";
 
   const dataAfter = await getStockfishMove(fen, 12);
+  if (!dataAfter) return "";
 
   const history = game.history({ verbose: true });
   const move = history[history.length - 1];
@@ -310,8 +402,10 @@ wss.on("connection", (ws, req) => {
 
         wait = false;
         ws.send(auth === "online" ? message : (piece + message));
-        if (chess.isGameOver())
+        if (chess.isGameOver()) {
+          saveCompletedGame(game, chess);
           ws.send(chess.isDraw() ? "draw" : "lose");
+        }
 
         analysis = await getStockfishMove(chess.fen(), 12);
         return;
@@ -330,9 +424,15 @@ wss.on("connection", (ws, req) => {
         ws.send("timer " + timer);
       }
 
-      const result = await analyze(chess, analysis);
-      ws.send(auth === "online" ? "valid" : ("valid " + result));
+      if (auth === "online")
+        ws.send("valid");
+      else {
+        const result = await analyze(chess, analysis);
+        ws.send("valid " + result);
+      }
+
       if (chess.isGameOver()) {
+        saveCompletedGame(game, chess);
         ws.send(chess.isDraw() ? "draw" : "win");
       }
 
@@ -380,14 +480,15 @@ wss.on("connection", (ws, req) => {
         }
       }
 
-      await new Promise(r => setTimeout(r, 3000));
+      if (auth !== "online") await new Promise(r => setTimeout(r, 3000));
       await stockfish();
       if (chess.isGameOver()) {
+        saveCompletedGame(game, chess);
         ws.send(chess.isDraw() ? "draw" : "lose");
         return;
       }
 
-      analysis = await getStockfishMove(chess.fen(), 12);
+      if (auth !== "online") analysis = await getStockfishMove(chess.fen(), 12);
     });
   else {
     ws.on("message", async (data) => {
@@ -437,8 +538,10 @@ wss.on("connection", (ws, req) => {
         wait = false;
         ws.send(message);
 
-        if (chess.isGameOver())
+        if (chess.isGameOver()) {
+          saveCompletedGame(game, chess);
           ws.send(chess.isDraw() ? "draw" : "lose");
+        }
         return;
       }
 
@@ -453,6 +556,7 @@ wss.on("connection", (ws, req) => {
 
       ws.send("valid");
       if (chess.isGameOver()) {
+        saveCompletedGame(game, chess);
         ws.send(chess.isDraw() ? "draw" : "win");
       }
 

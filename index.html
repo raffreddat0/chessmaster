@@ -56,6 +56,10 @@
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"></path>
         </svg><span id="enterGameLabel">Enter Game</span></button>
     </div>
+    <section id="recentReplays" class="recent-replays" style="display:none">
+      <h2>Recent replays</h2>
+      <ul id="replayList"></ul>
+    </section>
     <div id="footerWrap">
       <a id="link" href="/about">About</a>
       <span>·</span>
@@ -109,10 +113,18 @@
       }
 
       try {
-        const res = await fetch(`/api/games/${encodeURIComponent(code)}`);
+        let res = await fetch(`/api/games/${encodeURIComponent(code)}`);
         if (!res.ok) throw new Error('bad status');
-        const data = await res.json();
-        if (data?.exists) {
+        let data = await res.json();
+        if (data?.exist) {
+          window.location.href = "/" + code;
+          return;
+        }
+
+        res = await fetch(`/api/replays/${encodeURIComponent(code)}`);
+        if (!res.ok) throw new Error('bad status');
+        data = await res.json();
+        if (data?.exist) {
           window.location.href = "/" + code;
           return;
         }
@@ -150,6 +162,29 @@
     }
 
     setRandomFavicon();
+    async function loadRecentReplays() {
+      const panel = document.getElementById('recentReplays');
+      const replayList = document.getElementById('replayList');
+      try {
+        const response = await fetch('/api/replays', { cache: 'no-store' });
+        if (!response.ok) return;
+        const games = await response.json();
+        if (!Array.isArray(games) || games.length === 0) return;
+
+        for (const replay of games.slice(0, 5)) {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = `/${encodeURIComponent(replay.code)}`;
+          link.textContent = `${replay.code} · ${replay.result.toUpperCase()} · ${replay.moves} moves`;
+          item.appendChild(link);
+          replayList.appendChild(item);
+        }
+        panel.style.display = 'block';
+      } catch { }
+    }
+
+    loadRecentReplays();
+
     function randomizeTitleCase() {
       const top = document.querySelector('.title-top');
       const bottom = document.querySelector('.title-bottom');
@@ -384,15 +419,16 @@
       }
     }
 
-    if (sessionStorage.getItem('gameNotFound')) {
+    if (sessionStorage.getItem('gameNotFound') || sessionStorage.getItem('replayNotFound')) {
       const error = document.getElementById('error');
       const codeInput = document.getElementById('codeInput');
       if (error && codeInput) {
-        error.textContent = 'Game not found.';
+        error.textContent = sessionStorage.getItem('gameNotFound') ? 'Game not found.' : 'Replay not found.';
         error.className = 'error';
         error.style.display = 'block';
         codeInput.classList.add('error');
         sessionStorage.removeItem('gameNotFound');
+        sessionStorage.removeItem('replayNotFound');
 
         setTimeout(() => {
           error.style.display = 'none';

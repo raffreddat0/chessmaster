@@ -97,7 +97,7 @@
     </div>
   </div>
   <script>
-    function main(code) {
+    function main(code, replayMode = false) {
       var board = null;
       var game = new Chess();
       var state = 0;
@@ -306,7 +306,7 @@
         }
 
         updateHistory();
-        draggable = true;
+        draggable = !replayMode;
       }
 
       let islandMode = 'hidden';
@@ -410,7 +410,7 @@
       function startTimer(start = Date.now()) {
         if (timerInterval) clearInterval(timerInterval);
         timer = start;
-        ws.send("timer " + timer / 1000);
+        if (ws?.readyState === WebSocket.OPEN) ws.send("timer " + timer / 1000);
         timerInterval = setInterval(() => {
           const elapsed = Math.floor((Date.now() - timer) / 1000);
           const hours = Math.floor(elapsed / 3600);
@@ -439,9 +439,9 @@
       error.textContent = '';
 
       const wsUrl = `ws${window.location.protocol === "https:" ? "s" : ""}://${window.location.host}?code=${code}`;
-      const ws = new WebSocket(wsUrl);
+      const ws = replayMode ? null : new WebSocket(wsUrl);
 
-      ws.onopen = () => {
+      if (ws) ws.onopen = () => {
         console.log(`Connected to WebSocket with code: ${code}`);
       };
 
@@ -452,7 +452,7 @@
         });
       });
 
-      ws.onmessage = async (message) => {
+      if (ws) ws.onmessage = async (message) => {
         const content = message.data.toString();
         console.log(content);
 
@@ -610,7 +610,7 @@
 
       };
 
-      ws.onclose = () => {
+      if (ws) ws.onclose = () => {
         const error = document.getElementById('error');
         const island = document.getElementById('island');
         const islandStatus = document.getElementById('islandStatus');
@@ -787,7 +787,7 @@
         if (!timer)
           startTimer();
 
-        if (ws.readyState === WebSocket.OPEN) {
+        if (ws?.readyState === WebSocket.OPEN) {
           ws.send(source + target);
         }
 
@@ -870,6 +870,47 @@
 
       board = Chessboard('board', config);
       $(window).resize(board.resize);
+
+      if (replayMode) {
+        fetch(`/api/replays/${encodeURIComponent(code)}`, { cache: 'no-store' })
+          .then(response => {
+            if (!response.ok) throw new Error('Replay not found');
+            return response.json();
+          })
+          .then(replay => {
+            if (!Array.isArray(replay.moves)) throw new Error('Invalid replay');
+            game = new Chess();
+            for (const move of replay.moves) {
+              if (typeof move !== 'string' || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(move)) {
+                throw new Error('Invalid replay move');
+              }
+              const applied = game.move({
+                from: move.slice(0, 2),
+                to: move.slice(2, 4),
+                promotion: move[4] || 'q'
+              });
+              if (!applied) throw new Error('Invalid replay move');
+            }
+
+            document.getElementById('hero').style.display = 'none';
+            document.getElementById('board').style.display = 'block';
+            document.getElementById('gameTimerDisplay').textContent = 'Replay';
+            document.getElementById('mobileTimer').textContent = 'Replay';
+            board.orientation('white');
+            board.position(game.fen());
+            draggable = false;
+            viewingIndex = -1;
+            updateHistory();
+            updateHistoryPanelVisibility();
+            islandMode = 'result';
+            islandStatus.textContent = `${replay.code} · ${replay.result.toUpperCase()}`;
+            updateIslandVisibility();
+          })
+          .catch(() => {
+            sessionStorage.setItem('replayNotFound', 'true');
+            window.location.href = '/';
+          });
+      }
     }
 
     const code = window.location.pathname.substring(1).toUpperCase();
@@ -879,7 +920,16 @@
     favicon.rel = 'icon';
     favicon.href = logoUrl;
     document.head.appendChild(favicon);
-    main(code);
+    (async () => {
+      let replayMatch = false;
+      let res = await fetch(`/api/replays/${encodeURIComponent(code)}`);
+      if (res.ok) {
+        let data = await res.json();
+        if (data.exist)
+          replayMatch = true;
+      }
+      main(code, replayMatch);
+    })();
   </script>
 </body>
 
