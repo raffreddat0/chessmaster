@@ -3,7 +3,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
-const openings = require("./public/openings.json");
+const openings = require("./openings.json");
 require("dotenv").config();
 
 const app = express();

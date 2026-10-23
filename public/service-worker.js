@@ -12,7 +12,6 @@ const STATIC_ASSETS = [
   '/font.otf',
   '/service-worker.js',
   '/manifest.json',
-  '/openings.json',
   '/pieces/wk.png',
   '/pieces/wq.png',
   '/pieces/wr.png',

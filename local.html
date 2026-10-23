@@ -145,7 +145,6 @@
     let lastBleValidation = null;
     let bleNotificationHandler = null;
     const pendingBleEchoes = [];
-    let openings = {};
     let dataBefore = null;
 
     async function isOnline() {
@@ -187,23 +186,7 @@
       updateAiToggleUi();
     }
 
-    async function loadOpening() {
-      try {
-        const response = await fetch('/openings.json');
-
-        if (!response.ok) {
-          throw new Error(`HTTP Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        openings = data;
-      } catch (error) {
-        console.error("JSON Error:", error);
-      }
-    }
-
     updateAiToggleUi();
-    loadOpening();
 
     document.head.insertAdjacentHTML(
       'beforeend',
@@ -600,13 +583,9 @@
 
     async function analyze() {
       const fen = game.fen();
-
-      const opening = openings[truncateFen(fen)];
-      if (opening?.name) return opening.name;
-      else if (!dataBefore) return "";
+      if (!dataBefore) return "";
 
       const dataAfter = await getStockfishMove(fen, 12);
-
       const history = game.history({ verbose: true });
       const move = history[history.length - 1];
       const playedMoveUCI = move.from + move.to + (move.promotion || '');
@@ -856,7 +835,7 @@
       await sendBleMessage(messageToSend);
       console.log(messageToSend);
 
-      dataBefore = await getStockfishMove(chess.fen(), 12);
+      dataBefore = await getStockfishMove(game.fen(), 12);
     }
 
     function onDrop(source, target) {
