@@ -1194,7 +1194,7 @@ void play(int &t, char position[4], int invalid[2]) {
     lcd.setCursor(0, 0);
     lcd.print(buffer);
 
-    lcd.setCursor(8, 0);
+    lcd.setCursor(7, 0);
     lcd.print(t == 0 ? "WHITE" : "BLACK");
 
     lcd.setCursor(14, 0);
@@ -1728,7 +1728,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           t = 1;
           strcpy(comment, "");
           if (confirm == 0) {
-            lcd.setCursor(8, 0);
+            lcd.setCursor(7, 0);
             lcd.print("BLACK");
 
             lcd.setCursor(0, 2);

@@ -370,6 +370,7 @@ wss.on("connection", (ws, req) => {
         }
       }
 
+      await new Promise(r => setTimeout(r, 2000));
       await stockfish();
       if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "lose");
