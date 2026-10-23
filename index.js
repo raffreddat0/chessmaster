@@ -127,7 +127,6 @@ async function analyze(game, dataBefore) {
   const fen = game.fen();
 
   const opening = openings[truncateFen(fen)];
-  console.log(fen, opening);
   if (opening?.name) return opening.name;
   else if (!dataBefore) return "";
 
@@ -138,6 +137,7 @@ async function analyze(game, dataBefore) {
   const playedMoveUCI = move.from + move.to + (move.promotion || '');
 
   let label = "";
+  console.log(dataBefore, dataAfter);
   if (dataBefore.mate !== null || dataAfter.mate !== null) {
     if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
@@ -152,6 +152,7 @@ async function analyze(game, dataBefore) {
     const evalAfterUser = -dataAfter.evaluation;
 
     const centipawnLoss = Math.round((evalBefore - evalAfterUser) * 100);
+    console.log(centipawnLoss);
     if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
     } else if (centipawnLoss <= 20) {
