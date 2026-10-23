@@ -137,7 +137,6 @@ async function analyze(game, dataBefore) {
   const playedMoveUCI = move.from + move.to + (move.promotion || '');
 
   let label = "";
-  console.log(dataBefore, dataAfter);
   if (dataBefore.mate !== null || dataAfter.mate !== null) {
     if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
@@ -149,9 +148,9 @@ async function analyze(game, dataBefore) {
   }
   else {
     const evalBefore = dataBefore.evaluation;
-    const evalAfterUser = -dataAfter.evaluation;
+    const evalAfter = dataAfter.evaluation;
 
-    const centipawnLoss = Math.round((evalBefore - evalAfterUser) * 100);
+    const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
     console.log(centipawnLoss);
     if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
