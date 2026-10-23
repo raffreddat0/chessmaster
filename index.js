@@ -116,10 +116,9 @@ const getStockfishMove = async (fen, level) => {
 async function analyze(game, dataBefore) {
   const fen = game.fen();
 
-  if (!dataBefore) {
-    const opening = openings[fen];
-    return opening?.name || "";
-  }
+  const opening = openings[fen];
+  if (opening?.name) return opening.name;
+  else if (!dataBefore) return "";
 
   const dataAfter = await getStockfishMove(fen, 12);
 
