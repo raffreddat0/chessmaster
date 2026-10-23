@@ -754,12 +754,6 @@
       }
 
       const isValid = applyMove(move);
-      lastBleValidation = {
-        move,
-        response,
-        timestamp: now
-      };
-
       if (isValid && !timerStartedAt) {
         startTimer();
         sendBleMessage('timer ' + Math.floor(Date.now() / 1000)).catch((error) => {
@@ -773,6 +767,12 @@
       } else {
         response = 'invalid';
       }
+
+      lastBleValidation = {
+        move,
+        response,
+        timestamp: now
+      };
 
       sendBleMessage(response).catch((error) => {
         console.error('BLE validation response failed:', error);
