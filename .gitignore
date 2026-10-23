@@ -3,4 +3,4 @@ bun.lock
 package-lock.json
 .env
 config.h
-game.json
+games.json
