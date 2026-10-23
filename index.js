@@ -113,10 +113,20 @@ const getStockfishMove = async (fen, level) => {
   }
 };
 
+function truncateFen(fen) {
+  if (!fen || typeof fen !== 'string') return '';
+  const parts = fen.trim().split(/\s+/);
+
+  if (parts.length >= 4)
+    return parts.slice(0, 4).join(' ');
+
+  return fen.trim();
+}
+
 async function analyze(game, dataBefore) {
   const fen = game.fen();
 
-  const opening = openings[fen];
+  const opening = openings[truncateFen(fen)];
   console.log(fen, opening);
   if (opening?.name) return opening.name;
   else if (!dataBefore) return "";
