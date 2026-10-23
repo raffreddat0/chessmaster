@@ -3,7 +3,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
-const { openingBook, findOpening } = require("@chess-openings/eco.json");
+const openings = require("./openings.json");
 require("dotenv").config();
 
 const app = express();
@@ -113,12 +113,11 @@ const getStockfishMove = async (fen, level) => {
   }
 };
 
-const openings = await openingBook();
 async function analyze(game, dataBefore) {
   const fen = game.fen();
 
   if (!dataBefore) {
-    const opening = findOpening(openings, fen);
+    const opening = openings[fen];
     return opening?.name || "";
   }
 
