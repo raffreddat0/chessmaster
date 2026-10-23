@@ -1666,6 +1666,13 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           skip = 1;
         }
 
+        if (input == "check") {
+          lcd.setCursor(7, 2);
+          lcd.print("CHECK");
+          input = "";
+          skip = 1;
+        }
+
         if (input == "win") {
           config.wins += 1;
           config.streak += 1;

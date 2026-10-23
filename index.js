@@ -405,7 +405,11 @@ wss.on("connection", (ws, req) => {
         if (chess.isGameOver()) {
           saveCompletedGame(game, chess);
           ws.send(chess.isDraw() ? "draw" : "lose");
+          return;
         }
+
+        if (chess.isCheck())
+          ws.send("check");
 
         analysis = await getStockfishMove(chess.fen(), 12);
         return;
@@ -487,6 +491,9 @@ wss.on("connection", (ws, req) => {
         ws.send(chess.isDraw() ? "draw" : "lose");
         return;
       }
+
+      if (chess.isCheck())
+        ws.send("check");
 
       if (auth !== "online") analysis = await getStockfishMove(chess.fen(), 12);
     });

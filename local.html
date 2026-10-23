@@ -791,6 +791,11 @@
         console.error('BLE validation response failed:', error);
       });
 
+      if (game.isGameOver()) {
+        await sendBleMessage(game.isDraw() ? "draw" : "win");
+        return;
+      }
+
       if (ai && isValid) {
         const online = await isOnline();
         if (!online) return toggleAi();
@@ -868,6 +873,14 @@
 
       await sendBleMessage(messageToSend);
       console.log(messageToSend);
+
+      if (game.isGameOver()) {
+        await sendBleMessage(game.isDraw() ? "draw" : "lose");
+        return;
+      }
+
+      if (game.isCheck())
+        await sendBleMessage("check");
 
       const online = await isOnline();
       if (!online) {
