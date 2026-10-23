@@ -1113,6 +1113,7 @@ void play(int &t, char position[4], int invalid[2]) {
     page = -3;
     redirect = 7;
     timer = 0;
+    gap = 0;
     playing = -1;
     t = 0;
     if (playing == 1) {
@@ -1185,7 +1186,7 @@ void play(int &t, char position[4], int invalid[2]) {
 
   char buffer[12] = "00:00";
 
-  if (hour < 1000) {
+  if (gap > 0 && hour < 1000) {
     if (hour > 0) sprintf(buffer, "%u:%02u:%02u", hour, min, sec);
     else sprintf(buffer, "%02u:%02u", min, sec);
   }
@@ -1332,6 +1333,7 @@ void online() {
   if (!connected) {
     strcpy(code, "");
     page = -3;
+    gap = 0;
     redirect = 2;
     lcd.clear();
     delay(100);
@@ -1388,6 +1390,7 @@ void online() {
       playing = -1;
       strcpy(code, "");
       click = 0;
+      gap = 0;
       prevent = 1;
       timer = 0;
       x = x0 = 1;
@@ -1451,6 +1454,7 @@ void local() {
     if (click && timer > 1) {
       playing = -1;
       click = 0;
+      gap = 0;
       prevent = 1;
       timer = 0;
       x = x0 = 4;
@@ -1633,6 +1637,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (page == 7) {
           x = x0 = 4;
           timer = 0;
+          gap = 0;
           playing = -1;
           t = 0;
           page = 0;

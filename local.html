@@ -108,11 +108,13 @@
         <div id="mobileTimer">00:00</div>
         <div class="history-header" style="margin-top: 1rem;">Move History</div>
         <div id="mobileMoveList" class="move-list-base"></div>
-        <div class="ai-toggle-wrap">
-          <button class="ai-toggle" id="mobileAiToggleBtn" type="button" aria-pressed="true" title="AI ON"
-            onclick="toggleAi()">
-            <span id="mobileAiToggleLabel">AI OFF</span>
-          </button>
+        <div class="ai-toggle-wrap" id="mobileLevelControl">
+          <div class="mobile-level-heading">
+            <label for="mobileLevelSlider">AI LEVEL</label>
+            <output id="mobileLevelValue" for="mobileLevelSlider">0</output>
+          </div>
+          <input id="mobileLevelSlider" type="range" min="0" max="15" step="1" value="0" aria-label="AI LEVEL"
+            oninput="setAiLevel(this.value)">
         </div>
         <div id="mobileHistoryControls"></div>
       </div>
@@ -129,7 +131,7 @@
     let board = null;
     const $board = $('#board');
     let game = new Chess();
-    let level = 1;
+    let level = 0;
     let ai = false;
     let state = 0;
     let draggable = true;
@@ -145,6 +147,7 @@
     let lastBleValidation = null;
     let bleNotificationHandler = null;
     const pendingBleEchoes = [];
+    let maxLevel = 0;
     let dataBefore = null;
 
     async function isOnline() {
@@ -164,7 +167,30 @@
       return online;
     }
 
+    function updateAiLevelUi() {
+      const slider = document.getElementById('mobileLevelSlider');
+      const value = document.getElementById('mobileLevelValue');
+      if (slider) slider.value = String(level);
+      if (value) value.value = String(level);
+    }
+
+    async function setAiLevel(value) {
+      if (!ai) {
+        const online = await isOnline();
+        if (!online) {
+          level = 0;
+          updateAiToggleUi();
+          return;
+        };
+      }
+
+      level = Math.max(0, Math.min(15, Number(value) || 0));
+      ai = level > 0;
+      updateAiToggleUi();
+    }
+
     function updateAiToggleUi() {
+      updateAiLevelUi();
       [document.getElementById('aiToggleBtn'), document.getElementById('mobileAiToggleBtn')]
         .filter(Boolean)
         .forEach(async (button) => {
@@ -183,6 +209,7 @@
       }
 
       ai = !ai;
+      level = ai ? maxLevel : 0;
       updateAiToggleUi();
     }
 
@@ -660,9 +687,11 @@
       console.log(lowerMessage);
 
       if (lowerMessage.startsWith('level')) {
-        level = parseInt(lowerMessage.split(' ')[1]) || 1;
-        level = Math.max(level, 1);
-        level = Math.min(level, 15);
+        const slider = document.getElementById('mobileLevelSlider');
+        maxLevel = parseInt(lowerMessage.split(' ')[1]) || 1;
+        maxLevel = Math.max(maxLevel, 1);
+        maxLevel = Math.min(maxLevel, 15);
+        slider.max = maxLevel;
         return;
       }
 
