@@ -29,6 +29,7 @@ int value1 = 0;
 int value2 = 0;
 int click = 0;
 int prevent = 0;
+bool magnet = false;
 
 int x0 = 0;
 int y0 = 0;
@@ -68,7 +69,7 @@ unsigned long timer = 0;
 
 void ditch() {
   const char *settings[] = {
-      "Turn: ", "Move: ", "Down: ", "Try", "Save", "Exit"};
+      "Turn: ", "Move: ", "Down: ", "Magnet", "Try", "Save", "Exit"};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -90,6 +91,9 @@ void ditch() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
+
+  lcd.setCursor(0, 0);
+  lcd.print(magnet ? "ON " : "OFF");
 
   static int start = 0;
   if (y < start) {
@@ -190,7 +194,12 @@ void ditch() {
   if (click) {
     click = 0;
     prevent = 1;
-    if (y == numItems - 3) {
+    if (y == numItems - 4) {
+      magnet = !magnet;
+      lcd.setCursor(0, 0);
+      lcd.print(magnet ? "ON " : "OFF");
+      pinMode(pinMagnet, magnet ? 1 : 0);
+    } else if (y == numItems - 3) {
       reset();
       turn(T0.turn);
       move(T0.move);
@@ -203,6 +212,8 @@ void ditch() {
       x = x0 = 0;
       y = y0 = 2;
       reset();
+      pinMode(pinMagnet, 0);
+      magnet = false;
       editing = 0;
       lcd.clear();
       delay(100);
@@ -211,7 +222,7 @@ void ditch() {
       if (r > 3)
         r = 0;
     }
-  }
+   }
 }
 
 void calibration() {
@@ -274,7 +285,7 @@ void calibration() {
 
 void squares() {
   const char *settings[] = {
-      "Square: ", "Turn: ", "Move: ", "Down: ", "Try", "Save", "Exit"};
+      "Square: ", "Turn: ", "Move: ", "Down: ", "Magnet", "Try", "Save", "Exit"};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -296,6 +307,9 @@ void squares() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
+
+  lcd.setCursor(0, 0);
+  lcd.print(magnet ? "ON " : "OFF");
 
   static int start = 0;
   if (y < start) {
@@ -328,8 +342,6 @@ void squares() {
     T[7 - z][z0].move = 0;
   if (T[7 - z][z0].down < 0)
     T[7 - z][z0].down = 0;
-
-  pinMode(pinMagnet, 1);
 
   for (int i = start; i < end; i++) {
     int row = i - start + 1;
@@ -448,7 +460,12 @@ void squares() {
   if (click) {
     click = 0;
     prevent = 1;
-    if (y == numItems - 3) {
+    if (y == numItems - 4) {
+      magnet = !magnet;
+      lcd.setCursor(0, 0);
+      lcd.print(magnet ? "ON " : "OFF");
+      pinMode(pinMagnet, magnet ? 1 : 0);
+    } else if (y == numItems - 3) {
       reset();
       turn(T[7 - z][z0].turn);
       move(T[7 - z][z0].move);
@@ -462,6 +479,7 @@ void squares() {
       y0 = x0 = 0;
       reset();
       pinMode(pinMagnet, 0);
+      magnet = false;
       editing = 0;
       lcd.clear();
       delay(100);
