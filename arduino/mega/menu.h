@@ -1308,6 +1308,7 @@ void play(int &t, char position[4], int invalid[2]) {
           x = x0 = 4;
         y = y0 = 0;
         page = redirect = 0;
+        gap = 0;
         timer = 0;
         strcpy(code, "");
         Serial1.println("exit");

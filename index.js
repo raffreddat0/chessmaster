@@ -117,6 +117,7 @@ async function analyze(game, dataBefore) {
   const fen = game.fen();
 
   const opening = openings[fen];
+  console.log(fen, opening);
   if (opening?.name) return opening.name;
   else if (!dataBefore) return "";
 
@@ -302,6 +303,8 @@ wss.on("connection", (ws, req) => {
         ws.send(auth === "online" ? message : (piece + message));
         if (chess.isGameOver())
           ws.send(chess.isDraw() ? "draw" : "lose");
+
+        analysis = await getStockfishMove(chess.fen(), 12);
         return;
       }
 
