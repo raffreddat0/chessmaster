@@ -126,11 +126,10 @@ async function analyze(game, dataBefore) {
   const history = game.history({ verbose: true });
   const move = history[history.length - 1];
   const playedMoveUCI = move.from + move.to + (move.promotion || '');
-  const expectedBestMove = extractBestMove(dataBefore.bestmove);
 
   let label = "";
   if (dataBefore.mate !== null || dataAfter.mate !== null) {
-    if (playedMoveUCI === expectedBestMove) {
+    if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
     } else if (dataAfter.mate !== null && dataAfter.mate < 0) {
       label = "Blunder (??)";
@@ -143,7 +142,7 @@ async function analyze(game, dataBefore) {
     const evalAfterUser = -dataAfter.evaluation;
 
     const centipawnLoss = Math.round((evalBefore - evalAfterUser) * 100);
-    if (playedMoveUCI === expectedBestMove) {
+    if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
     } else if (centipawnLoss <= 20) {
       label = "Excellent (!)";
