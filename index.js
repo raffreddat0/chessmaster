@@ -151,7 +151,6 @@ async function analyze(game, dataBefore) {
     const evalAfter = dataAfter.evaluation;
 
     const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
-    console.log(centipawnLoss);
     if (playedMoveUCI === dataBefore.bestmove) {
       label = "Best Move (!!)";
     } else if (centipawnLoss <= 20) {

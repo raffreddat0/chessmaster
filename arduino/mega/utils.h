@@ -55,6 +55,17 @@ byte wifiIcon[8] = {
   0b00000
 };
 
+byte bluetoothIcon[8] = {
+    0b00110,
+    0b00101,
+    0b00110,
+    0b11100,
+    0b00110,
+    0b00101,
+    0b00110,
+    0b00000
+};
+
 String checkEdges(int M[cell][cell]) {
   for (int r = 0; r < 2; r++) {
     for (int c = 0; c < cell; c++) {

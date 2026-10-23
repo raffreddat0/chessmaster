@@ -605,7 +605,6 @@
         const evalAfter = dataAfter.evaluation;
 
         const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
-        console.log(centipawnLoss);
         if (playedMoveUCI === dataBefore.bestmove) {
           label = "Best Move (!!)";
         } else if (centipawnLoss <= 20) {
@@ -619,6 +618,8 @@
         } else {
           label = "Blunder (??)";
         }
+
+        console.log(label, centipawnLoss);
       }
 
       return label;

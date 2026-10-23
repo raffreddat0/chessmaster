@@ -1206,7 +1206,10 @@ void play(int &t, char position[4], int invalid[2]) {
       } else {
         lcd.print(config.level);
       }
-    } else if (!ble) {
+    } else if (ble) {
+      lcd.setCursor(19, 0);
+      lcd.write(byte(5));
+    } else {
       lcd.print(code);
     }
 
@@ -1224,15 +1227,17 @@ void play(int &t, char position[4], int invalid[2]) {
 
       if (strlen(comment) > 20) {
         int totalLength = strlen(comment);
-        while (l < totalLength && ddlay(300)) {
-          lcd.setCursor(0, 2);
+        char window[21];
+        while (l < totalLength && ddlay(400)) {
+          lcd.setCursor(0, 3);
 
-          String window = "";
           for (int j = 0; j < 20; j++) {
-            window += comment[(l + j) % totalLength];
+            window[j] = comment[(l + j) % totalLength];
           }
+          window[20] = '\0';
 
           lcd.print(window);
+
           l++;
           l = l % totalLength;
         }
@@ -1364,15 +1369,17 @@ void online() {
     String fullText = "www.chessmaster" + String(year) + ".lol   ";
     int totalLength = fullText.length();
 
-    while (l < totalLength && ddlay(300)) {
+    char window[21];
+    while (l < totalLength && ddlay(500)) {
       lcd.setCursor(0, 3);
 
-      String window = "";
       for (int j = 0; j < 20; j++) {
-        window += fullText[(l + j) % totalLength];
+        window[j] = fullText[(l + j) % totalLength];
       }
+      window[20] = '\0';
 
       lcd.print(window);
+
       l++;
       l = l % totalLength;
     }
@@ -1426,15 +1433,17 @@ void local() {
     String fullText = "www.chessmaster" + String(year) + ".lol   ";
     int totalLength = fullText.length();
 
-    while (l < totalLength && ddlay(300)) {
+    char window[21];
+    while (l < totalLength && ddlay(500)) {
       lcd.setCursor(0, 3);
 
-      String window = "";
       for (int j = 0; j < 20; j++) {
-        window += fullText[(l + j) % totalLength];
+        window[j] = fullText[(l + j) % totalLength];
       }
+      window[20] = '\0';
 
       lcd.print(window);
+
       l++;
       l = l % totalLength;
     }
@@ -1915,6 +1924,7 @@ void lcdbegin() {
   lcd.createChar(2, checkMark);
   lcd.createChar(3, crossMark);
   lcd.createChar(4, wifiIcon);
+  lcd.createChar(5, bluetoothIcon);
 
   pinMode(switchPin, INPUT_PULLUP);
   pinMode(resetlcd, OUTPUT);
