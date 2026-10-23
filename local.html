@@ -145,6 +145,8 @@
     let lastBleValidation = null;
     let bleNotificationHandler = null;
     const pendingBleEchoes = [];
+    let openings = {};
+    let dataBefore = null;
 
     async function isOnline() {
       let online = navigator.onLine;
@@ -185,7 +187,23 @@
       updateAiToggleUi();
     }
 
+    async function loadOpening() {
+      try {
+        const response = await fetch('/openings.json');
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        openings = data;
+      } catch (error) {
+        console.error("JSON Error:", error);
+      }
+    }
+
     updateAiToggleUi();
+    loadOpening();
 
     document.head.insertAdjacentHTML(
       'beforeend',
@@ -559,7 +577,7 @@
 
         if (data.success) {
           const continuation = data.continuation.split(" ");
-          return continuation[0];
+          return { bestmove: continuation[0], evaluation: data.evaluation, mate: data.mate };
         } else {
           throw new Error("Error in Stockfish response");
         }
@@ -569,6 +587,63 @@
         return null;
       }
     };
+
+    function truncateFen(fen) {
+      if (!fen || typeof fen !== 'string') return '';
+      const parts = fen.trim().split(/\s+/);
+
+      if (parts.length >= 4)
+        return parts.slice(0, 4).join(' ');
+
+      return fen.trim();
+    }
+
+    async function analyze() {
+      const fen = game.fen();
+
+      const opening = openings[truncateFen(fen)];
+      if (opening?.name) return opening.name;
+      else if (!dataBefore) return "";
+
+      const dataAfter = await getStockfishMove(fen, 12);
+
+      const history = game.history({ verbose: true });
+      const move = history[history.length - 1];
+      const playedMoveUCI = move.from + move.to + (move.promotion || '');
+
+      let label = "";
+      if (dataBefore.mate !== null || dataAfter.mate !== null) {
+        if (playedMoveUCI === dataBefore.bestmove) {
+          label = "Best Move (!!)";
+        } else if (dataAfter.mate !== null && dataAfter.mate < 0) {
+          label = "Blunder (??)";
+        } else {
+          label = "Excellent (!)";
+        }
+      }
+      else {
+        const evalBefore = dataBefore.evaluation;
+        const evalAfter = dataAfter.evaluation;
+
+        const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
+        console.log(centipawnLoss);
+        if (playedMoveUCI === dataBefore.bestmove) {
+          label = "Best Move (!!)";
+        } else if (centipawnLoss <= 20) {
+          label = "Excellent (!)";
+        } else if (centipawnLoss <= 50) {
+          label = "Good";
+        } else if (centipawnLoss <= 100) {
+          label = "Imprecision (?)";
+        } else if (centipawnLoss <= 250) {
+          label = "Mistake (??)";
+        } else {
+          label = "Blunder (??)";
+        }
+      }
+
+      return label;
+    }
 
     async function stockfish() {
       try {
@@ -580,9 +655,9 @@
           chosen = legalMoves[Math.floor(Math.random() * legalMoves.length)];
           await new Promise(r => setTimeout(r, 500));
         } else {
-          const bestMove = await getStockfishMove(game.fen(), level);
-          const from = bestMove.substring(0, 2);
-          const to = bestMove.substring(2, 4);
+          const { bestmove } = await getStockfishMove(game.fen(), level);
+          const from = bestmove.substring(0, 2);
+          const to = bestmove.substring(2, 4);
 
           chosen = { from, to, promotion: "q" };
         }
@@ -679,7 +754,6 @@
       }
 
       const isValid = applyMove(move);
-      const response = isValid ? 'valid' : 'invalid';
       lastBleValidation = {
         move,
         response,
@@ -693,6 +767,13 @@
         });
       }
 
+      let response;
+      if (isValid) {
+        response = 'valid ' + (await analyze());
+      } else {
+        response = 'invalid';
+      }
+
       sendBleMessage(response).catch((error) => {
         console.error('BLE validation response failed:', error);
       });
@@ -700,7 +781,7 @@
       if (ai && isValid) {
         const online = await isOnline();
         if (!online) return toggleAi();
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
         const result = await stockfish();
         if (!result) return;
         sendBlackMove(result.moveText, result.piece).catch((error) => {
@@ -774,6 +855,8 @@
 
       await sendBleMessage(messageToSend);
       console.log(messageToSend);
+
+      dataBefore = await getStockfishMove(chess.fen(), 12);
     }
 
     function onDrop(source, target) {

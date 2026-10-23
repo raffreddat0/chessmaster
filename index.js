@@ -3,7 +3,7 @@ const path = require("path");
 const http = require("http");
 const { Server } = require("ws");
 const Chess = require("chess.js").Chess;
-const openings = require("./openings.json");
+const openings = require("./public/openings.json");
 require("dotenv").config();
 
 const app = express();
@@ -161,7 +161,7 @@ async function analyze(game, dataBefore) {
     } else if (centipawnLoss <= 100) {
       label = "Imprecision (?)";
     } else if (centipawnLoss <= 250) {
-      label = "Error (??)";
+      label = "Mistake (??)";
     } else {
       label = "Blunder (??)";
     }
@@ -381,7 +381,7 @@ wss.on("connection", (ws, req) => {
         }
       }
 
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise(r => setTimeout(r, 3000));
       await stockfish();
       if (chess.isGameOver()) {
         ws.send(chess.isDraw() ? "draw" : "lose");

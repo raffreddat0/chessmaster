@@ -1214,7 +1214,7 @@ void play(int &t, char position[4], int invalid[2]) {
       if (ddlay(1000))
         timer++;
 
-      if (timer > 2) {
+      if (timer > 3) {
         timer = 0;
         l = 0;
         t = 1;
