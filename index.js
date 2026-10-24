@@ -213,51 +213,60 @@ function truncateFen(fen) {
   return fen.trim();
 }
 
+function getWinChance(centipawn) {
+  const cp = centipawn * 100;
+  return 1 / (1 + Math.pow(10, -cp / 400));
+}
+
 async function analyze(game, dataBefore) {
   const fen = game.fen();
 
   const opening = openings[truncateFen(fen)];
   if (opening?.name) return opening.name;
-  else if (!dataBefore) return "";
+  if (!dataBefore) return "";
 
   const dataAfter = await getStockfishMove(fen, 12);
   if (!dataAfter) return "";
 
   const history = game.history({ verbose: true });
   const move = history[history.length - 1];
+  if (!move) return "";
+
   const playedMoveUCI = move.from + move.to + (move.promotion || '');
+  if (playedMoveUCI === dataBefore.bestmove) {
+    if (dataBefore.mate !== null && Math.abs(dataBefore.mate) <= 5) {
+      return "Brilliant (!!)";
+    }
+    return "Best Move";
+  }
 
-  let label = "";
   if (dataBefore.mate !== null || dataAfter.mate !== null) {
-    if (playedMoveUCI === dataBefore.bestmove) {
-      label = "Best Move (!!)";
-    } else if (dataAfter.mate !== null && dataAfter.mate < 0) {
-      label = "Blunder (??)";
-    } else {
-      label = "Excellent (!)";
+    if (dataBefore.mate !== null && dataBefore.mate > 0 && (dataAfter.mate === null || dataAfter.mate <= 0)) {
+      return "Miss (X)";
     }
-  }
-  else {
-    const evalBefore = dataBefore.evaluation;
-    const evalAfter = dataAfter.evaluation;
-
-    const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
-    if (playedMoveUCI === dataBefore.bestmove) {
-      label = "Best Move (!!)";
-    } else if (centipawnLoss <= 20) {
-      label = "Excellent (!)";
-    } else if (centipawnLoss <= 50) {
-      label = "Good";
-    } else if (centipawnLoss <= 100) {
-      label = "Imprecision (?)";
-    } else if (centipawnLoss <= 250) {
-      label = "Mistake (??)";
-    } else {
-      label = "Blunder (??)";
+    if (dataAfter.mate !== null && dataAfter.mate < 0) {
+      return "Blunder (??)";
     }
+    return "Excellent (!)";
   }
 
-  return label;
+  const winChanceBefore = getWinChance(dataBefore.evaluation);
+  const winChanceAfter = getWinChance(dataAfter.evaluation);
+
+  const winChanceLoss = winChanceBefore - winChanceAfter;
+  if (winChanceLoss <= 0.005) {
+    return "Great (!!)";
+  } else if (winChanceLoss <= 0.02) {
+    return "Excellent (!)";
+  } else if (winChanceLoss <= 0.06) {
+    return "Good";
+  } else if (winChanceLoss <= 0.12) {
+    return "Inaccuracy (!?)";
+  } else if (winChanceLoss <= 0.25) {
+    return "Mistake (?)";
+  } else {
+    return "Blunder (??)";
+  }
 }
 
 let games = [];

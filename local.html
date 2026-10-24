@@ -607,6 +607,11 @@
       return fen.trim();
     }
 
+    function getWinChance(centipawn) {
+      const cp = centipawn * 100;
+      return 1 / (1 + Math.pow(10, -cp / 400));
+    }
+
     async function analyze() {
       const fen = game.fen();
       const online = await isOnline();
@@ -615,44 +620,55 @@
         return "";
       }
 
+      const opening = openings[truncateFen(fen)];
+      if (opening?.name) return opening.name;
+
       const dataAfter = await getStockfishMove(fen, 12);
+      if (!dataAfter) return "";
+
       const history = game.history({ verbose: true });
       const move = history[history.length - 1];
+      if (!move) return "";
+
       const playedMoveUCI = move.from + move.to + (move.promotion || '');
-
-      let label = "";
-      if (dataBefore.mate !== null || dataAfter.mate !== null) {
-        if (playedMoveUCI === dataBefore.bestmove) {
-          label = "Best Move (!!)";
-        } else if (dataAfter.mate !== null && dataAfter.mate < 0) {
-          label = "Blunder (??)";
+      if (playedMoveUCI === dataBefore.bestmove) {
+        if (dataBefore.mate !== null && Math.abs(dataBefore.mate) <= 5) {
+          return "Brilliant (!!)";
         } else {
-          label = "Excellent (!)";
+          return "Best Move";
         }
       }
+      else if (dataBefore.mate !== null || dataAfter.mate !== null) {
+        if (dataBefore.mate !== null && dataBefore.mate > 0 && (dataAfter.mate === null || dataAfter.mate <= 0)) {
+          return "Miss (X)";
+        }
+        else if (dataAfter.mate !== null && dataAfter.mate < 0) {
+          return "Blunder (??)";
+        }
+        else {
+          return "Excellent (!)";
+        }
+      }
+
       else {
-        const evalBefore = dataBefore.evaluation;
-        const evalAfter = dataAfter.evaluation;
+        const winChanceBefore = getWinChance(dataBefore.evaluation);
+        const winChanceAfter = getWinChance(dataAfter.evaluation);
 
-        const centipawnLoss = Math.round((evalBefore - evalAfter) * 100);
-        if (playedMoveUCI === dataBefore.bestmove) {
-          label = "Best Move (!!)";
-        } else if (centipawnLoss <= 20) {
-          label = "Excellent (!)";
-        } else if (centipawnLoss <= 50) {
-          label = "Good";
-        } else if (centipawnLoss <= 100) {
-          label = "Imprecision (?)";
-        } else if (centipawnLoss <= 250) {
-          label = "Mistake (??)";
+        const winChanceLoss = Math.max(0, winChanceBefore - winChanceAfter);
+        if (winChanceLoss <= 0.005) {
+          return "Great (!!)";
+        } else if (winChanceLoss <= 0.03) {
+          return "Excellent (!)";
+        } else if (winChanceLoss <= 0.07) {
+          return "Good";
+        } else if (winChanceLoss <= 0.15) {
+          return "Inaccuracy (!?)";
+        } else if (winChanceLoss <= 0.25) {
+          return "Mistake (?)";
         } else {
-          label = "Blunder (??)";
+          return "Blunder (??)";
         }
-
-        console.log(label, centipawnLoss);
       }
-
-      return label;
     }
 
     async function stockfish() {
