@@ -1200,6 +1200,7 @@ void play(int &t, char position[4], int invalid[2]) {
     page = -3;
     redirect = stockfish > 0 ? 7 : 2;
     timer = 0;
+    strcpy(code, "");
     gap = 0;
     playing = -1;
     t = 0;
@@ -1431,12 +1432,6 @@ void online() {
     Serial1.println("start");
     Serial1.println("year");
     playing = -2;
-  }
-
-  if (input.startsWith("code")) {
-    String parsed = input.substring(5);
-    parsed.toCharArray(code, sizeof(code));
-    input = "";
   }
 
   if (playing == -2 && input == "joined") {
@@ -1737,6 +1732,14 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         }
       }
 
+      if (input.startsWith("code")) {
+        strcpy(code, input.substring(5).c_str());
+        invalid[0] = -1;
+        invalid[1] = -1;
+        t = 0;
+        input = "";
+      }
+
       if (page == 7) {
         int skip = 0;
 
@@ -1765,11 +1768,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.streak += 1;
           playing = 2;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - WIN").c_str());
+            length = addReplay(history, ("LVL " + String(config.level) + " - WIN - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - WIN");
-          } else if (code != "")
-            length = addReplay(history, (String(code) + " - WIN").c_str());
+          } else
+            length = addReplay(history, ("ONLINE - WIN - " + String(code)).c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1785,11 +1788,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.draws += 1;
           playing = 3;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - DRAW").c_str());
+            length = addReplay(history, ("LVL " + String(config.level) + " - DRAW - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - DRAW");
-          } else if (code != "")
-            length = addReplay(history, (String(code) + " - DRAW").c_str());
+          } else
+            length = addReplay(history, ("ONLINE - DRAW - " + String(code)).c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1803,11 +1806,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.streak = 0;
           playing = 4;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - LOSS").c_str());
+            length = addReplay(history, ("LVL " + String(config.level) + " - LOSS - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - LOSS");
-          } else if (code != "")
-            length = addReplay(history, (String(code) + " - LOSS").c_str());
+          } else
+            length = addReplay(history, ("ONLINE - LOSS - " + String(code)).c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1839,13 +1842,6 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           invalid[1] = colIndex;
           strcpy(position, "");
 
-          t = 0;
-          skip = 1;
-        }
-
-        if (input.startsWith("code")) {
-          invalid[0] = -1;
-          invalid[1] = -1;
           t = 0;
           skip = 1;
         }
