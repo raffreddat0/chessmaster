@@ -700,6 +700,44 @@
       }
     }
 
+    function handleResult(result) {
+      if (result === 'win' || result === 'lose' || result === 'draw' || result === 'exit') {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+
+        draggable = false;
+        const island = document.getElementById('island');
+        const islandStatus = document.getElementById('islandStatus');
+
+        if (result === 'win') {
+          state = 1;
+          islandMode = 'result';
+          if (islandStatus) islandStatus.textContent = 'You Win!';
+          if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
+        } else if (result === 'lose') {
+          state = 2;
+          islandMode = 'result';
+          if (islandStatus) islandStatus.textContent = 'You Lose!';
+          if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
+        } else if (result === 'draw') {
+          state = 3;
+          islandMode = 'result';
+          if (islandStatus) islandStatus.textContent = 'Draw!';
+          if (island) island.style.setProperty('--result-bg', '#f59e0b');
+        } else if (result === 'exit') {
+          state = 0;
+          sessionStorage.setItem('gameEnded', 'true');
+          window.location.href = '/';
+          return;
+        }
+
+        if (island) island.classList.remove('expanded');
+        updateIslandVisibility();
+      }
+    }
+
     async function handleBleMove(value) {
       const message = value.trim();
       const lowerMessage = message.toLowerCase();
@@ -732,40 +770,8 @@
         return;
       }
 
-      if (lowerMessage === 'win' || lowerMessage === 'lose' || lowerMessage === 'draw' || lowerMessage === 'exit') {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
-        }
-
-        draggable = false;
-        const island = document.getElementById('island');
-        const islandStatus = document.getElementById('islandStatus');
-
-        if (lowerMessage === 'win') {
-          state = 1;
-          islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'You Win!';
-          if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
-        } else if (lowerMessage === 'lose') {
-          state = 2;
-          islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'You Lose!';
-          if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
-        } else if (lowerMessage === 'draw') {
-          state = 3;
-          islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'Draw!';
-          if (island) island.style.setProperty('--result-bg', '#f59e0b');
-        } else if (lowerMessage === 'exit') {
-          state = 0;
-          sessionStorage.setItem('gameEnded', 'true');
-          window.location.href = '/';
-          return;
-        }
-
-        if (island) island.classList.remove('expanded');
-        updateIslandVisibility();
+      if (lowerMessage === 'exit') {
+        handleResult(lowerMessage);
         return;
       }
 
@@ -808,6 +814,7 @@
       });
 
       if (game.game_over()) {
+        handleResult(game.in_draw() ? "draw" : "lose");
         await sendBleMessage(game.in_draw() ? "draw" : "win");
         return;
       }
@@ -891,6 +898,7 @@
       console.log(messageToSend);
 
       if (game.game_over()) {
+        handleResult(game.in_draw() ? "draw" : "win");
         await sendBleMessage(game.in_draw() ? "draw" : "lose");
         return;
       }
