@@ -807,8 +807,8 @@
         console.error('BLE validation response failed:', error);
       });
 
-      if (game.isGameOver()) {
-        await sendBleMessage(game.isDraw() ? "draw" : "win");
+      if (game.game_over()) {
+        await sendBleMessage(game.in_draw() ? "draw" : "win");
         return;
       }
 
@@ -890,12 +890,12 @@
       await sendBleMessage(messageToSend);
       console.log(messageToSend);
 
-      if (game.isGameOver()) {
-        await sendBleMessage(game.isDraw() ? "draw" : "lose");
+      if (game.game_over()) {
+        await sendBleMessage(game.in_draw() ? "draw" : "lose");
         return;
       }
 
-      if (game.isCheck())
+      if (game.in_check())
         await sendBleMessage("check");
 
       const online = await isOnline();
