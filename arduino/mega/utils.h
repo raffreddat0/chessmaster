@@ -66,6 +66,31 @@ byte bluetoothIcon[8] = {
     0b00000
 };
 
+int addReplay(char history[][19], const char* element) {
+    for (int i = 4; i > 0; i--) {
+        if (strcmp(history[i - 1], "Exit") == 0) {
+            history[i][0] = '\0';
+        } else {
+            strncpy(history[i], history[i - 1], 19);
+            history[i][18] = '\0';
+        }
+    }
+
+    strncpy(history[0], element, 19);
+    history[0][18] = '\0';
+
+    int c = 0;
+    for (int i = 0; i < 5; i++) {
+        if (history[i][0] != '\0') {
+            c++;
+        } else {
+            break;
+        }
+    }
+
+    return c;
+}
+
 String checkEdges(int M[cell][cell]) {
   for (int r = 0; r < 2; r++) {
     for (int c = 0; c < cell; c++) {

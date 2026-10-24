@@ -199,7 +199,6 @@ const getStockfishMove = async (fen, level) => {
     }
   } catch (error) {
     console.error("Error:", error);
-    await new Promise(r => setTimeout(r, 2000));
     return null;
   }
 };
@@ -480,6 +479,7 @@ wss.on("connection", (ws, req) => {
           console.log(`Stockfish: ${uci}`);
           ws.send(auth === "online" ? uci : (piece + uci));
         } catch {
+          await new Promise(r => setTimeout(r, 2000));
           return await stockfish();
         }
       }

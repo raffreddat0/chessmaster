@@ -637,7 +637,7 @@
           if (state === 1) {
             draggable = false;
             islandMode = 'result';
-            islandStatus.textContent = 'Win!';
+            islandStatus.textContent = 'You Win!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
             island.classList.remove('expanded');
             updateIslandVisibility();
@@ -645,7 +645,7 @@
           if (state === 2) {
             draggable = false;
             islandMode = 'result';
-            islandStatus.textContent = 'Lose!';
+            islandStatus.textContent = 'You Lose!';
             island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
             island.classList.remove('expanded');
             updateIslandVisibility();

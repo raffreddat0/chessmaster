@@ -593,7 +593,6 @@
         }
       } catch (error) {
         console.error("Error:", error);
-        await new Promise(r => setTimeout(r, 2000));
         return null;
       }
     };
@@ -680,6 +679,7 @@
         return { moveText: uci, piece };
       } catch {
         if (game.turn() === "w") return null;
+        await new Promise(r => setTimeout(r, 2000));
         return await stockfish();
       }
     }
@@ -729,12 +729,12 @@
         if (lowerMessage === 'win') {
           state = 1;
           islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'Win!';
+          if (islandStatus) islandStatus.textContent = 'You Win!';
           if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#22c55e');
         } else if (lowerMessage === 'lose') {
           state = 2;
           islandMode = 'result';
-          if (islandStatus) islandStatus.textContent = 'Lose!';
+          if (islandStatus) islandStatus.textContent = 'You Lose!';
           if (island) island.style.setProperty('--result-bg', getComputedStyle(document.documentElement).getPropertyValue('--error').trim() || '#ef4444');
         } else if (lowerMessage === 'draw') {
           state = 3;

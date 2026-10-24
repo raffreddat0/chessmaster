@@ -50,6 +50,7 @@ int status = 0;
 int confirm = 0;
 int yes = 0;
 int size = 0;
+int length = 0;
 int editing = 0;
 int year = 0;
 
@@ -64,6 +65,7 @@ bool ble = false;
 unsigned long gap = 0;
 char code[7] = "";
 char comment[100] = "";
+char history[6][19];
 int playing = -1;
 unsigned long timer = 0;
 
@@ -1056,9 +1058,68 @@ void settings() {
   }
 }
 
+void replays() {
+  int numItems = length + 1;
+  strcpy(history[numItems - 1], "Exit");
+
+  y = constrain(y, 0, numItems - 1);
+
+  lcd.setCursor(6, 0);
+  lcd.print("Replays");
+
+  static int start = 0;
+  if (y < start) {
+    start = y;
+  } else if (y >= start + 3) {
+    start = y - 2;
+  }
+
+  int end = min(start + 3, numItems);
+
+  if (start > 0) {
+    lcd.setCursor(19, 1);
+    lcd.write(byte(1));
+  } else {
+    lcd.setCursor(19, 1);
+    lcd.print(" ");
+  }
+
+  if (end < numItems) {
+    lcd.setCursor(19, 3);
+    lcd.write(byte(0));
+  } else {
+    lcd.setCursor(19, 3);
+    lcd.print(" ");
+  }
+
+  for (int i = start; i < end; i++) {
+    lcd.setCursor(0, i - start + 1);
+    if (i == y)
+      lcd.print("> ");
+    else
+      lcd.print("  ");
+
+    char buffer[18];
+    snprintf(buffer, sizeof(buffer), "%-17.17s", history[i]);
+    lcd.print(buffer);
+  }
+
+  if (click) {
+    click = 0;
+    prevent = 1;
+    if (y == numItems - 1) {
+      page = 3;
+      y = y0 = 5;
+      x = x0 = 0;
+      lcd.clear();
+      delay(100);
+    }
+  }
+}
+
 void stats() {
   const char *stats[] = {
-      "Streak: ", "Wins: ", "Losses: ", "Draws: ", "Games: ", "Exit"};
+      "Streak: ", "Wins: ", "Losses: ", "Draws: ", "Games: ", "Replays", "Exit"};
   const int numItems = sizeof(stats) / sizeof(stats[0]);
 
   y = constrain(y, 0, numItems - 1);
@@ -1115,21 +1176,29 @@ void stats() {
       lcd.print(config.games);
   }
 
-  if (click && y == numItems - 1) {
+  if (click) {
     click = 0;
     prevent = 1;
-    page = 0;
-    y = y0 = 0;
-    x = x0 = 2;
-    lcd.clear();
-    delay(100);
+    if (y == numItems - 2) {
+      page = 9;
+      y = y0 = 0;
+      x = x0 = 0;
+      lcd.clear();
+      delay(100);
+    } else if (y == numItems - 1) {
+      page = 0;
+      y = y0 = 0;
+      x = x0 = 2;
+      lcd.clear();
+      delay(100);
+    }
   }
 }
 
 void play(int &t, char position[4], int invalid[2]) {
   if (!connected && !ble) {
     page = -3;
-    redirect = 7;
+    redirect = stockfish > 0 ? 7 : 2;
     timer = 0;
     gap = 0;
     playing = -1;
@@ -1278,11 +1347,11 @@ void play(int &t, char position[4], int invalid[2]) {
     confirm = x = 1;
     lcd.setCursor(6, 1);
     if (playing == 2)
-      lcd.print("  WIN!  ");
+      lcd.print("YOU WIN! ");
     if (playing == 3)
-      lcd.print("  DRAW  ");
+      lcd.print("  DRAW   ");
     if (playing == 4)
-      lcd.print("  LOSE  ");
+      lcd.print("YOU LOSE!");
 
     lcd.setCursor(0, 2);
     lcd.print("                    ");
@@ -1695,6 +1764,12 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.wins += 1;
           config.streak += 1;
           playing = 2;
+          if (stockfish > 1)
+            length = addReplay(history, ("LVL " + String(config.level) + " - WIN").c_str());
+          else if (ble) {
+            length = addReplay(history, "LOCAL - WIN");
+          } else if (code != "")
+            length = addReplay(history, (String(code) + " - WIN").c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1709,6 +1784,12 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "draw") {
           config.draws += 1;
           playing = 3;
+          if (stockfish > 1)
+            length = addReplay(history, ("LVL " + String(config.level) + " - DRAW").c_str());
+          else if (ble) {
+            length = addReplay(history, "LOCAL - DRAW");
+          } else if (code != "")
+            length = addReplay(history, (String(code) + " - DRAW").c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1721,6 +1802,12 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           config.losses += 1;
           config.streak = 0;
           playing = 4;
+          if (stockfish > 1)
+            length = addReplay(history, ("LVL " + String(config.level) + " - LOSS").c_str());
+          else if (ble) {
+            length = addReplay(history, "LOCAL - LOSS");
+          } else if (code != "")
+            length = addReplay(history, (String(code) + " - LOSS").c_str());
           skip = 1;
           gap = 0;
           strcpy(position, "");
@@ -1942,6 +2029,9 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
     break;
   case 8:
     about();
+    break;
+  case 9:
+    replays();
     break;
   }
 
