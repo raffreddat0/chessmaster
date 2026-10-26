@@ -1,6 +1,9 @@
 const CACHE_NAME = 'chessmaster';
 const OFFLINE_PAGES = new Set([
   '/',
+  'LOCAL',
+  'about',
+  'credits',
   '/index.html',
   '/about.html',
   '/credits.html',
@@ -82,7 +85,7 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  const isTemporaryPage = /^\/(?=(?:[^a-zA-Z]*[a-zA-Z]){3}[^a-zA-Z]*$)(?=(?:[^\d]*\d){3}[^\d]*$)[a-zA-Z0-9]{6}$/.test(url.pathname) && !(OFFLINE_PAGES.has(url.pathname.toLowerCase()) || OFFLINE_PAGES.has(url.pathname.toLowerCase().replace('.html', '')));
+  const isTemporaryPage = /^\/(?=(?:[^a-zA-Z]*[a-zA-Z]){3}[^a-zA-Z]*$)(?=(?:[^\d]*\d){3}[^\d]*$)[a-zA-Z0-9]{6}$/.test(url.pathname) && !OFFLINE_PAGES.has(url.pathname);
   if (isTemporaryPage) {
     return event.respondWith(
       fetch(request).catch(() => {
@@ -93,7 +96,7 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  if (OFFLINE_PAGES.has(url.pathname.toLowerCase()) || OFFLINE_PAGES.has(url.pathname.toLowerCase().replace('.html', ''))) {
+  if (OFFLINE_PAGES.has(url.pathname)) {
     return event.respondWith(
       fetch(request)
         .then((response) => {
