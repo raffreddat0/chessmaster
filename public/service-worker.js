@@ -77,10 +77,18 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname === '/ONLINE') {
     return event.respondWith(
       fetch(request).catch(() => {
-        return new Response(
-          '<h1>Chess Master</h1><p>This mode requires an internet connection.</p>',
-          { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-        );
+        return new Response('Offline - Page Not Available', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      })
+    );
+  }
+
+  const isTemporaryPage = /^\/[A-Za-z0-9]+$/.test(url.pathname) && !OFFLINE_PAGES.has(url.pathname);
+  if (isTemporaryPage) {
+    return event.respondWith(
+      fetch(request).catch(() => {
+        return caches.match('/index.html').then((cachedResponse) => {
+          return cachedResponse || new Response('Offline - Page Not Available', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+        });
       })
     );
   }
@@ -99,7 +107,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           return caches.match(request).then((cachedResponse) => {
-            return cachedResponse || caches.match('/index.html') || new Response('Offline - Page Not Available', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+            return cachedResponse || caches.match('/index.html') || new Response('Offline - Page Not Available', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
           });
         })
     );
