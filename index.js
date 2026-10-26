@@ -157,6 +157,7 @@ app.use((req, res) => {
 const server = http.createServer(app);
 const wss = new Server({ server });
 
+let games = [];
 function generateCode() {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const numbers = "0123456789";
@@ -177,7 +178,11 @@ function generateCode() {
     [codeArray[i], codeArray[j]] = [codeArray[j], codeArray[i]];
   }
 
-  return codeArray.join("");
+  const code = codeArray.join("");
+  if (completedGames.some((record) => record.code === code) || games.includes(code))
+    return generateCode();
+
+  return code;
 }
 
 const getStockfishMove = async (fen, level) => {
@@ -269,7 +274,6 @@ async function analyze(game, dataBefore) {
   }
 }
 
-let games = [];
 let sessions = {};
 wss.on("connection", (ws, req) => {
   const urlParams = new URLSearchParams(req.url.split("?")[1]);

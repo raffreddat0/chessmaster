@@ -32,7 +32,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Errore durante il caching iniziale:', err);
+        console.warn('Error caching initial assets:', err);
       });
     })
   );

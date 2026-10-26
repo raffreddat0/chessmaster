@@ -57,7 +57,7 @@
         </svg><span id="enterGameLabel">Enter Game</span></button>
     </div>
     <section id="recentReplays" class="recent-replays" style="display:none">
-      <h2>Recent replays</h2>
+      <!-- <h2>Recent replays</h2> -->
       <ul id="replayList"></ul>
     </section>
     <div id="footerWrap">
@@ -162,6 +162,35 @@
     }
 
     setRandomFavicon();
+
+    function timeAgo(date) {
+      const previousTime = typeof date === 'object' ? date.getTime() : new Date(date).getTime();
+      const currentTime = Date.now();
+
+      const msPerCurrent = currentTime - previousTime;
+
+      const seconds = Math.floor(msPerCurrent / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (seconds < 5) {
+        return "just now";
+      } else if (seconds < 60) {
+        return `${seconds}s ago`;
+      } else if (minutes < 60) {
+        return `${minutes}m ago`;
+      } else if (hours < 24) {
+        return `${hours}h ago`;
+      } else if (days < 7) {
+        return `${days}d ago`;
+      } else if (days < 14) {
+        return "1w ago";
+      } else {
+        return new Date(previousTime).toLocaleDateString();
+      }
+    }
+
     async function loadRecentReplays() {
       const panel = document.getElementById('recentReplays');
       const replayList = document.getElementById('replayList');
@@ -171,11 +200,11 @@
         const games = await response.json();
         if (!Array.isArray(games) || games.length === 0) return;
 
-        for (const replay of games.slice(0, 5)) {
+        for (const replay of games.slice(0, 1)) {
           const item = document.createElement('li');
           const link = document.createElement('a');
           link.href = `/${encodeURIComponent(replay.code)}`;
-          link.textContent = `${replay.code} · ${replay.result.toUpperCase()} · ${replay.moves} moves`;
+          link.textContent = `REPLAY · ${replay.result.toUpperCase()} · ${timeAgo(replay.date).toUpperCase()}`;
           item.appendChild(link);
           replayList.appendChild(item);
         }

@@ -184,6 +184,7 @@
       width: min(100%, 400px);
       padding: 0 1rem;
       z-index: 10;
+      margin-top: -1rem;
     }
 
     .recent-replays h2 {
@@ -211,6 +212,7 @@
 
     .recent-replays a:hover {
       color: #fff;
+      text-decoration-color: rgba(255, 255, 255, 1);
     }
 
     .subtitle {
