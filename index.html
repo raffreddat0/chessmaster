@@ -200,11 +200,15 @@
         const games = await response.json();
         if (!Array.isArray(games) || games.length === 0) return;
 
+        replayList.innerHTML = '';
         for (const replay of games.slice(0, 1)) {
           const item = document.createElement('li');
           const link = document.createElement('a');
           link.href = `/${encodeURIComponent(replay.code)}`;
+
+          link.setAttribute('ago', replay.date);
           link.textContent = `REPLAY · ${replay.result.toUpperCase()} · ${timeAgo(replay.date).toUpperCase()}`;
+
           item.appendChild(link);
           replayList.appendChild(item);
         }
@@ -212,7 +216,20 @@
       } catch { }
     }
 
+    function updateTimeAgo() {
+      const links = document.querySelectorAll('#replayList a[ago]');
+      links.forEach(link => {
+        const date = link.getAttribute('ago');
+        const textParts = link.textContent.split('·');
+        if (textParts.length >= 2) {
+          const prefix = `${textParts[0]} · ${textParts[1]}`;
+          link.textContent = `${prefix} · ${timeAgo(date).toUpperCase()}`;
+        }
+      });
+    }
+
     loadRecentReplays();
+    setInterval(updateTimeAgo, 10000);
 
     function randomizeTitleCase() {
       const top = document.querySelector('.title-top');
