@@ -107,7 +107,7 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 1rem;
-      font-size: .7rem;
+      font-size: clamp(0.68rem, 2.9vw, 0.75rem);
       letter-spacing: 0.02em;
     }
 
@@ -184,7 +184,7 @@
       width: min(100%, 400px);
       padding: 0 1rem;
       z-index: 10;
-      margin-top: -1rem;
+      margin-top: -1.5rem;
     }
 
     .recent-replays h2 {
@@ -204,10 +204,15 @@
     }
 
     .recent-replays a {
-      color: rgba(255, 255, 255, 0.72);
-      font-size: 0.75rem;
+      font-size: clamp(0.68rem, 2.9vw, 0.75rem);
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.02em;
+      line-height: 1;
+      text-decoration-line: underline;
       text-decoration-color: rgba(255, 255, 255, 0.2);
+      text-decoration-thickness: 1px;
       text-underline-offset: 2px;
+      pointer-events: auto;
     }
 
     .recent-replays a:hover {
