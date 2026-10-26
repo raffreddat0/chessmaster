@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  const isTemporaryPage = /^\/(?=(?:[^a-zA-Z]*[a-zA-Z]){3}[^a-zA-Z]*$)(?=(?:[^\d]*\d){3}[^\d]*$)[a-zA-Z0-9]{6}$/.test(url.pathname) && !OFFLINE_PAGES.has(url.pathname);
+  const isTemporaryPage = /^\/(?=(?:[^a-zA-Z]*[a-zA-Z]){3}[^a-zA-Z]*$)(?=(?:[^\d]*\d){3}[^\d]*$)[a-zA-Z0-9]{6}$/.test(url.pathname) && !(OFFLINE_PAGES.has(url.pathname.toLowerCase()) || OFFLINE_PAGES.has(url.pathname.toLowerCase().replace('.html', '')));
   if (isTemporaryPage) {
     return event.respondWith(
       fetch(request).catch(() => {
@@ -93,7 +93,7 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  if (OFFLINE_PAGES.has(url.pathname)) {
+  if (OFFLINE_PAGES.has(url.pathname.toLowerCase()) || OFFLINE_PAGES.has(url.pathname.toLowerCase().replace('.html', ''))) {
     return event.respondWith(
       fetch(request)
         .then((response) => {
