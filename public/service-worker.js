@@ -82,7 +82,7 @@ self.addEventListener('fetch', (event) => {
     );
   }
 
-  const isTemporaryPage = /^\/[A-Za-z0-9]+$/.test(url.pathname) && !OFFLINE_PAGES.has(url.pathname);
+  const isTemporaryPage = /^\/(?=(?:[^a-zA-Z]*[a-zA-Z]){3}[^a-zA-Z]*$)(?=(?:[^\d]*\d){3}[^\d]*$)[a-zA-Z0-9]{6}$/.test(url.pathname) && !OFFLINE_PAGES.has(url.pathname);
   if (isTemporaryPage) {
     return event.respondWith(
       fetch(request).catch(() => {
