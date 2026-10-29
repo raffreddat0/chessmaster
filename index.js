@@ -307,7 +307,7 @@ wss.on("connection", (ws, req) => {
     ws.send("start");
   }
 
-  console.log("Client connesso");
+  console.log("Client connected");
 
   let pongTimeout;
   const heartbeat = () => {
@@ -440,12 +440,8 @@ wss.on("connection", (ws, req) => {
         ws.send("timer " + timer);
       }
 
-      if (auth === "online")
-        ws.send("valid");
-      else {
-        const result = await analyze(chess, analysis);
-        ws.send("valid " + result);
-      }
+      const result = await analyze(chess, analysis);
+      ws.send("valid " + result);
 
       if (chess.isGameOver()) {
         saveCompletedGame(game, chess);
@@ -497,7 +493,7 @@ wss.on("connection", (ws, req) => {
         }
       }
 
-      if (auth !== "online") await new Promise(r => setTimeout(r, 3000));
+      await new Promise(r => setTimeout(r, auth === "online" ? 1500 : 3000));
       await stockfish();
       if (chess.isGameOver()) {
         saveCompletedGame(game, chess);
@@ -508,7 +504,7 @@ wss.on("connection", (ws, req) => {
       if (chess.isCheck())
         ws.send("check");
 
-      if (auth !== "online") analysis = await getStockfishMove(chess.fen(), 12);
+      analysis = await getStockfishMove(chess.fen(), 12);
     });
   else {
     ws.on("message", async (data) => {
@@ -561,7 +557,10 @@ wss.on("connection", (ws, req) => {
         if (chess.isGameOver()) {
           saveCompletedGame(game, chess);
           ws.send(chess.isDraw() ? "draw" : "lose");
+          return;
         }
+
+        analysis = await getStockfishMove(chess.fen(), 12);
         return;
       }
 
@@ -574,7 +573,9 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
-      ws.send("valid");
+      const result = await analyze(chess, analysis);
+      ws.send("valid " + result);
+
       if (chess.isGameOver()) {
         saveCompletedGame(game, chess);
         ws.send(chess.isDraw() ? "draw" : "win");

@@ -149,6 +149,7 @@
     const pendingBleEchoes = [];
     let maxLevel = 0;
     let dataBefore = null;
+    let moveEvaluations = {};
 
     async function isOnline() {
       let online = navigator.onLine;
@@ -449,6 +450,41 @@
       }
 
       updateResponsiveHistory();
+      updateMoveEvaluationMarker(viewingIndex === -1 ? history.length : viewingIndex);
+    }
+
+    function updateMoveEvaluationMarker(moveCount) {
+      document.querySelectorAll('#board .move-evaluation-marker').forEach(marker => marker.remove());
+      if (!moveCount || !moveEvaluations[moveCount]) return;
+
+      const history = game.history({ verbose: true });
+      const move = history[moveCount - 1];
+      if (!move) return;
+
+      const square = document.querySelector(`#board .square-${move.to}`);
+      if (!square) return;
+
+      const evaluation = moveEvaluations[moveCount];
+      const marker = document.createElement('span');
+      marker.className = 'move-evaluation-marker';
+      marker.dataset.evaluation = evaluation.symbol;
+      marker.textContent = evaluation.symbol;
+      square.appendChild(marker);
+    }
+
+    function addMoveEvaluation(moveCount, label) {
+      let symbol = '';
+      if (label.includes('(!!)')) symbol = '!!';
+      else if (label.includes('(!?)')) symbol = '!?';
+      else if (label.includes('(??)')) symbol = '??';
+      else if (label.includes('(X)')) symbol = 'X';
+      else if (label.includes('(?)')) symbol = '?';
+      else if (label.includes('(!)')) symbol = '!';
+      else if (label.includes('Best Move')) symbol = '★';
+
+      if (!symbol) return;
+      moveEvaluations[moveCount] = { symbol, label };
+      updateMoveEvaluationMarker(viewingIndex === -1 ? game.history().length : viewingIndex);
     }
 
 
@@ -460,12 +496,13 @@
         return;
       }
 
+      const previousIndex = viewingIndex === -1 ? history.length : viewingIndex;
       viewingIndex = index;
       const tempGame = new Chess();
       for (let i = 0; i < index; i++) {
         tempGame.move(history[i]);
       }
-      board.position(tempGame.fen());
+      board.position(tempGame.fen(), true);
 
       removeMoves();
       removeHighlights();
@@ -482,7 +519,7 @@
     function backToPresent() {
       if (autoPlayInterval) toggleAutoPlay();
       viewingIndex = -1;
-      board.position(game.fen());
+      board.position(game.fen(), true);
 
       removeHighlights();
       const history = game.history({ verbose: true });
@@ -795,7 +832,9 @@
 
       let response;
       if (isValid) {
-        response = 'valid ' + (await analyze());
+        const evaluation = await analyze();
+        response = 'valid ' + evaluation;
+        if (evaluation) addMoveEvaluation(game.history().length, evaluation);
       } else {
         response = 'invalid';
       }
@@ -1042,6 +1081,7 @@
     function updateResponsiveHistory() {
       updateHistoryPanelVisibility();
       updateIslandVisibility();
+      updateMoveEvaluationMarker(viewingIndex === -1 ? history.length : viewingIndex);
     }
 
     function openIsland() {
