@@ -729,7 +729,7 @@
     }
 
     [class^="notation-"] {
-      font-family: 'IBM Plex Mono', monospace;
+      font-family: 'IBM Plex Mono', monospace !important;
     }
 
     input[type="text"].success {
@@ -1080,6 +1080,6 @@
       }
 
       [class^="notation-"] {
-        font-size: 9px;
+        font-size: 9px !important;
       }
     }
