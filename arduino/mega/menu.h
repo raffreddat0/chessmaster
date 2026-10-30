@@ -193,12 +193,10 @@ void ditch() {
     click = 0;
     prevent = 1;
     if (y == numItems - 3) {
-      pinMode(pinMagnet, 1);
       reset();
       turn(T0.turn);
       move(T0.move);
       down(T0.down * 100);
-      pinMode(pinMagnet, 0);
     } else if (y == numItems - 2) {
       S0 = T0;
       EEPROM.put(addr0, S0);
@@ -451,12 +449,10 @@ void squares() {
     click = 0;
     prevent = 1;
     if (y == numItems - 3) {
-      pinMode(pinMagnet, 1);
       reset();
       turn(T[7 - z][z0].turn);
       move(T[7 - z][z0].move);
       down(T[7 - z][z0].down * 100);
-      pinMode(pinMagnet, 0);
     } else if (y == numItems - 2) {
       memcpy(S, T, sizeof(T));
       EEPROM.put(addr, S);
