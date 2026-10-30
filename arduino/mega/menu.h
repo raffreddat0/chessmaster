@@ -29,7 +29,6 @@ int value1 = 0;
 int value2 = 0;
 int click = 0;
 int prevent = 0;
-bool magnet = false;
 
 int x0 = 0;
 int y0 = 0;
@@ -71,7 +70,7 @@ unsigned long timer = 0;
 
 void ditch() {
   const char *settings[] = {
-      "Turn: ", "Move: ", "Down: ", "Magnet", "Try", "Save", "Exit"};
+      "Turn: ", "Move: ", "Down: ", "Try", "Save", "Exit"};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -93,9 +92,6 @@ void ditch() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
-
-  lcd.setCursor(0, 0);
-  lcd.print(magnet ? "ON " : "OFF");
 
   static int start = 0;
   if (y < start) {
@@ -196,16 +192,13 @@ void ditch() {
   if (click) {
     click = 0;
     prevent = 1;
-    if (y == numItems - 4) {
-      magnet = !magnet;
-      lcd.setCursor(0, 0);
-      lcd.print(magnet ? "ON " : "OFF");
-      pinMode(pinMagnet, magnet ? 1 : 0);
-    } else if (y == numItems - 3) {
+    if (y == numItems - 3) {
+      pinMode(pinMagnet, 1);
       reset();
       turn(T0.turn);
       move(T0.move);
       down(T0.down * 100);
+      pinMode(pinMagnet, 0);
     } else if (y == numItems - 2) {
       S0 = T0;
       EEPROM.put(addr0, S0);
@@ -214,8 +207,6 @@ void ditch() {
       x = x0 = 0;
       y = y0 = 2;
       reset();
-      pinMode(pinMagnet, 0);
-      magnet = false;
       editing = 0;
       lcd.clear();
       delay(100);
@@ -287,7 +278,7 @@ void calibration() {
 
 void squares() {
   const char *settings[] = {
-      "Square: ", "Turn: ", "Move: ", "Down: ", "Magnet", "Try", "Save", "Exit"};
+      "Square: ", "Turn: ", "Move: ", "Down: ", "Try", "Save", "Exit"};
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
 
@@ -309,9 +300,6 @@ void squares() {
     lcd.print(range[r]);
   } else
     lcd.print(range[r]);
-
-  lcd.setCursor(0, 0);
-  lcd.print(magnet ? "ON " : "OFF");
 
   static int start = 0;
   if (y < start) {
@@ -462,16 +450,13 @@ void squares() {
   if (click) {
     click = 0;
     prevent = 1;
-    if (y == numItems - 4) {
-      magnet = !magnet;
-      lcd.setCursor(0, 0);
-      lcd.print(magnet ? "ON " : "OFF");
-      pinMode(pinMagnet, magnet ? 1 : 0);
-    } else if (y == numItems - 3) {
+    if (y == numItems - 3) {
+      pinMode(pinMagnet, 1);
       reset();
       turn(T[7 - z][z0].turn);
       move(T[7 - z][z0].move);
       down(T[7 - z][z0].down * 100);
+      pinMode(pinMagnet, 0);
     } else if (y == numItems - 2) {
       memcpy(S, T, sizeof(T));
       EEPROM.put(addr, S);
@@ -480,8 +465,6 @@ void squares() {
       y = x = 0;
       y0 = x0 = 0;
       reset();
-      pinMode(pinMagnet, 0);
-      magnet = false;
       editing = 0;
       lcd.clear();
       delay(100);
