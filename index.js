@@ -203,7 +203,6 @@ const getStockfishMove = async (fen, level) => {
       throw new Error("Error in Stockfish response");
     }
   } catch (error) {
-    console.error("Error:", error);
     return null;
   }
 };
