@@ -1,5 +1,6 @@
 #include <EEPROM.h>
 #include <LiquidCrystal.h>
+#include <math.h>
 
 #include "servo.h"
 #include "utils.h"
@@ -8,7 +9,7 @@ void animation(int type);
 void lcdbegin();
 
 struct Config {
-  int level;
+  int elo;
   char ssid[32];
   int streak;
   int wins;
@@ -18,6 +19,86 @@ struct Config {
 };
 
 Config config;
+const int STOCKFISH_ELO[] = {
+  400, 600, 800, 1000, 1150, 1300, 1450, 1600,
+  1750, 1900, 2050, 2200, 2350, 2500, 2650
+};
+const int STOCKFISH_LEVELS = sizeof(STOCKFISH_ELO) / sizeof(STOCKFISH_ELO[0]);
+const int DEFAULT_ELO = 400;
+const int MIN_ELO = 100;
+const int MAX_ELO = 3000;
+
+int clampElo(int elo) {
+  return constrain(elo, MIN_ELO, MAX_ELO);
+}
+
+int getKFactor(int elo) {
+  if (elo < 1400)
+    return 40;
+  if (elo <= 2100)
+    return 20;
+  return 10;
+}
+
+int getStockfishLevel(int elo) {
+  int level = 1;
+  int distance = abs(STOCKFISH_ELO[0] - elo);
+
+  for (int i = 1; i < STOCKFISH_LEVELS; i++) {
+    int currentDistance = abs(STOCKFISH_ELO[i] - elo);
+    if (currentDistance < distance) {
+      level = i + 1;
+      distance = currentDistance;
+    }
+  }
+
+  return level;
+}
+
+int calculateNewElo(int userElo, int stockfishLevel, float score) {
+  int botElo = STOCKFISH_ELO[constrain(stockfishLevel, 1, STOCKFISH_LEVELS) - 1];
+  float expectedScore = 1.0 / (1.0 + pow(10.0, (botElo - userElo) / 400.0));
+  float newElo = userElo + getKFactor(userElo) * (score - expectedScore);
+  return clampElo((int)(newElo + 0.5));
+}
+
+extern int stockfish;
+
+int getGameStockfishLevel() {
+  switch (stockfish) {
+  case 1:
+    return getStockfishLevel(config.elo);
+  case 2:
+    return 5;
+  case 3:
+    return 8;
+  case 4:
+    return 12;
+  case 5:
+    return 15;
+  default:
+    return 0;
+  }
+}
+
+void updateEloFromResult(float score) {
+  int stockfishLevel = getGameStockfishLevel();
+  if (stockfishLevel > 0) {
+    config.elo = calculateNewElo(config.elo, stockfishLevel, score);
+    EEPROM.put(0, config);
+  }
+}
+
+bool normalizeElo() {
+  int previousElo = config.elo;
+  if (config.elo >= 1 && config.elo <= STOCKFISH_LEVELS) {
+    config.elo = STOCKFISH_ELO[config.elo - 1];
+  } else if (config.elo < MIN_ELO || config.elo > MAX_ELO) {
+    config.elo = DEFAULT_ELO;
+  }
+  return config.elo != previousElo;
+}
+
 Square T[8][8] = {};
 Square T0 = {};
 int addr = sizeof(config);
@@ -950,16 +1031,25 @@ void settings() {
   };
 
   const MenuItem settings[] = {
-    {"About", 8}, {"Level: ", 0}, {"Wifi", -3},
+    {"About", 8}, {"Elo: ", 0}, {"Wifi", -3},
     {"Debug", -4}, {"Exit", 0}
   };
 
   const int numItems = sizeof(settings) / sizeof(settings[0]);
+  const int range[4] = {5, 10, 50, 100};
 
   y = constrain(y, 0, numItems - 1);
 
   lcd.setCursor(6, 0);
   lcd.print("Settings");
+
+  if (r > 0 && r < 3)
+    lcd.setCursor(18, 0);
+  else if (r == 3)
+    lcd.setCursor(17, 0);
+  else
+    lcd.setCursor(19, 0);
+  lcd.print(range[r]);
 
   static int start = 0;
   if (y < start) {
@@ -1000,19 +1090,19 @@ void settings() {
     lcd.print(buffer);
 
     lcd.setCursor(strlen(settings[i].label) + 2, row);
-    if (strcmp(settings[i].label, "Level: ") == 0) {
+    if (strcmp(settings[i].label, "Elo: ") == 0) {
       if (i == y && x != x0) {
-        config.level += (x - x0);
-        if (config.level < 1)
-          config.level = 15;
-        if (config.level > 15)
-          config.level = 1;
+        config.elo += range[r] * (x - x0);
+        if (config.elo < MIN_ELO)
+          config.elo = MAX_ELO;
+        if (config.elo > MAX_ELO)
+          config.elo = MIN_ELO;
         x = x0 = 0;
         EEPROM.put(0, config);
       }
 
       lcd.print("<");
-      lcd.print(config.level);
+      lcd.print(config.elo);
       lcd.print("> ");
     }
   }
@@ -1033,6 +1123,10 @@ void settings() {
       x = x0 = 3;
       lcd.clear();
       delay(100);
+    } else {
+      r++;
+      if (r > 3)
+        r = 0;
     }
   }
 }
@@ -1211,7 +1305,7 @@ void play(int &t, char position[4], int invalid[2]) {
   if (playing == -1) {
     switch(stockfish) {
       case 1:
-        Serial1.println("level " + String(config.level));
+        Serial1.println("level " + String(getStockfishLevel(config.elo)));
         break;
       case 2:
         Serial1.println("level 5");
@@ -1265,15 +1359,10 @@ void play(int &t, char position[4], int invalid[2]) {
     lcd.setCursor(7, 0);
     lcd.print(t == 0 ? "WHITE" : "BLACK");
 
-    lcd.setCursor(14, 0);
+    lcd.setCursor(12, 0);
     if (stockfish > 0) {
-      lcd.print("LVL ");
-      if (config.level < 10) {
-        lcd.print("0");
-        lcd.print(config.level);
-      } else {
-        lcd.print(config.level);
-      }
+      lcd.setCursor(config.elo > 999 ? 16 : 17, 0);
+      lcd.print(config.elo);
     } else if (ble) {
       lcd.setCursor(19, 0);
       lcd.write(byte(5));
@@ -1475,7 +1564,7 @@ void online() {
 
 void local() {
   if (ble && timer > 3) {
-    Serial1.println("level " + String(config.level));
+    Serial1.println("level " + String(getStockfishLevel(config.elo)));
     playing = 0;
   }
 
@@ -1745,9 +1834,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "win") {
           config.wins += 1;
           config.streak += 1;
+          prevelo = config.elo;
+          updateEloFromResult(1.0);
           playing = 2;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - WIN - " + String(code)).c_str());
+            length = addReplay(history, ("+" + String(abs(config.elo - prevelo)) + " - WIN - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - WIN");
           } else
@@ -1757,17 +1848,16 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
           strcpy(position, "");
           t = 0;
 
-          if (config.level < 15 && stockfish == 1)
-            config.level += 1;
-
           EEPROM.put(0, config);
         }
 
         if (input == "draw") {
           config.draws += 1;
+          prevelo = config.elo;
+          updateEloFromResult(0.5);
           playing = 3;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - DRAW - " + String(code)).c_str());
+            length = addReplay(history, ("+" + String(abs(config.elo - prevelo)) + " - DRAW - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - DRAW");
           } else
@@ -1783,9 +1873,11 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "lose") {
           config.losses += 1;
           config.streak = 0;
+          prevelo = config.elo;
+          updateEloFromResult(0.0);
           playing = 4;
           if (stockfish > 1)
-            length = addReplay(history, ("LVL " + String(config.level) + " - LOSS - " + String(code)).c_str());
+            length = addReplay(history, ("-" + String(abs(config.elo - prevelo)) + " - LOSS - " + String(code)).c_str());
           else if (ble) {
             length = addReplay(history, "LOCAL - LOSS");
           } else
@@ -2043,6 +2135,8 @@ void lcdbegin() {
   EEPROM.get(0, config);
   EEPROM.get(addr, S);
   EEPROM.get(addr0, S0);
+  if (normalizeElo())
+    EEPROM.put(0, config);
   Serial.println(config.ssid);
 
   Serial1.println("wifi");

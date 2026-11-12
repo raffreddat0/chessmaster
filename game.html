@@ -97,11 +97,57 @@
     </div>
   </div>
   <script>
+    const STOCKFISH_ELO = [400, 600, 800, 1000, 1150, 1300, 1450, 1600, 1750, 1900, 2050, 2200, 2350, 2500, 2650];
+    const DEFAULT_ELO = 400;
+
+    function getKFactor(currentElo) {
+      if (currentElo < 1400) return 40;
+      if (currentElo <= 2100) return 20;
+      return 10;
+    }
+
+    function clampElo(elo) {
+      return Math.max(100, Math.min(3000, Math.round(elo)));
+    }
+
+    function getStoredElo() {
+      const storedElo = Number(localStorage.getItem("elo"));
+      if (Number.isFinite(storedElo) && storedElo > 0) {
+        return clampElo(storedElo);
+      }
+
+      const legacyLevel = Number(localStorage.getItem("level"));
+      if (Number.isInteger(legacyLevel) && legacyLevel >= 1 && legacyLevel <= STOCKFISH_ELO.length) {
+        const migratedElo = STOCKFISH_ELO[legacyLevel - 1];
+        localStorage.setItem("elo", String(migratedElo));
+        localStorage.removeItem("level");
+        return migratedElo;
+      }
+
+      return DEFAULT_ELO;
+    }
+
+    function getStockfishLevel(currentElo) {
+      return STOCKFISH_ELO.reduce((closestLevel, botElo, index) => {
+        const closestElo = STOCKFISH_ELO[closestLevel - 1];
+        return Math.abs(botElo - currentElo) < Math.abs(closestElo - currentElo)
+          ? index + 1
+          : closestLevel;
+      }, 1);
+    }
+
+    function calculateNewElo(userElo, stockfishLevel, score) {
+      const botElo = STOCKFISH_ELO[stockfishLevel - 1] || STOCKFISH_ELO[0];
+      const expectedScore = 1 / (1 + Math.pow(10, (botElo - userElo) / 400));
+      return clampElo(userElo + getKFactor(userElo) * (score - expectedScore));
+    }
+
     function main(code, replayMode = false) {
       var board = null;
       var game = new Chess();
       var state = 0;
       var level = 0;
+      var playerElo = getStoredElo();
       var timer = null;
       var timerInterval = null;
       var viewingIndex = -1;
@@ -535,7 +581,8 @@
         }
 
         if (content === "stockfish") {
-          level = Math.max(1, Math.min(Number(localStorage.getItem("level") || "1"), 15));
+          playerElo = getStoredElo();
+          level = getStockfishLevel(playerElo);
           ws.send("level " + level);
           if (island && islandStatus) {
             islandMode = 'timer';
@@ -602,11 +649,13 @@
         }
 
         if (content === "win" || content === "lose" || content === "draw") {
-          if (content === "win") {
-            if (level > 0)
-              localStorage.setItem("level", Math.min(15, level + 1));
-            state = 1;
+          if (level > 0) {
+            const score = content === "win" ? 1 : content === "draw" ? 0.5 : 0;
+            playerElo = calculateNewElo(playerElo, level, score);
+            localStorage.setItem("elo", String(playerElo));
           }
+          if (content === "win")
+            state = 1;
           if (content === "lose")
             state = 2;
           if (content === "draw")
