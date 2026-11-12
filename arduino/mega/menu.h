@@ -1303,25 +1303,8 @@ void play(int &t, char position[4], int invalid[2]) {
   }*/
 
   if (playing == -1) {
-    switch(stockfish) {
-      case 1:
-        Serial1.println("level " + String(getStockfishLevel(config.elo)));
-        break;
-      case 2:
-        Serial1.println("level 5");
-        break;
-      case 3:
-        Serial1.println("level 8");
-        break;
-      case 4:
-        Serial1.println("level 12");
-        break;
-      case 5:
-        Serial1.println("level 15");
-        break;
-      default:
-        break;
-    }
+    int level = getGameStockfishLevel();
+    Serial1.println("level " + String(level));
     Serial1.println("start");
     playing = 0;
   }
@@ -1361,8 +1344,9 @@ void play(int &t, char position[4], int invalid[2]) {
 
     lcd.setCursor(12, 0);
     if (stockfish > 0) {
-      lcd.setCursor(config.elo > 999 ? 16 : 17, 0);
-      lcd.print(config.elo);
+      static int elo = STOCKFISH_ELO[getGameStockfishLevel()];
+      lcd.setCursor(elo > 999 ? 16 : 17, 0);
+      lcd.print(elo);
     } else if (ble) {
       lcd.setCursor(19, 0);
       lcd.write(byte(5));
@@ -1834,7 +1818,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "win") {
           config.wins += 1;
           config.streak += 1;
-          prevelo = config.elo;
+          int prevelo = config.elo;
           updateEloFromResult(1.0);
           playing = 2;
           if (stockfish > 1)
@@ -1853,7 +1837,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
 
         if (input == "draw") {
           config.draws += 1;
-          prevelo = config.elo;
+          int prevelo = config.elo;
           updateEloFromResult(0.5);
           playing = 3;
           if (stockfish > 1)
@@ -1873,7 +1857,7 @@ int lcdloop(int M[cell][cell], int &t, char position[4], int invalid[2]) {
         if (input == "lose") {
           config.losses += 1;
           config.streak = 0;
-          prevelo = config.elo;
+          int prevelo = config.elo;
           updateEloFromResult(0.0);
           playing = 4;
           if (stockfish > 1)
