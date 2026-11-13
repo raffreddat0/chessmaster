@@ -1043,12 +1043,11 @@ void settings() {
   lcd.setCursor(6, 0);
   lcd.print("Settings");
 
+  lcd.setCursor(17, 0);
   if (r > 0 && r < 3)
-    lcd.setCursor(18, 0);
-  else if (r == 3)
-    lcd.setCursor(17, 0);
-  else
-    lcd.setCursor(19, 0);
+    lcd.print(" ");
+  else if (r == 0)
+    lcd.print("  ");
   lcd.print(range[r]);
 
   static int start = 0;
@@ -1344,7 +1343,7 @@ void play(int &t, char position[4], int invalid[2]) {
 
     lcd.setCursor(12, 0);
     if (stockfish > 0) {
-      static int elo = STOCKFISH_ELO[getGameStockfishLevel()];
+      static int elo = STOCKFISH_ELO[getGameStockfishLevel() - 1];
       lcd.setCursor(elo > 999 ? 16 : 17, 0);
       lcd.print(elo);
     } else if (ble) {
