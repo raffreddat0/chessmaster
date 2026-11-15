@@ -394,6 +394,7 @@ wss.on("connection", (ws, req) => {
         console.log("Game terminated");
         analysis = null;
         wait = false;
+        timer = null;
         if (sessions[game]?.length === 2)
           sessions[game][1].close();
         sessions[game] = [];
@@ -599,6 +600,7 @@ wss.on("connection", (ws, req) => {
       sessions[game] = [];
       games = games.filter(code => code !== game);
       game = null;
+      timer = null;
     } else
       sessions[game] = [sessions[game][0]];
     clearInterval(heartbeatInterval);

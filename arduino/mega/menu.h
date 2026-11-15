@@ -1341,8 +1341,8 @@ void play(int &t, char position[4], int invalid[2]) {
     lcd.setCursor(7, 0);
     lcd.print(t == 0 ? "WHITE" : "BLACK");
 
-    lcd.setCursor(12, 0);
     if (stockfish > 0) {
+      lcd.setCursor(12, 0);
       static int elo = STOCKFISH_ELO[getGameStockfishLevel() - 1];
       lcd.setCursor(elo > 999 ? 16 : 17, 0);
       lcd.print(elo);
@@ -1350,6 +1350,7 @@ void play(int &t, char position[4], int invalid[2]) {
       lcd.setCursor(19, 0);
       lcd.write(byte(5));
     } else {
+      lcd.setCursor(14, 0);
       lcd.print(code);
     }
 
