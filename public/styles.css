@@ -561,8 +561,6 @@
       grid-template-columns: 30px 1fr 1fr;
       gap: 0.5rem;
       align-content: flex-start;
-      border-bottom-right-radius: 0;
-      border-bottom-left-radius: 0;
     }
 
     #moveListContent::-webkit-scrollbar {
